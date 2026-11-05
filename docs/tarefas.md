@@ -778,7 +778,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [ ] C-16 Correções E0.5
 - [x] C-17 Spike de mapas
 - [x] C-18 Estoque e cobertura
-- [ ] C-19 Agenda
+- [x] C-19 Agenda
 - [ ] C-20 Geração da lista
 - [ ] C-21 Catálogo
 - [ ] C-22 Ajustes

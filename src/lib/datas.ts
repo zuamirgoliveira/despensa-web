@@ -36,3 +36,18 @@ export function adicionarDias(data: string, n: number): string {
 export function soData(valor: string): string {
   return valor.slice(0, 10);
 }
+
+/** Dia da semana de uma data: 0 = domingo ... 6 = sábado. */
+export function diaDaSemana(data: string): number {
+  return new Date(diaCivil(data) * 86_400_000).getUTCDay();
+}
+
+/** Último dia do mês (28 a 31). `mes` de 1 a 12. */
+export function ultimoDiaDoMes(ano: number, mes: number): number {
+  return new Date(Date.UTC(ano, mes, 0)).getUTCDate();
+}
+
+/** AAAA-MM-DD a partir das partes (sem validar o dia). */
+export function montarData(ano: number, mes: number, dia: number): string {
+  return `${String(ano).padStart(4, "0")}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+}

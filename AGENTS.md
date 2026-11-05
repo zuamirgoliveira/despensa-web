@@ -211,7 +211,8 @@ Todas as fórmulas vivem em `src/domain/` e têm teste tabelado.
 
 - Três tipos: `feira_mensal` (dia do mês), `mercado_semanal` e `hortifruti_semanal` (dia da semana, 0 = domingo).
 - Dia do mês inexistente (31 em abril, 30 em fevereiro) ajusta para o **último dia do mês**.
-- `tiposCompativeis(produto)`: feira mensal e mercearia podem ser puxados para `mercado_semanal`; hortifruti fica em `hortifruti_semanal`.
+- `tiposCompativeis(produto)`: feira mensal e mercearia podem ser puxados para `mercado_semanal`; hortifruti fica em `hortifruti_semanal`; os tipos semanais só voltam a si mesmos.
+- API: `proximaOcorrencia(agenda, aPartirDe, incluirHoje = true)`, `ocorrenciasEntre`, `proximaIdaDoTipo(agendas, tipo, hoje)` e `idaSeguinte(agendas, tipo, data)` (estritamente posterior), ambas devolvendo `Ida { tipo, data, agendaId }`.
 
 ### 6.3 Geração da lista (`lista.ts`)
 
