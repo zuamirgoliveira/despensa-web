@@ -131,8 +131,10 @@ export async function dividirLista(
   agora: Date = new Date(),
 ): Promise<{ original: Lista; nova: Lista }> {
   const mover = new Set(produtoIds);
+  // A nova lista é sempre posterior à original (a regeração usa a mais antiga), mesmo no mesmo milissegundo.
+  const criadaEm = new Date(Math.max(agora.getTime(), new Date(lista.criadaEm).getTime() + 1)).toISOString();
   const nova = await repos.listas.salvar({
-    id: crypto.randomUUID(), casaId: lista.casaId, tipoIda: lista.tipoIda, data: lista.data, status: "rascunho", mercadoId: alternativoId, criadaEm: agora.toISOString(),
+    id: crypto.randomUUID(), casaId: lista.casaId, tipoIda: lista.tipoIda, data: lista.data, status: "rascunho", mercadoId: alternativoId, criadaEm,
   });
   for (const i of await repos.itensLista.listarPorLista(lista.id)) {
     if (!i.removido && i.produtoId && mover.has(i.produtoId)) await repos.itensLista.salvar({ ...i, listaId: nova.id });
