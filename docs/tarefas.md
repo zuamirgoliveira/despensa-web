@@ -785,7 +785,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-23 Conferência
 - [x] C-24 Lista
 - [x] C-25 Modo compra
-- [ ] C-26 Reconciliação
+- [x] C-26 Reconciliação
 - [ ] C-27 Mercados e casa
 - [ ] C-28 Estimativa da ida
 - [ ] C-29 Início

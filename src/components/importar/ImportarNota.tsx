@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { Alert, useToast } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { prepararConferencia, salvarNotaImportada, type ItemConferencia } from "@/data/importarNota";
+import { finalizarCompra, listasEmCompra } from "@/data/reconciliacao";
+import type { Lista } from "@/domain/types";
 import { parseNota, type ResultadoParser } from "@/domain/nfce/parser";
 import { Conferencia } from "./Conferencia";
 import { PassoChave, type ChaveValida } from "./PassoChave";
@@ -24,6 +26,8 @@ export function ImportarNota() {
   const [leitura, setLeitura] = useState<Leitura | null>(null);
   const [nomes, setNomes] = useState<Record<string, string>>({});
   const [salvando, setSalvando] = useState(false);
+  const [listasAbertas, setListasAbertas] = useState<Lista[]>([]);
+  const [listaId, setListaId] = useState("");
   const [jaImportadaNota, setJaImportadaNota] = useState(false);
 
   async function ler(conteudo: string, informada: ChaveValida | null): Promise<void> {
@@ -52,6 +56,16 @@ export function ImportarNota() {
     setMsgLeitura({ texto: temErro ? "Encontrei problemas." : `Li ${nota.itens.length} itens.`, tipo: temErro ? "erro" : "ok" });
   }
 
+  // Listas em compra: a do parâmetro ?lista= (vindo do modo compra) ou, sem ela, a mais recente.
+  useEffect(() => {
+    (async () => {
+      const abertas = await listasEmCompra(await criarRepositorios());
+      const pedida = new URLSearchParams(location.search).get("lista");
+      setListasAbertas(abertas);
+      setListaId(abertas.find((l) => l.id === pedida)?.id ?? abertas[0]?.id ?? "");
+    })();
+  }, []);
+
   // Compartilhar (Android): /importar?text=... lê a nota na hora e limpa a URL.
   useEffect(() => {
     const p = new URLSearchParams(location.search);
@@ -71,14 +85,15 @@ export function ImportarNota() {
     setSalvando(true);
     try {
       const repos = await criarRepositorios();
-      await salvarNotaImportada(repos, {
+      const { compra } = await salvarNotaImportada(repos, {
         nota: leitura.resultado.nota,
         chave: k,
         nomes,
         substituir: jaImportadaNota || jaImportadaEm !== null,
       });
+      const fechamento = await finalizarCompra(repos, compra, listaId || undefined);
       mostrar("Compra salva.");
-      router.push("/compras");
+      router.push(fechamento.lista ? `/resumo?lista=${fechamento.lista.id}` : "/compras");
     } catch (e) {
       mostrar(e instanceof Error ? e.message : "Não consegui salvar a compra.", "erro");
     } finally {
@@ -108,6 +123,9 @@ export function ImportarNota() {
           jaImportada={jaImportadaNota || jaImportadaEm !== null}
           salvando={salvando}
           aoSalvar={() => void salvar()}
+          listasAbertas={listasAbertas}
+          listaId={listaId}
+          aoMudarLista={setListaId}
         />
       ) : null}
       <Alert tipo="info">Seus dados ficam só neste aparelho. O app não guarda CPF.</Alert>

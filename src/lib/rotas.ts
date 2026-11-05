@@ -7,6 +7,7 @@ export const ROTAS: readonly Rota[] = [
   { href: "/compras", rotulo: "Compras", naBarra: true },
   { href: "/lista", rotulo: "Lista", naBarra: true },
   { href: "/compra", rotulo: "Modo compra", naBarra: false },
+  { href: "/resumo", rotulo: "Resumo", naBarra: false },
   { href: "/conferencia", rotulo: "Conferir", naBarra: false },
   { href: "/catalogo", rotulo: "Catálogo", naBarra: true },
   { href: "/precos", rotulo: "Preços", naBarra: true },

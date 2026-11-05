@@ -1,5 +1,5 @@
 // Serviço da lista de compras: gera, regera preservando edições e altera itens.
-import { gerarLista, mesclarRegeracao, estimarCusto } from "@/domain/lista";
+import { gerarLista, mesclarRegeracao, estimarCusto, type ItemListaSugerido } from "@/domain/lista";
 import { proximaIdaDoTipo } from "@/domain/agenda";
 import type { ItemLista, Lista, TipoIda } from "@/domain/types";
 import type { Repositorios } from "./repositorios";
@@ -35,8 +35,9 @@ export async function garantirLista(repos: Repositorios, tipo: TipoIda, hoje: st
       id: crypto.randomUUID(), casaId: casa.id, tipoIda: tipo, data: gerada.ida.data, status: "rascunho", criadaEm: agora.toISOString(),
     }));
 
+  const pendentes = await pendenciasDaListaAnterior(repos, tipo, gerada.ida.data, listas, new Set(gerada.itens.map((i) => i.produtoId)));
   const atuais = await repos.itensLista.listarPorLista(lista.id);
-  const m = mesclarRegeracao(gerada.itens, atuais);
+  const m = mesclarRegeracao([...gerada.itens, ...pendentes], atuais);
   for (const s of m.adicionar) {
     await repos.itensLista.salvar({
       id: crypto.randomUUID(), casaId: casa.id, listaId: lista.id, produtoId: s.produtoId, quantidadeSugerida: s.quantidade,
@@ -85,4 +86,29 @@ export async function adicionarAvulso(repos: Repositorios, lista: Lista, nome: s
     id: crypto.randomUUID(), casaId: lista.casaId, listaId: lista.id, nomeAvulso: nome.trim(), quantidadeSugerida: quantidade,
     status: "pendente", motivo: "manual", urgente: false, removido: false, quantidadeEditada: true,
   });
+}
+
+/**
+ * Itens que ficaram de fora da última lista fechada do mesmo tipo (não pegos, não removidos) voltam como
+ * sugestão, mesmo que a regra de cobertura não os incluísse (RN-11: "permanece pendente para a próxima ida").
+ */
+async function pendenciasDaListaAnterior(
+  repos: Repositorios,
+  tipo: TipoIda,
+  dataDaIda: string,
+  listas: readonly Lista[],
+  jaSugeridos: ReadonlySet<string>,
+): Promise<ItemListaSugerido[]> {
+  const anterior = listas
+    .filter((l) => l.status === "fechada" && l.tipoIda === tipo && l.data < dataDaIda)
+    .sort((a, b) => b.data.localeCompare(a.data))[0];
+  if (!anterior) return [];
+  const produtos = new Map((await repos.produtos.listar()).map((p) => [p.id, p]));
+  const saida: ItemListaSugerido[] = [];
+  for (const i of await repos.itensLista.listarPorLista(anterior.id)) {
+    const pendente = i.status === "pendente" || i.status === "nao_encontrado" || i.status === "adiado";
+    if (!i.produtoId || i.removido || !pendente || jaSugeridos.has(i.produtoId) || !produtos.get(i.produtoId)?.ativo) continue;
+    saida.push({ produtoId: i.produtoId, quantidade: i.quantidadeSugerida, motivo: "cobertura", urgente: false });
+  }
+  return saida;
 }

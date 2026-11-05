@@ -158,6 +158,8 @@ export const listaSchema = z.object({
   mercadoId: idSchema.optional(),
   orcamentoCentavos: centavosNaoNegSchema.optional(),
   estimativaCentavos: centavosNaoNegSchema.optional(),
+  /** Total da nota que fechou a lista (para comparar com a estimativa). */
+  gastoCentavos: centavosNaoNegSchema.optional(),
   criadaEm: instanteSchema,
 });
 

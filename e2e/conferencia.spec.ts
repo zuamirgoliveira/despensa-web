@@ -51,14 +51,16 @@ test("escolher a ida e conferir 5 produtos: níveis e tempo persistem; Gerar lis
   await expect(page.getByText(/5 de 16 produtos conferidos em/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Gerar lista" })).toHaveAttribute("href", "/lista?ida=hortifruti_semanal");
 
-  // persistiu: o backup traz os 4 níveis, 5 registros de estoque e 1 conferência com o tempo
+  // persistiu: a importação já deixou os 16 produtos como "cheio"; as 5 respostas atualizaram o estoque
+  // (backup: os 4 níveis aparecem, 16 registros de estoque e 1 conferência com o tempo)
   await page.goto("/ajustes");
   const baixa = page.waitForEvent("download");
   await page.getByRole("button", { name: "Exportar backup" }).click();
   const arquivo = JSON.parse(readFileSync((await (await baixa).path()) as string, "utf8"));
-  const niveis = arquivo.colecoes.estoques.map((e: { nivel: string }) => e.nivel).sort();
-  expect(niveis).toHaveLength(5);
+  const niveis: string[] = arquivo.colecoes.estoques.map((e: { nivel: string }) => e.nivel);
+  expect(niveis).toHaveLength(16);
   expect(new Set(niveis)).toEqual(new Set(["cheio", "metade", "acabando", "acabou"]));
+  expect(niveis.filter((n) => n !== "cheio")).toHaveLength(3); // metade, acabando e acabou; os outros 13 seguem cheios
   expect(arquivo.colecoes.conferencias).toHaveLength(1);
   expect(arquivo.colecoes.conferencias[0]).toMatchObject({ tipoIda: "hortifruti_semanal", produtosConferidos: 5 });
   expect(arquivo.colecoes.conferencias[0].duracaoSegundos).toBeGreaterThanOrEqual(0);
@@ -81,6 +83,7 @@ test("sair no meio mantém as respostas já dadas", async ({ page }) => {
   const baixa = page.waitForEvent("download");
   await page.getByRole("button", { name: "Exportar backup" }).click();
   const arquivo = JSON.parse(readFileSync((await (await baixa).path()) as string, "utf8"));
-  expect(arquivo.colecoes.estoques).toHaveLength(2);
+  const niveis: string[] = arquivo.colecoes.estoques.map((e: { nivel: string }) => e.nivel);
+  expect(niveis.filter((n) => n === "acabou")).toHaveLength(2); // as duas respostas; os outros 14 seguem cheios da importação
   expect(arquivo.colecoes.conferencias).toHaveLength(0); // sem concluir, não registra tempo
 });

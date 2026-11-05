@@ -114,6 +114,7 @@ despensa-web/
 │  │  ├─ conferencia/              tela Conferir despensa (um produto por vez)
 │  │  ├─ lista/                    tela Lista inteligente (itens, estimativa, avulsos)
 │  │  ├─ compra/                   tela Modo compra (checklist offline, total corrente)
+│  │  ├─ resumo/                   tela Resumo da compra (comprado, faltou, fora da lista)
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
@@ -142,6 +143,7 @@ despensa-web/
 │  │  ├─ conferencia.ts            fila da conferência, registrar nível e sessão
 │  │  ├─ lista.ts                  garantir/regerar lista preservando edições, editar itens
 │  │  ├─ compra.ts                 modo compra: pego, não encontrei, preço, extra, orçamento
+│  │  ├─ reconciliacao.ts          fechar a compra: estoque cheio, reconciliar, fechar lista, resumo
 │  │  ├─ importarNota.ts           orquestra a importação (mercado, produtos, apelidos, compra, meta)
 │  │  ├─ catalogo.ts               edição com meta manual, liberar meta, mesclar produtos
 │  │  ├─ eventos.ts                emissor de mudanças (aoMudar, emitirMudanca)
@@ -261,7 +263,15 @@ Decisões de implementação (`gerarLista(entrada)` devolve `{ ida, itens, resum
 
 ### 6.4 Reconciliação (`reconciliacao.ts`)
 
-Casa itens da nota com `ItemLista` por `produtoId` (via `ApelidoMercado`). Três grupos: **comprado**, **ficou de fora** (permanece pendente para a próxima ida) e **fora da lista**. Item fora da lista em ida de reposição (mercado semanal ou hortifruti semanal) conta como **compra de emergência**. Itens comprados atualizam `Estoque` para `cheio`. A lista passa a `fechada`.
+Casa itens da nota com `ItemLista` por `produtoId` (resolvido pelo apelido na importação); avulsos e extras casam pelo nome contido na descrição da nota; itens removidos da lista são ignorados. Três grupos: **comprado**, **ficou de fora** (permanece pendente para a próxima ida) e **fora da lista**. Item fora da lista em ida de reposição (mercado semanal ou hortifruti semanal) conta como **compra de emergência**; na feira mensal não.
+
+`finalizarCompra(repos, compra, listaId?)` (em `data/reconciliacao.ts`) roda depois de `salvarNotaImportada`:
+
+- **Sempre** (com ou sem lista): produtos comprados voltam a `cheio` (`aplicarCompra`).
+- **Com lista** (a do `?lista=` do modo compra, ou a lista `em_compra` mais recente; o usuário pode trocar ou desassociar): itens comprados ganham `status: pego`, `quantidadePega` e `precoCentavos` da nota; a compra recebe `listaId`; a lista vira `fechada` com `gastoCentavos`. Lista já fechada por outra compra não é reprocessada.
+- Itens que ficaram de fora **voltam na próxima lista do mesmo tipo** (`garantirLista` traz as pendências da última lista fechada, mesmo que a cobertura não as incluísse).
+- Itens fora da lista **não** são criados como itens: o resumo é recalculado (`resumoDaLista`) a partir da lista e da compra ligada. Todos os itens da nota já viram produto do catálogo na importação (C-21), então não há "oferecer criar produto".
+- Tela `/resumo?lista=<id>`: comprado, faltou, fora da lista (com selo de emergência), total gasto contra a estimativa e, quando houver (C-28), custo da ida e custo real (`itens + ida`); sem custo da ida mostra "estimativa pendente".
 
 ### 6.5 Custo da ida (`ida.ts`)
 

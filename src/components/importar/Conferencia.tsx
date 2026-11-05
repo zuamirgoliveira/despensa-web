@@ -1,8 +1,10 @@
 "use client";
 
-import { Alert, Badge, Button, Card, Input } from "@/components/ui";
+import { Alert, Badge, Button, Card, Input, Select } from "@/components/ui";
 import type { ItemConferencia } from "@/data/importarNota";
 import type { ResultadoParser } from "@/domain/nfce/parser";
+import type { Lista } from "@/domain/types";
+import { TIPO_IDA_ROTULO } from "@/lib/rotulos";
 import { brl, dataBR, horaBR, numeroBR } from "@/lib/format";
 
 type Props = {
@@ -15,9 +17,12 @@ type Props = {
   jaImportada: boolean;
   salvando: boolean;
   aoSalvar: () => void;
+  listasAbertas: readonly Lista[];
+  listaId: string;
+  aoMudarLista: (id: string) => void;
 };
 
-export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, aoMudarNome, jaImportada, salvando, aoSalvar }: Props) {
+export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, aoMudarNome, jaImportada, salvando, aoSalvar, listasAbertas, listaId, aoMudarLista }: Props) {
   const { nota } = leitura;
   const erros = [...leitura.erros, ...errosExtras];
   const avisos = [...leitura.avisos, ...avisosExtras];
@@ -74,6 +79,22 @@ export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, 
           );
         })}
       </ul>
+
+      {listasAbertas.length ? (
+        <Select
+          rotulo="Associar esta nota à lista"
+          value={listaId}
+          onChange={(e) => aoMudarLista(e.target.value)}
+          ajuda="A lista é conferida com a nota (comprado, faltou, fora da lista) e fechada ao salvar."
+        >
+          <option value="">Nenhuma (só importar)</option>
+          {listasAbertas.map((l) => (
+            <option key={l.id} value={l.id}>
+              {TIPO_IDA_ROTULO[l.tipoIda]} · {dataBR(l.data)}
+            </option>
+          ))}
+        </Select>
+      ) : null}
 
       <Button disabled={erros.length > 0 || salvando} onClick={aoSalvar}>
         {jaImportada ? "Substituir compra" : "Salvar compra"}
