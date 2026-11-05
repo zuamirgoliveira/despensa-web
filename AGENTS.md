@@ -297,7 +297,7 @@ Casa itens da nota com `ItemLista` por `produtoId` (resolvido pelo apelido na im
 
 ### 6.6 Preços e comparação (`precos.ts`, `comparacao.ts`, `economia.ts`)
 
-- Versão atual (C-12) de `precos.ts`: `historicoPorProduto` agrupa por produto + unidade da nota, com último, anterior, variação (mostrada só se ≥ 0,5%), menor e maior preço unitário. O Backup fica em Ajustes.
+- `precoNormalizado(item)` (`precos.ts`): `KG` → R$/kg; `L` → R$/l; embalagem com tamanho → R$/100 g ou R$/100 ml (`PCT 180` sem medida = gramas; `LEITE 1L` → 100 ml); `CX 12` → R$/un; o resto → R$/un. `historicoPorProduto` agrupa por produto + **base** (embalagens diferentes do mesmo produto se comparam), com último, anterior, variação (mostrada se ≥ 0,5%), menor, maior e média, tudo normalizado. `mediaDoUsuario(pontos, { hoje, dias })` aceita janela. A tela `/precos` mostra o gráfico de linha em SVG próprio (`lib/grafico.ts` + `GraficoPreco`, sem biblioteca). O Backup fica em Ajustes.
 
 - Comparar sempre por **preço normalizado**: `KG` → centavos/kg; `UNID` → centavos/unidade; embalagem com tamanho (ex.: `PCT 180`) → centavos por 100 g ou por unidade de medida.
 - Alerta de preço: último preço acima da média do usuário em mais que `limiarAlertaPrecoPct` (padrão 20) **e** pelo menos 3 compras no histórico.

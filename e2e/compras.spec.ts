@@ -34,7 +34,7 @@ test("compra aparece em Compras (detalhe) e em Preços", async ({ page }) => {
   await expect(page.getByText("R$ 7,88/kg", { exact: true }).first()).toBeVisible();
   const melao = page.getByRole("listitem").filter({ hasText: "Melao Japones" });
   await melao.getByText("Melao Japones").click();
-  await expect(melao.getByText(/Menor R\$ 7,88\/kg · maior R\$ 7,88\/kg/)).toBeVisible();
+  await expect(melao.getByText(/Menor R\$ 7,88\/kg · maior R\$ 7,88\/kg · média R\$ 7,88\/kg/)).toBeVisible();
   semViolacaoDeCsp(erros);
 });
 
@@ -114,4 +114,23 @@ test("backup: exportar, apagar tudo e importar de volta restaura os dados", asyn
     buffer: Buffer.from(JSON.stringify({ ...conteudo, versao: 99 })),
   });
   await expect(page.getByText(/mais nova que a suportada/)).toBeVisible();
+});
+
+test("preço normalizado: pacote de 180 g aparece em R$/100 g e o gráfico mostra a evolução", async ({ page }) => {
+  await importarNota(page);
+  await irParaTela(page, "Preços");
+  const alho = page.getByRole("listitem").filter({ hasText: "Alho Redinha" }).first();
+  await expect(alho.getByText("R$ 3,60/100 g").first()).toBeVisible(); // R$ 6,48 ÷ 1,8
+  // segunda compra com o melão mais caro: o gráfico aparece (precisa de 2 pontos)
+  const outra = NOTA.replace("Número: 68903", "Número: 68904").replace("04/11/2026 10:33:31", "11/11/2026 10:33:31")
+    .replace("2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8720", "2626 1108 8682 3100 0638 6500 2000 0689 0410 2077 8728");
+  await page.goto("/importar");
+  await page.getByLabel("Texto copiado da página da SEFAZ").fill(outra);
+  await page.getByRole("button", { name: "Ler nota" }).click();
+  await page.getByRole("button", { name: "Salvar compra" }).click();
+  await pularEstimativa(page);
+  await page.goto("/precos");
+  const melao = page.getByRole("listitem").filter({ hasText: "Melao Japones" }).first();
+  await melao.getByText("Melao Japones").first().click();
+  await expect(melao.getByRole("img", { name: /Gráfico de preço/ })).toBeVisible();
 });

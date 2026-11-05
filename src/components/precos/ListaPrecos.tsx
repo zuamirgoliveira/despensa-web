@@ -6,8 +6,9 @@ import { criarRepositorios } from "@/data";
 import { useRepositorio } from "@/data/useRepositorio";
 import { historicoPorProduto, LIMITE_VARIACAO_PCT } from "@/domain/precos";
 import { brl, dataBR } from "@/lib/format";
+import { GraficoPreco } from "./GraficoPreco";
 
-const SUFIXO = { KG: "kg", UNID: "un", L: "l", PCT: "pct" } as const;
+const SUFIXO = { kg: "/kg", un: "/un", l: "/l", "100g": "/100 g", "100ml": "/100 ml" } as const;
 
 export function ListaPrecos() {
   const { dados, carregando } = useRepositorio(async () => {
@@ -42,18 +43,18 @@ export function ListaPrecos() {
   return (
     <ul className="flex flex-col gap-3">
       {lista.map((h) => {
-        const suf = SUFIXO[h.unidade];
+        const suf = SUFIXO[h.base].slice(1);
         const v = h.variacaoPct;
         const mostraVariacao = v !== undefined && Math.abs(v) >= LIMITE_VARIACAO_PCT;
         return (
-          <li key={`${h.produtoId}|${h.unidade}`}>
+          <li key={`${h.produtoId}|${h.base}`}>
             <Card className="p-3">
               <Details
                 titulo={
                   <span className="flex w-full items-center justify-between gap-2">
                     <span>{nome(h.produtoId)}</span>
                     <span className="flex items-center gap-2 font-semibold">
-                      {brl(h.ultimo.precoCentavos)}/{suf}
+                      {brl(h.ultimo.normalizadoCentavos)}/{suf}
                       {mostraVariacao ? (
                         <Badge tom={v > 0 ? "erro" : "verde"} aria-label={`variação de ${v.toFixed(1)}%`}>
                           {v > 0 ? "▲" : "▼"} {Math.abs(v).toFixed(1).replace(".", ",")}%
@@ -64,8 +65,9 @@ export function ListaPrecos() {
                 }
               >
                 <p className="mb-2 text-sm text-texto/70">
-                  Menor {brl(h.menorCentavos)}/{suf} · maior {brl(h.maiorCentavos)}/{suf}
+                  Menor {brl(h.menorCentavos)}/{suf} · maior {brl(h.maiorCentavos)}/{suf} · média {brl(h.mediaCentavos)}/{suf}
                 </p>
+                <GraficoPreco valores={h.pontos.map((p) => p.normalizadoCentavos)} sufixo={`/${suf}`} />
                 <ul className="flex flex-col gap-1 text-sm">
                   {[...h.pontos].reverse().map((p) => (
                     <li key={`${p.emissao}|${p.mercadoId}`} className="flex justify-between gap-2 border-t border-borda pt-1">
@@ -73,7 +75,7 @@ export function ListaPrecos() {
                         {dataBR(p.emissao)} · {dados.mercados.get(p.mercadoId)?.apelido || dados.mercados.get(p.mercadoId)?.nome || "Mercado"}
                       </span>
                       <span>
-                        {brl(p.precoCentavos)}/{suf}
+                        {brl(p.normalizadoCentavos)}/{suf}
                       </span>
                     </li>
                   ))}

@@ -58,3 +58,60 @@ describe("historicoPorProduto", () => {
     expect(h.map((x) => x.unidade).sort()).toEqual(["KG", "UNID"]);
   });
 });
+
+import { historicoDoProduto, mediaDoUsuario, precoNormalizado } from "@/domain/precos";
+
+describe("precoNormalizado", () => {
+  const n = (descricao: string, unidade: "KG" | "UNID" | "L" | "PCT", v: number) => precoNormalizado({ descricao, unidade, valorUnitarioCentavos: v });
+  it.each([
+    ["TOMATE KG", "KG", 898, { centavos: 898, base: "kg" }],
+    ["LEITE", "L", 450, { centavos: 450, base: "l" }],
+    ["COENTRO UN", "UNID", 288, { centavos: 288, base: "un" }],
+    ["ALHO REDINHA PCT 180", "UNID", 648, { centavos: 360, base: "100g" }], // pacote de 180 g a R$ 6,48 → R$ 3,60/100 g
+    ["CAFE PCT 500G", "UNID", 2000, { centavos: 400, base: "100g" }],
+    ["ACUCAR 2KG", "UNID", 1000, { centavos: 50, base: "100g" }],
+    ["LEITE UHT 1L", "UNID", 500, { centavos: 50, base: "100ml" }],
+    ["IOGURTE 170 ML", "UNID", 340, { centavos: 200, base: "100ml" }],
+    ["OVOS CX 12", "UNID", 1200, { centavos: 100, base: "un" }],
+    ["BISCOITO PCT", "PCT", 350, { centavos: 350, base: "un" }],
+  ] as const)("%s", (d, u, v, esperado) => expect(n(d, u, v)).toEqual(esperado));
+
+  it("embalagens diferentes do mesmo produto ficam comparáveis", () => {
+    const pequeno = n("CAFE PCT 250G", "UNID", 1100); // R$ 4,40/100 g
+    const grande = n("CAFE PCT 500G", "UNID", 2000); // R$ 4,00/100 g
+    expect(pequeno.base).toBe(grande.base);
+    expect(grande.centavos).toBeLessThan(pequeno.centavos);
+  });
+});
+
+describe("mediaDoUsuario e histórico normalizado", () => {
+  const casa = crypto.randomUUID();
+  const prod = crypto.randomUUID();
+  const comp = (data: string, descricao: string, v: number): Compra => ({
+    casaId: casa, chave: Math.random().toString().slice(2).padEnd(44, "0").slice(0, 44), mercadoId: crypto.randomUUID(), emissao: `${data}T10:00:00`,
+    valorTotalCentavos: v, pagamento: "", importadoEm: "2026-11-05T10:00:00Z",
+    itens: [{ codigo: "1", descricao, produtoId: prod, quantidade: 1, unidade: "UNID", valorUnitarioCentavos: v, valorTotalCentavos: v }],
+  });
+
+  it("pacote de 180 g e de 500 g entram no mesmo histórico, em R$/100 g", () => {
+    const [h] = historicoDoProduto([comp("2026-10-01", "CAFE PCT 250G", 1100), comp("2026-11-01", "CAFE PCT 500G", 2000)], prod);
+    expect(h.base).toBe("100g");
+    expect(h.pontos.map((p) => p.normalizadoCentavos)).toEqual([440, 400]);
+    expect(h.variacaoPct).toBeCloseTo(-9.09, 1);
+    expect(h).toMatchObject({ menorCentavos: 400, maiorCentavos: 440, mediaCentavos: 420 });
+  });
+
+  it("bases diferentes não se misturam", () => {
+    expect(historicoDoProduto([comp("2026-10-01", "CAFE PCT 250G", 1100), comp("2026-11-01", "CAFE", 900)], prod)).toHaveLength(2);
+  });
+
+  it("média com janela de dias", () => {
+    const [h] = historicoDoProduto([comp("2026-08-01", "X", 100), comp("2026-10-20", "X", 200), comp("2026-11-01", "X", 400)], prod);
+    expect(mediaDoUsuario(h.pontos)).toBe(233.33);
+    expect(mediaDoUsuario(h.pontos, { hoje: "2026-11-05", dias: 30 })).toBe(300);
+    expect(mediaDoUsuario(h.pontos, { hoje: "2026-11-05", dias: 1 })).toBeUndefined();
+    expect(mediaDoUsuario([])).toBeUndefined();
+  });
+
+  it("produto sem compras", () => expect(historicoDoProduto([], prod)).toEqual([]));
+});
