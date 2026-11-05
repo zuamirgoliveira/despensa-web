@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 (cópia de segurança e persistência)
+
+- **Cópia de segurança v2:** arquivo com cabeçalho (contagens, período, soma SHA-256) e opção de incluir a posição de casa (ligada por padrão); a v1 continua abrindo.
+- **Guardar pelo menu de compartilhar** (Drive, Gmail, WhatsApp), com download de reserva; data da última cópia em Ajustes; lembrete no Início aos 30 dias ou 5 notas.
+- **Restaurar ou verificar:** conferência antes de gravar (conteúdo, período, integridade, avisos e comparação com o aparelho); com dados no aparelho sempre pergunta entre mesclar e substituir, com confirmação dupla.
+- **Restauração atômica:** tudo numa única transação do IndexedDB, entra tudo ou nada (corrige a gravação em partes que podia deixar o aparelho pela metade).
+- **Armazenamento persistente** pedido ao navegador e estado mostrado em Ajustes.
+
 ## 0.3.0 (nomes de produto, chave da nota e tema)
 
 - **Produtos iguais com descrição diferente:** nomes normalizados (caixa, acento, ordem das palavras, artigos e tamanho: `500g`, `500 g`, `500GR` viram `500g`); chave igual une sozinha; parecido só sugere na conferência; nova seção "Possíveis duplicados" no Catálogo, com mesclagem confirmada.

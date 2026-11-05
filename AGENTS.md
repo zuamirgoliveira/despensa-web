@@ -111,7 +111,7 @@ despensa-web/
 │  │  ├─ ui/                       primitivos: Button/LinkBotao, Card, Input, Textarea, Select, Badge, Alert, Icone, Toast, Progress, Details, EmptyState, Dialog…
 │  │  ├─ importar/                 passos da tela Importar (chave, SEFAZ, colar, conferência)
 │  │  ├─ compras/                  lista de compras, detalhe e apagar
-│  │  ├─ ajustes/                  Ajustes: agenda, regras, custos e Backup (exportar/importar)
+│  │  ├─ ajustes/                  Ajustes: agenda, regras, custos, Aparência e Cópia de segurança (guardar, restaurar/verificar)
 │  │  ├─ precos/                   lista de preços e histórico
 │  │  ├─ catalogo/                 tela Catálogo (lista por categoria, formulário, mesclar)
 │  │  ├─ conferencia/              tela Conferir despensa (um produto por vez)
@@ -144,12 +144,14 @@ despensa-web/
 │  │  ├─ economia.ts               economia líquida, divisão da lista
 │  │  ├─ gastos.ts                 gastos e inflação pessoal
 │  │  ├─ painel.ts                 métricas mensais do painel e tendências
+│  │  ├─ backup.ts                 lembrete de cópia de segurança (30 dias ou 5 notas)
 │  │  └─ types.ts                  tipos inferidos dos schemas
 │  ├─ schemas/                     schemas Zod de todas as entidades
 │  ├─ data/
 │  │  ├─ repositorios.ts           interfaces dos repositórios
 │  │  ├─ indexeddb/                implementação e migrações numeradas
-│  │  ├─ backup.ts                 exportar e importar com validação
+│  │  ├─ backup.ts                 exportar (v2 com cabeçalho e integridade), inspecionar, comparar com o aparelho e restaurar
+│  │  ├─ backupArquivo.ts          guardar a cópia: compartilhar (Web Share) ou baixar, e registrar Perfil.ultimoBackupEm
 │  │  ├─ conferencia.ts            fila da conferência, registrar nível e sessão
 │  │  ├─ estimativaIda.ts          estimar distância/tempo da ida, confirmar e gravar custo nas compras
 │  │  ├─ lista.ts                  garantir/regerar lista preservando edições, editar itens
@@ -172,6 +174,8 @@ despensa-web/
 │  │  ├─ datas.ts                  datas sem hora, hojeRecife (injetável)
 │  │  ├─ rotas.ts                  lista de rotas do app (pré-cache)
 │  │  ├─ tema.ts                   preferência Claro/Escuro/Sistema (localStorage + data-tema)
+│  │  ├─ armazenamento.ts          pedir armazenamento persistente e ler o estado (navigator.storage)
+│  │  ├─ arquivos.ts               criar, compartilhar (menu do Android) e baixar arquivos
 │  │  └─ security-headers.ts       fonte única dos headers e da CSP
 │  └─ config/seed.ts               valores iniciais aplicados na primeira abertura
 ├─ tests/                          Vitest (espelha src/) + fixtures/
@@ -203,9 +207,9 @@ app/ (telas) → components/ → data/ (repositórios) → schemas/
 - Banco `despensa`, versionado (`criarRepositorios()` em `src/data/indexeddb/index.ts`; `criarRepositorios({ indexedDB, nomeBanco })` abre instância própria, usada nos testes com `fake-indexeddb`), com **migrações numeradas** em `src/data/indexeddb/migrations/NNN-descricao.ts`. Nunca editar migração já publicada; criar nova.
 - Todo registro: `id` (UUID v4 via `crypto.randomUUID()`) e `casaId`. Exceção de chave natural: `Compra.chave` (44 dígitos) e `ApelidoMercado` (`cnpj` + `codigo`).
 - Entidades: `Casa`, `Perfil`, `AgendaIda`, `Mercado`, `Produto`, `ApelidoMercado`, `Estoque`, `Compra` (com `ItemCompra[]`), `Lista`, `ItemLista`, `RegistroConferencia` (migração 002: tempo e quantidade de produtos de cada conferência; o campo `conferencias` do backup é opcional para aceitar backups antigos).
-- Schemas em `src/schemas/` (`comum`, `constantes`, `entidades`); tipos em `src/domain/types.ts`. Valores de enum não têm acento (`laticinios`). `Compra` e `ApelidoMercado` não têm `id` (chave natural). Campos extras além do blueprint: `Produto.metaManual`, `Produto.contavel`, `ItemLista.removido`, `ItemLista.quantidadeEditada`, `Perfil.economiaMinimaDivisaoCentavos`, `Perfil.janelaPrecoDias`. `Perfil.bikeCentavosPorKm` aceita fração de centavo.
+- Schemas em `src/schemas/` (`comum`, `constantes`, `entidades`); tipos em `src/domain/types.ts`. Valores de enum não têm acento (`laticinios`). `Compra` e `ApelidoMercado` não têm `id` (chave natural). Campos extras além do blueprint: `Produto.metaManual`, `Produto.contavel`, `ItemLista.removido`, `ItemLista.quantidadeEditada`, `Perfil.economiaMinimaDivisaoCentavos`, `Perfil.janelaPrecoDias`, `Perfil.ultimoBackupEm`. `Perfil.bikeCentavosPorKm` aceita fração de centavo.
 - Todo dado lido de IndexedDB ou de arquivo de backup passa por Zod antes de ser usado.
-- **Backup:** JSON com `versao`, `exportadoEm` e todas as coleções. Importação é idempotente (sobrescreve por `id`/`chave`) e rejeita versão superior à suportada. Ao restaurar em aparelho novo, a casa padrão vazia (criada na primeira abertura, com perfil e agenda do seed) é removida para não haver duas casas; uma casa local com dados nunca é apagada.
+- **Backup (especificação completa em [docs/backup.md](docs/backup.md)):** JSON `versao: 2` com `exportadoEm`, `meta` (contagens, período, `incluiPosicaoDeCasa` e soma SHA-256 de `JSON.stringify(colecoes)`) e `colecoes`; a v1 (sem `meta`) continua legível (fixture `tests/fixtures/backups/v1-seed.json`); versão superior à suportada é recusada. `inspecionarBackup` confere formato, versão, soma e contagens **sem gravar**; `compararComAparelho` diz o que existe aqui e na cópia. **Restauração atômica:** `Repositorios.restaurar(dados, modo)` valida tudo (Zod, chaves duplicadas, estoque único por produto) e grava **todas as coleções numa única transação** (erro no meio aborta e o aparelho fica como estava; `tests/data/restauracao.test.ts` inclui falha simulada e foi validado por mutação sem `tx.abort()`). Modos: `mesclar` (mesmo identificador fica como na cópia; o que só existe aqui é mantido; o estoque da cópia substitui o local do mesmo produto; a casa padrão vazia some; a posição de casa do aparelho é mantida se a cópia não a traz) e `substituir` (apaga tudo e deixa igual à cópia). `restaurarBackup` recusa soma que não confere e grava `Perfil.ultimoBackupEm = exportadoEm` (nunca volta para trás). Guardar: `guardarCopia` compartilha com `navigator.share({ files })` (cancelar não conta; sem suporte baixa o arquivo) e registra a data. Armazenamento persistente (`lib/armazenamento.ts`) é pedido ao abrir (`ProtegerArmazenamento`). **Decisões:** posição de casa incluída por padrão (opção de omitir), senha no arquivo adiada, ao restaurar com dados no aparelho **sempre perguntar** (mesclar ou substituir; substituir exige segunda confirmação com "Entendi").
 - **Seed (`src/config/seed.ts`):** ao criar a casa na primeira abertura, `iniciar()` grava o perfil com os padrões e a agenda inicial (feira dia 5, mercado semanal sábado, hortifruti semanal quarta). Só nesse momento: reabrir não recria o que o usuário apagou. Transcrever `docs/parametros-iniciais.md` (Z-07) para o seed quando existir.
 - O armazenamento é por origem e por aparelho. Não há sincronização.
 
@@ -285,7 +289,7 @@ Decisões de implementação (`gerarLista(entrada)` devolve `{ ida, itens, resum
 
 ### 6.3.0 Início (`inicio.ts`, tela `/`)
 
-Mostra a **próxima ida de qualquer tipo** (empate de data: feira primeiro), em quantos dias (`hoje`, `amanhã`, `em N dias`), quantos produtos a lista dessa ida teria agora, atalhos **Conferir despensa** / **Ver lista** / **Importar nota** e dois lembretes: **nota pendente** (lista `em_compra` criada há mais de 1 dia, data de `criadaEm` no fuso de Recife) e **estimativa de ida pendente** (mercado com compra sem `custoIdaCentavos`). Sem nenhuma nota: boas-vindas com atalho para importar a primeira. Navegação: a barra tem Início, Importar, Lista e Compras; o restante (Conferir despensa, Catálogo, Preços, Mercados, Ajustes) fica no menu **Mais** (`lib/rotas.ts` define barra e Mais; teclado: Esc ou toque fora fecha).
+Mostra a **próxima ida de qualquer tipo** (empate de data: feira primeiro), em quantos dias (`hoje`, `amanhã`, `em N dias`), quantos produtos a lista dessa ida teria agora, atalhos **Conferir despensa** / **Ver lista** / **Importar nota** e dois lembretes: **nota pendente** (lista `em_compra` criada há mais de 1 dia, data de `criadaEm` no fuso de Recife) e **estimativa de ida pendente** (mercado com compra sem `custoIdaCentavos`). Sem nenhuma nota: boas-vindas com atalho para importar a primeira. Com compras, um cartão **lembra da cópia de segurança** (`domain/backup.ts`: nunca houve cópia, 30 dias ou 5 notas desde a última, o que vier primeiro). Navegação: a barra tem Início, Importar, Lista e Compras; o restante (Conferir despensa, Catálogo, Preços, Mercados, Ajustes) fica no menu **Mais** (`lib/rotas.ts` define barra e Mais; teclado: Esc ou toque fora fecha).
 
 ### 6.3.1 Modo compra (`compra.ts`, tela `/compra?lista=<id>`)
 
@@ -462,7 +466,7 @@ Qualquer nova origem ou diretiva exige entrada nesta tabela e atualização do t
 
 ### 9.4 Privacidade
 
-Dados ficam no aparelho. O endereço e a posição de casa **não** são enviados a nenhum serviço; ao serviço de mapas vão apenas coordenadas e o endereço do mercado (que vem da nota). A posição de casa pode ser armazenada arredondada (3 casas decimais ≈ 100 m).
+Dados ficam no aparelho. O endereço e a posição de casa **não** são enviados a nenhum serviço; ao serviço de mapas vão apenas coordenadas e o endereço do mercado (que vem da nota). A posição de casa pode ser armazenada arredondada (3 casas decimais ≈ 100 m). **A cópia de segurança leva a posição de casa por padrão** (opção de omitir) e só sai do aparelho por escolha do usuário (menu de compartilhar ou download); o app não envia o arquivo a nenhum serviço. Envio direto ao Google Drive e senha no arquivo estão no pós-MVP (`docs/pos-mvp.md`) e exigem decisão registrada aqui (regras 2 e 3 da seção 13).
 
 ---
 
@@ -519,7 +523,7 @@ Diretório `/opt/docker/despensa-web` (dono `deploy`), `.env` com permissão 600
 ### 11.3 Testes
 
 - **Vitest** (`tests/`, espelha `src/`): toda regra de `src/domain` com testes tabelados, incluindo bordas (zero, vazio, mês curto, ano bissexto, limites de tolerância). Relógio sempre injetado. Repositórios testados com `fake-indexeddb`, incluindo migração e backup ida e volta.
-- **Playwright** (`e2e/`): roda contra `next start` para exercitar CSP e service worker. Câmera simulada com flags do Chrome (`--use-fake-ui-for-media-stream`, `--use-fake-device-for-media-stream`, `--use-file-for-fake-video-capture`). Falha o teste se aparecer violação de CSP no console. Cobre offline (navegar e recarregar todas as rotas). Acessibilidade roda nos dois temas e em 360×640 (`acessibilidade.spec.ts`); `tema.spec.ts` cobre Claro/Escuro/Sistema, persistência e a coluna em telas largas. O contraste dos tokens é testado em Vitest (`tests/lib/contraste.test.ts`).
+- **Playwright** (`e2e/`): roda contra `next start` para exercitar CSP e service worker. Câmera simulada com flags do Chrome (`--use-fake-ui-for-media-stream`, `--use-fake-device-for-media-stream`, `--use-file-for-fake-video-capture`). Falha o teste se aparecer violação de CSP no console. Cobre offline (navegar e recarregar todas as rotas). `backup.spec.ts` cobre guardar (download e menu de compartilhar simulado), lembrete, restaurar em aparelho vazio e com dados, as confirmações duplas e arquivos adulterados, cortados ou de versão nova; use o helper `restaurarBackupPelaTela` (`e2e/util.ts`) para carregar dados de seed. Acessibilidade roda nos dois temas e em 360×640 (`acessibilidade.spec.ts`); `tema.spec.ts` cobre Claro/Escuro/Sistema, persistência e a coluna em telas largas. O contraste dos tokens é testado em Vitest (`tests/lib/contraste.test.ts`).
 - E2E: `e2e/global-setup.ts` gera o vídeo falso da câmera (`test-results/camera-qr.y4m`, a partir de `tests/fixtures/fotos/qr-nota.png`, com `ffmpeg`); sem `ffmpeg` o teste da câmera é pulado. `tests/fixtures/foto-nota-real.jpeg` **não é versionada** (mostra final de cartão); o teste de OCR com ela é pulado quando o arquivo não existe (ex.: no CI). Imagens sintéticas (QR, ruído, chave com DV errado, sem chave) vêm de `scripts/gerar-fixtures-fotos.py`.
 - Fixtures em `tests/fixtures/`: notas reais em texto (sem CPF) e fotos. Ao encontrar nota que o parser não lê, adicione-a como fixture e corrija sem quebrar as anteriores.
 - E2E: `playwright.config.ts` nunca reaproveita servidor já em pé (`reuseExistingServer: false`, porta por `E2E_PORT`): um `next start` esquecido de uma rodada interrompida serve build antigo e gera falhas falsas. Se a porta estiver ocupada, use `E2E_PORT=3105 npm run e2e`.

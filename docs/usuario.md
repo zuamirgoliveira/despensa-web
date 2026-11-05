@@ -38,6 +38,17 @@ A nota de cada mercado escreve o produto de um jeito. O app junta sozinho o que 
 - **Tamanho diferente ou ausente** (`Maionese Liza` × `Maionese Liza 500g`): o app não junta sozinho. Na conferência da nota aparece "Já existe algo parecido: é o mesmo produto?" com um botão **Usar “…”**. Tocando, o item passa a usar o produto que já existe, e nas próximas notas daquele mercado ele já vem certo.
 - **O que já estava repetido:** em **Mais → Catálogo → Possíveis duplicados** o app lista os pares que parecem iguais. Você escolhe qual manter e confirma. Vale fazer um backup antes (Ajustes → Backup), porque mesclar não tem volta.
 
+## Cópia de segurança (importante)
+
+Seus dados ficam **só neste celular**. Se ele for perdido, quebrado, formatado ou se os dados do navegador forem limpos, eles se perdem. Por isso:
+
+- **Guardar:** **Mais → Ajustes → Cópia de segurança → Guardar uma cópia de segurança**. Abre o menu do celular: escolha **Drive** (ou Gmail, ou WhatsApp para você mesmo). O app mostra "Cópia compartilhada em ...": confira se ela chegou lá.
+- **Lembrete:** o Início avisa quando faz 30 dias da última cópia, ou depois de 5 notas importadas.
+- **Posição de casa:** vai na cópia por padrão. Se preferir, desmarque "Incluir a posição de casa na cópia"; ao restaurar, toque em "Estou em casa agora" de novo.
+- **Celular novo:** instale o app pelo **mesmo endereço**, abra, vá em **Ajustes → Restaurar ou verificar uma cópia** e escolha o arquivo no Drive. O app mostra o que há na cópia e restaura.
+- **Verificar:** escolha o arquivo e toque em **Fechar sem restaurar**: você vê o que está dentro sem mudar nada. Vale fazer uma vez para ter confiança.
+- **Se o celular já tem dados:** o app pergunta o que fazer. **Mesclar** junta a cópia com o que há aqui (o que existe nos dois fica como na cópia). **Substituir tudo** apaga o que está no celular e deixa igual à cópia; pede uma segunda confirmação e oferece guardar uma cópia do que está aqui antes.
+
 ## Para acompanhar
 
 - **Preços**: histórico por produto (preço normalizado, variação, gráfico) e **Comparar** mercados.

@@ -1,5 +1,7 @@
 # Backup, restauração e persistência dos dados
 
+> **Status:** implementado (tarefas B-01 a B-06). Testes: `tests/data/backupV2.test.ts`, `restauracao.test.ts`, `backupArquivo.test.ts`, `tests/domain/backup.test.ts`, `tests/lib/armazenamento.test.ts`, `arquivos.test.ts` e `e2e/backup.spec.ts`.
+
 Especificação (versão 2 do formato) e guia de uso. Decisões de 05/11/2026. O app não tem servidor: **os dados ficam só no aparelho** (IndexedDB do navegador). A segurança vem de ter uma cópia **fora do celular**, feita com facilidade e lembrada com frequência.
 
 ## 1. Por que os dados podem se perder

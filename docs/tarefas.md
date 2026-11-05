@@ -840,6 +840,12 @@ Origem: dúvida sobre perda de dados no aparelho. Especificação em [backup.md]
 - [x] D-06 Gráficos e selos
 - [x] D-07 Acessibilidade (contraste e e2e)
 - [x] D-08 Documentação e regressão final
+- [x] B-01 Especificação do backup v2
+- [x] B-02 Formato v2, integridade e inspeção
+- [x] B-03 Restauração atômica (mesclar e substituir)
+- [x] B-04 Armazenamento persistente, lembrete e guardar cópia
+- [x] B-05 Telas de guardar, restaurar e verificar; lembrete no Início
+- [x] B-06 Documentação e regressão
 
 ---
 

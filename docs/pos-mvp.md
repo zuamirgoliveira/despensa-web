@@ -30,6 +30,14 @@ Ideia: base de treinamento contínua e anonimizada, primeiro local (recorte da l
 
 **Só avançar se** o Google Lens (copiar o texto e colar no campo) deixar de bastar. Medição de referência: na foto de `tests/fixtures/fotos/nota-pontilhada.png` o Tesseract erra de 4 a 6 dígitos por linha; o Lens leu a linha inteira.
 
-## 4. Registrar compra sem nota
+## 4. Backup: senha no arquivo, Google Drive pela API e backup automático
+
+Decisões de 05/11/2026 (`docs/backup.md`, seção 8): a cópia de segurança sai pelo menu de compartilhar do aparelho. Ficam para depois:
+
+- **Senha no arquivo** (AES-GCM com chave derivada da senha pela Web Crypto): proteger a cópia onde quer que ela vá parar. Custo: esquecer a senha perde a cópia, então só com aviso muito claro.
+- **Envio direto ao Google Drive pela API**: exige projeto no Google Cloud, tela de consentimento, política de privacidade, domínio verificado, mudança de CSP (`accounts.google.com`, `www.googleapis.com`), decisão registrada sobre a regra 2 do `AGENTS.md` e, sem servidor, o token expira em cerca de 1 hora (o botão pede autorização de novo). Equivale em durabilidade ao compartilhar, com um toque a menos.
+- **Backup automático e sincronização entre aparelhos**: exigem servidor (token de renovação, conta do usuário): Perfil C do blueprint.
+
+## 5. Registrar compra sem nota
 
 Para notas que a SEFAZ recusa (ex.: chave impressa inválida em emissão em contingência) e para feira livre sem nota: lançar a compra à mão (data, mercado, itens e valores), marcada como "sem nota". O blueprint já prevê o preço manual da feira livre (seção 14, riscos). Decidir se vale antes de ver a frequência real do problema.
