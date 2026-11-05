@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole, pularEstimativa, irParaTela } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, pularEstimativa, irParaTela, restaurarBackupPelaTela } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 
@@ -95,8 +95,7 @@ test("possíveis duplicados: aponta o mesmo produto escrito de outro jeito e só
     { ...modelo, id: "00000000-0000-4000-8000-0000000000a2", nome: "maionese liza 500 g" },
   );
   await page.goto("/ajustes");
-  await page.getByLabel("Arquivo de backup").setInputFiles({ name: "seed.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(seed)) });
-  await expect(page.getByText(/Importado:/)).toBeVisible();
+  await restaurarBackupPelaTela(page, { name: "seed.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(seed)) });
 
   await page.goto("/catalogo");
   await expect(page.getByRole("heading", { name: "Possíveis duplicados (1)" })).toBeVisible();

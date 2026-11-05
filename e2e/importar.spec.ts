@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole, pularEstimativa } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, pularEstimativa, restaurarBackupPelaTela } from "./util";
 
 const CHAVE = "26261108868231000638650020000689031020778720";
 const CHAVE_ESPACADA = "2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8720";
@@ -59,8 +59,7 @@ test("conferência sugere o produto parecido (outro tamanho) e o usuário escolh
   const seed = gerarSeed(new Date());
   seed.colecoes.produtos.push({ ...seed.colecoes.produtos[0], id: "00000000-0000-4000-8000-000000000a1c", nome: "Alho Redinha 500g" });
   await page.goto("/ajustes");
-  await page.getByLabel("Arquivo de backup").setInputFiles({ name: "seed.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(seed)) });
-  await expect(page.getByText(/Importado:/)).toBeVisible();
+  await restaurarBackupPelaTela(page, { name: "seed.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(seed)) });
 
   await page.goto("/importar");
   await lerNota(page, NOTA);

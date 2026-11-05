@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole } from "./util";
+import { restaurarBackupPelaTela, semViolacaoDeCsp, vigiarConsole } from "./util";
 
 test("sem compras: estado vazio", async ({ page }) => {
   await page.goto("/gastos");
@@ -12,12 +12,12 @@ test("com 3 meses de dados (seed): custo real, categorias, deslocamento e infla�
   // @ts-expect-error módulo .mjs de script, sem tipos
   const { gerarSeed } = await import("../scripts/seed-dev.mjs");
   await page.goto("/ajustes");
-  await page.getByLabel("Arquivo de backup").setInputFiles({
+  await restaurarBackupPelaTela(page, {
     name: "seed.json",
     mimeType: "application/json",
     buffer: Buffer.from(JSON.stringify(gerarSeed(new Date()))),
   });
-  await expect(page.getByText(/Importado: 12 compras/)).toBeVisible();
+  await expect(page.getByText(/Restaurado: 12 compras/)).toBeVisible();
 
   await page.goto("/gastos");
   await expect(page.getByRole("heading", { name: "Custo real por mês" })).toBeVisible();

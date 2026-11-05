@@ -1,77 +1,95 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Button, Card, useToast } from "@/components/ui";
-import { BackupInvalidoError, criarRepositorios, exportar, importar } from "@/data";
-import { hojeRecife } from "@/lib/datas";
+import { criarRepositorios } from "@/data";
+import { useRepositorio } from "@/data/useRepositorio";
+import { hojeRecife, dataRecife, diasEntre } from "@/lib/datas";
+import { estadoArmazenamento, type EstadoArmazenamento } from "@/lib/armazenamento";
+import { instanteBR } from "@/lib/format";
+import { descreverContagens, guardarCopiaNoNavegador } from "./copiaNavegador";
+import { RestaurarBackup } from "./RestaurarBackup";
 
-const ROTULOS: Record<string, string> = {
-  compras: "compras",
-  mercados: "mercados",
-  produtos: "produtos",
-  apelidos: "apelidos",
-};
+/** Quando foi a última cópia, em palavras: "hoje", "ontem" ou "há 23 dias". */
+function haQuanto(instante: string): string {
+  const dias = diasEntre(dataRecife(instante), hojeRecife());
+  if (dias <= 0) return "hoje";
+  return dias === 1 ? "ontem" : `há ${dias} dias`;
+}
 
 export function Backup() {
   const { mostrar } = useToast();
-  const arquivo = useRef<HTMLInputElement>(null);
-  const [erro, setErro] = useState<string | null>(null);
-  const [resumo, setResumo] = useState<string | null>(null);
+  const [incluirPosicao, setIncluirPosicao] = useState(true);
+  const [ocupado, setOcupado] = useState(false);
+  const [resultado, setResultado] = useState<string | null>(null);
+  const [armazenamento, setArmazenamento] = useState<EstadoArmazenamento | null>(null);
 
-  async function baixar(): Promise<void> {
-    const dados = await exportar(await criarRepositorios());
-    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `despensa-backup-${hojeRecife()}.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    mostrar("Backup exportado.");
-  }
+  const { dados } = useRepositorio(async () => {
+    const r = await criarRepositorios();
+    const casa = await r.iniciar();
+    return { ultimoBackupEm: (await r.perfis.obterDaCasa(casa.id))?.ultimoBackupEm };
+  }, ["perfis"]);
 
-  async function restaurar(f: File | undefined): Promise<void> {
-    if (!f) return;
-    setErro(null);
-    setResumo(null);
+  useEffect(() => {
+    void estadoArmazenamento().then(setArmazenamento);
+  }, []);
+
+  async function guardar(soBaixar: boolean): Promise<void> {
+    setOcupado(true);
+    setResultado(null);
     try {
-      const r = await importar(await criarRepositorios(), await f.text());
-      setResumo(
-        Object.entries(ROTULOS)
-          .map(([k, nome]) => `${r[k as keyof typeof r]} ${nome}`)
-          .join(", "),
+      const r = await guardarCopiaNoNavegador({ incluirPosicaoDeCasa: incluirPosicao, soBaixar });
+      if (r.via === "cancelado") return;
+      const quando = instanteBR(new Date().toISOString());
+      setResultado(
+        r.via === "compartilhado"
+          ? `Cópia compartilhada em ${quando}: ${descreverContagens(r.contagens)}. Confira se ela chegou no destino que você escolheu.`
+          : `Arquivo ${r.nome} baixado em ${quando}: ${descreverContagens(r.contagens)}. Guarde-o fora do celular (Drive, e-mail).`,
       );
-      mostrar("Backup importado.");
-    } catch (e) {
-      setErro(e instanceof BackupInvalidoError ? e.message : "Não consegui importar esse arquivo.");
+      mostrar("Cópia de segurança feita.");
+    } catch {
+      mostrar("Não consegui guardar a cópia de segurança.", "erro");
+    } finally {
+      setOcupado(false);
     }
   }
 
   return (
-    <Card className="flex flex-col gap-3">
-      <h2 className="text-sm">Backup</h2>
-      <p className="text-sm text-suave">Seus dados ficam só neste aparelho. Exporte um arquivo de vez em quando e guarde fora do celular.</p>
-      <div className="grid grid-cols-2 gap-2">
-        <Button variante="secundario" onClick={() => void baixar()}>
-          Exportar backup
+    <Card className="flex flex-col gap-3" id="backup">
+      <h2 className="text-sm">Cópia de segurança</h2>
+      <p className="text-sm text-suave">Seus dados ficam só neste aparelho. Guarde uma cópia fora do celular (Drive, e-mail) de vez em quando: se o celular for perdido ou os dados do navegador forem limpos, é a única forma de recuperá-los.</p>
+
+      <p aria-label="Última cópia" className="text-sm font-medium">
+        {dados?.ultimoBackupEm ? `Última cópia: ${instanteBR(dados.ultimoBackupEm)} (${haQuanto(dados.ultimoBackupEm)}).` : "Você ainda não guardou nenhuma cópia."}
+      </p>
+
+      <label className="flex min-h-11 items-start gap-2 text-sm">
+        <input type="checkbox" className="mt-0.5 size-5" checked={incluirPosicao} onChange={(e) => setIncluirPosicao(e.target.checked)} />
+        <span>
+          Incluir a posição de casa na cópia
+          <span className="block text-suave">Desmarcando, o arquivo sai sem as coordenadas (será preciso informá-las de novo ao restaurar).</span>
+        </span>
+      </label>
+
+      <div className="flex flex-col gap-2">
+        <Button disabled={ocupado} onClick={() => void guardar(false)}>
+          Guardar uma cópia de segurança
         </Button>
-        <Button variante="secundario" onClick={() => arquivo.current?.click()}>
-          Importar backup
+        <Button variante="secundario" disabled={ocupado} onClick={() => void guardar(true)}>
+          Baixar o arquivo
         </Button>
       </div>
-      <input
-        ref={arquivo}
-        type="file"
-        accept="application/json,.json"
-        hidden
-        aria-label="Arquivo de backup"
-        onChange={(e) => {
-          void restaurar(e.target.files?.[0]);
-          e.target.value = "";
-        }}
-      />
-      {erro ? <Alert tipo="erro">{erro}</Alert> : null}
-      {resumo ? <Alert tipo="info">Importado: {resumo}.</Alert> : null}
+      {resultado ? <Alert tipo="sucesso">{resultado}</Alert> : null}
+
+      <RestaurarBackup />
+
+      <p aria-label="Armazenamento protegido" className="text-xs text-suave">
+        Armazenamento protegido pelo navegador:{" "}
+        <strong>{armazenamento === null ? "verificando..." : armazenamento.persistente === true ? "sim" : armazenamento.persistente === false ? "não" : "indisponível"}</strong>.{" "}
+        {armazenamento?.persistente === true
+          ? "O navegador não apaga os dados do app por falta de espaço. Isso não substitui a cópia de segurança."
+          : "Sem essa proteção, o navegador pode apagar os dados do app se faltar espaço. Instalar o app e usá-lo com frequência ajuda."}
+      </p>
     </Card>
   );
 }

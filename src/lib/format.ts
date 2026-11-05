@@ -23,6 +23,23 @@ export function horaBR(iso: string): string {
   return m ? `${m[1]}:${m[2]}` : "";
 }
 
+/** Instante ISO (com fuso) → "05/11/2026 14:30" no horário de Recife. Entrada inválida devolve "". */
+export function instanteBR(instante: string): string {
+  const d = new Date(instante);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Recife",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(d);
+  const v = (t: string): string => p.find((x) => x.type === t)?.value ?? "";
+  return `${v("day")}/${v("month")}/${v("year")} ${v("hour")}:${v("minute")}`;
+}
+
 /** Quantidade em kg com vírgula, sem zeros à direita: 1.26 → "1,26 kg"; 2 → "2 kg". */
 export function kg(n: number): string {
   const t = String(Math.round(n * 1000) / 1000).replace(".", ",");

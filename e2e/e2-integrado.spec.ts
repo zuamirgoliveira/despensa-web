@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { irParaTela, semViolacaoDeCsp, vigiarConsole } from "./util";
+import { irParaTela, restaurarBackupPelaTela, semViolacaoDeCsp, vigiarConsole } from "./util";
 
 // Dados de 3 meses e 2 mercados (scripts/seed-dev.mjs), importados como backup.
 test("E2 com 3 meses e 2 mercados: histórico, comparação, gastos e painel", async ({ page }) => {
@@ -7,8 +7,8 @@ test("E2 com 3 meses e 2 mercados: histórico, comparação, gastos e painel", a
   // @ts-expect-error módulo .mjs de script, sem tipos
   const { gerarSeed } = await import("../scripts/seed-dev.mjs");
   await page.goto("/ajustes");
-  await page.getByLabel("Arquivo de backup").setInputFiles({ name: "seed.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(gerarSeed(new Date()))) });
-  await expect(page.getByText(/Importado: 12 compras/)).toBeVisible();
+  await restaurarBackupPelaTela(page, { name: "seed.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(gerarSeed(new Date()))) });
+  await expect(page.getByText(/Restaurado: 12 compras/)).toBeVisible();
 
   // histórico: variação em relação à compra anterior
   await irParaTela(page, "Preços");

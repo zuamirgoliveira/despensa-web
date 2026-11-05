@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { agruparChave, brl, dataBR, horaBR, kg, numeroBR } from "@/lib/format";
+import { agruparChave, brl, dataBR, horaBR, instanteBR, kg, numeroBR } from "@/lib/format";
 
 describe("brl", () => {
   it.each([
@@ -50,5 +50,17 @@ describe("agruparChave", () => {
       "2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8720",
     );
     expect(agruparChave("ab12-34")).toBe("1234");
+  });
+});
+
+describe("instanteBR", () => {
+  it("mostra o horário de Recife (UTC-3)", () => {
+    expect(instanteBR("2026-11-05T17:30:00.000Z")).toBe("05/11/2026 14:30");
+    expect(instanteBR("2026-11-06T01:05:00Z")).toBe("05/11/2026 22:05");
+    expect(instanteBR("2026-11-05T03:00:00Z")).toBe("05/11/2026 00:00");
+  });
+  it("entrada inválida devolve vazio", () => {
+    expect(instanteBR("ontem")).toBe("");
+    expect(instanteBR("")).toBe("");
   });
 });

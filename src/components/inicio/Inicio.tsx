@@ -4,10 +4,12 @@ import Link from "next/link";
 import { Alert, Card, EmptyState, LinkBotao } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { useRepositorio } from "@/data/useRepositorio";
+import { lembreteDeBackup } from "@/domain/backup";
 import { resumirDia } from "@/domain/inicio";
 import { hojeRecife } from "@/lib/datas";
 import { dataBR } from "@/lib/format";
 import { TIPO_IDA_ROTULO } from "@/lib/rotulos";
+import { LembreteBackup } from "./LembreteBackup";
 
 
 function emDias(n: number): string {
@@ -21,7 +23,11 @@ export function Inicio() {
     const [produtos, estoques, compras, agendas, perfil, listas, mercados] = await Promise.all([
       r.produtos.listar(), r.estoques.listar(), r.compras.listar(), r.agendas.listar(), r.perfis.obterDaCasa(casa.id), r.listas.listar(), r.mercados.listar(),
     ]);
-    return resumirDia({ hoje: hojeRecife(), produtos, estoques, compras, agendas, folgaDias: perfil?.folgaDias ?? 2, listas, mercados });
+    const hoje = hojeRecife();
+    return {
+      ...resumirDia({ hoje, produtos, estoques, compras, agendas, folgaDias: perfil?.folgaDias ?? 2, listas, mercados }),
+      lembreteBackup: lembreteDeBackup({ ultimoBackupEm: perfil?.ultimoBackupEm, compras, hoje }),
+    };
   }, ["produtos", "estoques", "compras", "agendas", "perfis", "listas", "mercados"]);
 
   if (carregando || !dados) return <p aria-live="polite">Carregando...</p>;
@@ -49,6 +55,8 @@ export function Inicio() {
   const { proxima } = dados;
   return (
     <div className="flex flex-col gap-4">
+      {dados.lembreteBackup ? <LembreteBackup lembrete={dados.lembreteBackup} /> : null}
+
       {dados.notasPendentes.map((l) => (
         <Alert key={l.id} tipo="aviso">
           <p>

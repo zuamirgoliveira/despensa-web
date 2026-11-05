@@ -56,7 +56,7 @@ test("escolher a ida e conferir 5 produtos: níveis e tempo persistem; Gerar lis
   // (backup: os 4 níveis aparecem, 16 registros de estoque e 1 conferência com o tempo)
   await page.goto("/ajustes");
   const baixa = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Exportar backup" }).click();
+  await page.getByRole("button", { name: "Baixar o arquivo" }).click();
   const arquivo = JSON.parse(readFileSync((await (await baixa).path()) as string, "utf8"));
   const niveis: string[] = arquivo.colecoes.estoques.map((e: { nivel: string }) => e.nivel);
   expect(niveis).toHaveLength(16);
@@ -82,7 +82,7 @@ test("sair no meio mantém as respostas já dadas", async ({ page }) => {
   await page.getByRole("button", { name: "Acabou", exact: true }).click();
   await page.goto("/ajustes"); // sai sem concluir
   const baixa = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Exportar backup" }).click();
+  await page.getByRole("button", { name: "Baixar o arquivo" }).click();
   const arquivo = JSON.parse(readFileSync((await (await baixa).path()) as string, "utf8"));
   const niveis: string[] = arquivo.colecoes.estoques.map((e: { nivel: string }) => e.nivel);
   expect(niveis.filter((n) => n === "acabou")).toHaveLength(2); // as duas respostas; os outros 14 seguem cheios da importação

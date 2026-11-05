@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole, pularEstimativa, irParaTela } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, pularEstimativa, irParaTela, restaurarBackupPelaTela } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 
@@ -83,13 +83,14 @@ test("backup: exportar, apagar tudo e importar de volta restaura os dados", asyn
   await importarNota(page);
   await page.goto("/ajustes");
   const baixa = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Exportar backup" }).click();
+  await page.getByRole("button", { name: "Baixar o arquivo" }).click();
   const download = await baixa;
   expect(download.suggestedFilename()).toMatch(/^despensa-backup-\d{4}-\d{2}-\d{2}\.json$/);
   const caminho = info.outputPath("backup.json");
   await download.saveAs(caminho);
   const conteudo = JSON.parse(readFileSync(caminho, "utf8"));
-  expect(conteudo.versao).toBe(1);
+  expect(conteudo.versao).toBe(2);
+  expect(conteudo.meta.integridade.algoritmo).toBe("SHA-256");
   expect(conteudo.colecoes.compras).toHaveLength(1);
   expect(JSON.stringify(conteudo)).not.toMatch(/cpf/i);
 
@@ -99,8 +100,8 @@ test("backup: exportar, apagar tudo e importar de volta restaura os dados", asyn
   await expect(page.getByText("Nenhuma compra ainda")).toBeVisible();
 
   await page.goto("/ajustes");
-  await page.getByLabel("Arquivo de backup").setInputFiles(caminho);
-  await expect(page.getByText(/Importado: 1 compras/)).toBeVisible();
+  await restaurarBackupPelaTela(page, caminho); // o aparelho ainda tem produtos e mercados: escolhe "mesclar"
+  await expect(page.getByText(/Restaurado: 1 compra,/)).toBeVisible();
   await page.goto("/compras");
   await expect(page.getByText("R$ 77,24").first()).toBeVisible();
   await page.goto("/ajustes");

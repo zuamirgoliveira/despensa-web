@@ -10,6 +10,8 @@ type Props = {
   rotuloConfirmar?: string;
   rotuloCancelar?: string;
   perigo?: boolean;
+  /** Mantém o botão de confirmar desabilitado (ex.: até o usuário marcar que entendeu). */
+  confirmarDesabilitado?: boolean;
   aoConfirmar: () => void;
   aoCancelar: () => void;
 };
@@ -22,6 +24,7 @@ export function Dialog({
   rotuloConfirmar = "Confirmar",
   rotuloCancelar = "Cancelar",
   perigo,
+  confirmarDesabilitado,
   aoConfirmar,
   aoCancelar,
 }: Props) {
@@ -54,7 +57,7 @@ export function Dialog({
           <Button variante="secundario" onClick={aoCancelar}>
             {rotuloCancelar}
           </Button>
-          <Button variante={perigo ? "perigo" : "primario"} onClick={aoConfirmar}>
+          <Button variante={perigo ? "perigo" : "primario"} disabled={confirmarDesabilitado} onClick={aoConfirmar}>
             {rotuloConfirmar}
           </Button>
         </div>
