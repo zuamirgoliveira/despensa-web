@@ -65,7 +65,7 @@ describe("lerChaveDaFoto", () => {
   });
 
   it("sem chave certa devolve a leitura aproximada (nunca como chave)", async () => {
-    // leitura real de uma nota de impressão pontilhada: 42 dígitos, com erros
+    // leitura real de uma nota de impressão pontilhada (tests/fixtures/fotos/nota-pontilhada.png): 42 dígitos, com erros
     const ruim = "CONSULTE\n1626 1141 44983 3906 0161 050 00 1238 5496 3136 4469\n123854 5 85112026";
     const m = montar([ruim, "", ruim]);
     const r = await lerChaveDaFoto(canvas, {}, m.deps);

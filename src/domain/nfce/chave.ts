@@ -118,7 +118,7 @@ export function chavePlausivel(k: string): boolean {
 
 // Troca típica do OCR em papel térmico: dígito lido -> dígitos que podem ser o verdadeiro.
 const CONFUSAO: Readonly<Record<string, string>> = {
-  0: "86", 1: "7", 2: "7", 3: "85", 4: "9", 5: "639", 6: "580", 7: "12", 8: "0369", 9: "8405",
+  0: "86", 1: "7", 2: "7", 3: "85", 4: "9", 5: "639", 6: "580", 7: "12", 8: "0369", 9: "840",
 };
 
 export type Candidata = { chave: string; trocas: number };

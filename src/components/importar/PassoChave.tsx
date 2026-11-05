@@ -261,6 +261,9 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
           <p className="text-sm text-suave">
             Se só um dígito estiver errado, estas trocas deixam a chave válida. Confira no papel (o número da nota e a data estão impressos logo abaixo da chave) e escolha a que bate:
           </p>
+          <p className="text-xs text-suave">
+            Se a chave está idêntica à do papel e nenhuma troca bate, a própria nota saiu com a chave inválida (acontece em notas emitidas em contingência). A SEFAZ também a recusa: peça uma nova via ou a correção ao estabelecimento.
+          </p>
           {correcoes.map((c) => (
             <Button key={`${c.posicao}-${c.para}`} variante="secundario" onClick={() => void validar(c.chave)}>
               Grupo {Math.floor((c.posicao - 1) / 4) + 1}, dígito {((c.posicao - 1) % 4) + 1}: trocar {c.de} por {c.para}

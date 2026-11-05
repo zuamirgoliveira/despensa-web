@@ -19,15 +19,15 @@ test("chave com um dígito divergente: oferece as trocas de 1 dígito e nunca ap
   const { erros } = vigiarConsole(page);
   await page.goto("/importar");
   const campo = page.getByLabel("Chave de acesso (44 dígitos)");
-  // chave de nota real de impressão pontilhada, transcrita com o 9 do grupo 10 que no papel é 5
-  await campo.fill("2626 1141 4993 3900 0161 6500 5000 1238 5490 9136 4469");
+  // chave real (fixture Cia Santos) com o último dígito digitado como 8 em vez de 0
+  await campo.fill("2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8728");
   await expect(page.getByText("Dígito verificador não confere")).toBeVisible();
   const grupo = page.getByRole("group", { name: "Correções possíveis" });
   await expect(grupo).toBeVisible();
-  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 9136 4469"); // não mudou sozinho
-  await grupo.getByRole("button", { name: "Grupo 10, dígito 1: trocar 9 por 5" }).click();
-  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 5136 4469");
-  await expect(page.getByText(/Chave válida: nota 123854, série 5/)).toBeVisible();
+  await expect(campo).toHaveValue("2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8728"); // não mudou sozinho
+  await grupo.getByRole("button", { name: "Grupo 11, dígito 4: trocar 8 por 0" }).click();
+  await expect(campo).toHaveValue(CHAVE_ESPACADA);
+  await expect(page.getByText(/Chave válida: nota 68903, série 2/)).toBeVisible();
   await expect(grupo).toBeHidden();
   semViolacaoDeCsp(erros);
 });
@@ -35,20 +35,20 @@ test("chave com um dígito divergente: oferece as trocas de 1 dígito e nunca ap
 test("campo da chave: editar no meio mantém o cursor (apagar e digitar no meio de um grupo)", async ({ page }) => {
   await page.goto("/importar");
   const campo = page.getByLabel("Chave de acesso (44 dígitos)");
-  await campo.fill("2626 1141 4993 3900 0161 6500 5000 1238 5490 9136 4469");
-  // cursor no meio do grupo 10 ("9136"): depois do '9'
+  await campo.fill(CHAVE_ESPACADA);
+  // cursor no meio do grupo 3 ("8682"→ aqui "8682" é o grupo 3): depois do 1º dígito
   await campo.press("Home");
-  for (let i = 0; i < 9 * 5 + 1; i++) await campo.press("ArrowRight"); // 9 grupos + espaços = 45; +1 = depois do '9'
-  await campo.press("Backspace"); // apaga o '9' do grupo 10
-  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 1364 469");
-  await campo.press("5"); // digita no mesmo lugar (o cursor não foi para o fim)
-  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 5136 4469");
-  await expect(page.getByText(/Chave válida: nota 123854/)).toBeVisible();
+  for (let i = 0; i < 2 * 5 + 1; i++) await campo.press("ArrowRight"); // 2 grupos + espaços + 1 dígito
+  await campo.press("Backspace"); // apaga o '8' do grupo 3
+  await expect(campo).toHaveValue("2626 1108 6823 1000 6386 5002 0000 6890 3102 0778 720");
+  await campo.press("8"); // digita no mesmo lugar (o cursor não foi para o fim)
+  await expect(campo).toHaveValue(CHAVE_ESPACADA);
+  await expect(page.getByText(/Chave válida: nota 68903/)).toBeVisible();
   // apagar cruzando o espaço: cursor no início do grupo 11 e Backspace apaga o último dígito do grupo 10
   await campo.press("Home");
   for (let i = 0; i < 10 * 5; i++) await campo.press("ArrowRight");
   await campo.press("Backspace");
-  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 5134 469");
+  await expect(campo).toHaveValue("2626 1108 8682 3100 0638 6500 2000 0689 0310 2078 720"); // o 7 do grupo 10 saiu e o resto reagrupou
 });
 
 test("chave: parcial, inválida e válida", async ({ page }) => {

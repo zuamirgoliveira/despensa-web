@@ -198,23 +198,28 @@ describe("leituraAproximada", () => {
 });
 
 describe("correcoesDeUmDigito", () => {
-  // chave de uma nota real (impressão pontilhada) transcrita com 1 dígito divergente do papel
-  const TRANSCRITA = "26261141499339000161650050001238549091364469";
+  const VALIDA = "26261108868231000638650020000689031020778720"; // nota real (fixture Cia Santos)
+  // erro de digitação típico: o último dígito (0) digitado como 8, confusão que a tabela de OCR conhece
+  const DIGITADA = VALIDA.slice(0, 43) + "8";
 
-  it("sugere trocas de 1 dígito que tornam a chave válida, com a posição", () => {
-    const r = correcoesDeUmDigito(TRANSCRITA);
+  it("sugere trocas de 1 dígito que tornam a chave válida, com a posição, e inclui a correta", () => {
+    const r = correcoesDeUmDigito(DIGITADA);
     expect(r.length).toBeGreaterThan(0);
     for (const c of r) {
       expect(chavePlausivel(c.chave)).toBe(true);
       expect(c.chave[c.posicao - 1]).toBe(c.para);
-      expect(TRANSCRITA[c.posicao - 1]).toBe(c.de);
+      expect(DIGITADA[c.posicao - 1]).toBe(c.de);
     }
-    // o 9 do grupo 10 pode ser um 5 (confusão comum em impressão pontilhada)
-    expect(r).toContainEqual(expect.objectContaining({ posicao: 37, de: "9", para: "5" }));
+    expect(r).toContainEqual({ chave: VALIDA, posicao: 44, de: "8", para: "0" });
   });
   it("chave já válida, tamanho errado ou lixo não geram sugestões", () => {
-    expect(correcoesDeUmDigito("26261108868231000638650020000689031020778720")).toEqual([]);
+    expect(correcoesDeUmDigito(VALIDA)).toEqual([]);
     expect(correcoesDeUmDigito("123")).toEqual([]);
     expect(correcoesDeUmDigito("")).toEqual([]);
+  });
+  it("chave impressa inválida de fábrica (nota em contingência, recusada pela SEFAZ) não é 'corrigida' sozinha", () => {
+    // a SEFAZ também responde "dígito verificador da chave inválido" para esta chave
+    const impressa = "26261141499339000161650050001238549091364469";
+    expect(chavePlausivel(impressa)).toBe(false);
   });
 });
