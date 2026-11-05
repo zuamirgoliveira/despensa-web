@@ -26,7 +26,7 @@ PWA de gestão de despensa doméstica. Funciona offline, instala no Android, rod
 | clsx                   | 2                    |                                                                                    |
 | tailwind-merge         | 3                    |                                                                                    |
 | Zod                    | ^4                   | validação de dados persistidos, backup e entradas externas                         |
-| Vitest                 | ^4                   | testes unitários e de repositório                                                  |
+| Vitest                 | ^4 (fixado em 4.0.18) | testes unitários e de repositório; 4.1.x quebra o `npm install` (bug de peers do npm 10.9) |
 | @playwright/test       | versão atual estável | apenas desenvolvimento; testes e2e                                                 |
 | fake-indexeddb         | versão atual estável | apenas desenvolvimento; testes de repositório                                      |
 | jsqr                   | versão atual estável | leitura de QR por software (fallback do detector nativo)                           |
