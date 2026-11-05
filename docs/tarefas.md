@@ -797,7 +797,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-35 Gastos e inflação
 - [x] C-36 Painel
 - [x] C-37 e2e E2
-- [ ] C-38 Segurança final
+- [x] C-38 Segurança final
 - [ ] C-39 Performance e acessibilidade
 - [ ] C-40 Documentação final
 
