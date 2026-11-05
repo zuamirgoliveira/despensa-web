@@ -40,6 +40,35 @@ test.describe("tema", () => {
   });
 });
 
+test.describe("tema com HTML alterado por terceiros", () => {
+  // sem service worker: ele serviria o HTML do cache e a simulação da injeção não valeria nas recargas
+  test.use({ serviceWorkers: "block" });
+  test("a escolha sobrevive a uma falha de hidratação (ex.: tags injetadas pelo Cloudflare)", async ({ page }) => {
+    // simula o que o Cloudflare faz: scripts extras no início do <head>, antes do <meta charSet>
+    await page.route("**/*", async (route) => {
+      const req = route.request();
+      if (req.resourceType() !== "document") return route.continue();
+      const resp = await route.fetch();
+      const corpo = (await resp.text()).replace("<head>", "<head><script>window.__injetado = 1</script><script>window.__injetado2 = 2</script>");
+      return route.fulfill({ response: resp, body: corpo });
+    });
+    const erros: string[] = [];
+    page.on("pageerror", (e) => erros.push(e.message));
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/ajustes");
+    await page.getByRole("radio", { name: /Claro/ }).check();
+    expect(await fundo(page)).toBe("rgb(244, 246, 250)");
+
+    for (let i = 0; i < 2; i++) {
+      await page.reload();
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator("html")).toHaveAttribute("data-tema", "claro");
+      expect(await fundo(page)).toBe("rgb(244, 246, 250)");
+    }
+    expect(await page.evaluate(() => (window as unknown as { __injetado?: number }).__injetado)).toBe(1); // a injeção aconteceu
+  });
+});
+
 test.describe("layout em telas largas", () => {
   test("a coluna tem no máximo 640 px e fica centralizada", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });

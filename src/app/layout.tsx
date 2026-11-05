@@ -3,6 +3,7 @@ import { Inter, Michroma } from "next/font/google";
 import { BarraAbas } from "@/components/BarraAbas";
 import { Cabecalho } from "@/components/Cabecalho";
 import { RegistrarSW } from "@/components/RegistrarSW";
+import { TemaPersistente } from "@/components/TemaPersistente";
 import { ToastProvider } from "@/components/ui";
 import "./globals.css";
 
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </div>
           <BarraAbas />
           <RegistrarSW />
+          <TemaPersistente />
         </ToastProvider>
       </body>
     </html>
