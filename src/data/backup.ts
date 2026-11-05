@@ -16,11 +16,24 @@ import {
 } from "@/schemas";
 import type { Repositorios } from "./repositorios";
 
-export const VERSAO_BACKUP = 1;
+/** Versão do formato do arquivo. A 1 não tinha `meta`; a 2 acrescenta contagens, período e integridade. */
+export const VERSAO_BACKUP = 2;
+
+/** Cabeçalho do arquivo (v2): o que há dentro e uma soma para detectar arquivo cortado ou alterado. */
+export const metaBackupSchema = z.object({
+  app: z.string().optional(),
+  incluiPosicaoDeCasa: z.boolean(),
+  contagens: z.record(z.string(), z.number().int().nonnegative()),
+  periodo: z.object({ de: z.string(), ate: z.string() }).optional(),
+  integridade: z.object({ algoritmo: z.literal("SHA-256"), valor: z.string().regex(/^[0-9a-f]{64}$/) }),
+});
+export type MetaBackup = z.infer<typeof metaBackupSchema>;
 
 export const backupSchema = z.object({
   versao: z.number().int().min(1),
   exportadoEm: instanteSchema,
+  /** Ausente nos arquivos da versão 1. */
+  meta: metaBackupSchema.optional(),
   colecoes: z.object({
     casas: z.array(casaSchema),
     perfis: z.array(perfilSchema),
@@ -47,7 +60,29 @@ export class BackupInvalidoError extends Error {
   }
 }
 
-export async function exportar(repos: Repositorios, agora: Date = new Date()): Promise<Backup> {
+export type OpcoesExportacao = {
+  /** Padrão: true. Com false, o arquivo sai sem as coordenadas da casa. */
+  incluirPosicaoDeCasa?: boolean;
+};
+
+/** SHA-256 em hexadecimal (Web Crypto: exige HTTPS ou localhost, como o resto do PWA). */
+export async function sha256Hex(texto: string): Promise<string> {
+  const h = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+  return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+const contar = (colecoes: Record<string, readonly unknown[]>): Record<string, number> =>
+  Object.fromEntries(Object.entries(colecoes).map(([k, v]) => [k, v.length]));
+
+/** Menor e maior data de emissão (AAAA-MM-DD) entre as compras, ou `undefined` sem compras. */
+function periodoDasCompras(compras: readonly { emissao: string }[]): { de: string; ate: string } | undefined {
+  if (!compras.length) return undefined;
+  const datas = compras.map((c) => c.emissao.slice(0, 10)).sort();
+  return { de: datas[0], ate: datas[datas.length - 1] };
+}
+
+export async function exportar(repos: Repositorios, agora: Date = new Date(), opcoes: OpcoesExportacao = {}): Promise<Backup> {
+  const incluirPosicaoDeCasa = opcoes.incluirPosicaoDeCasa ?? true;
   const [casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias] =
     await Promise.all([
       repos.casas.listar(),
@@ -62,10 +97,70 @@ export async function exportar(repos: Repositorios, agora: Date = new Date()): P
       repos.itensLista.listar(),
       repos.conferencias.listar(),
     ]);
+  const colecoes = {
+    casas,
+    perfis: incluirPosicaoDeCasa ? perfis : perfis.map((p) => ({ ...p, localizacaoCasa: undefined })),
+    agendas,
+    mercados,
+    produtos,
+    apelidos,
+    estoques,
+    compras,
+    listas,
+    itensLista,
+    conferencias,
+  };
   return {
     versao: VERSAO_BACKUP,
     exportadoEm: agora.toISOString(),
-    colecoes: { casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias },
+    meta: {
+      app: "despensa-web",
+      incluiPosicaoDeCasa: incluirPosicaoDeCasa && perfis.some((p) => p.localizacaoCasa !== undefined),
+      contagens: contar(colecoes),
+      periodo: periodoDasCompras(compras),
+      integridade: { algoritmo: "SHA-256", valor: await sha256Hex(JSON.stringify(colecoes)) },
+    },
+    colecoes,
+  };
+}
+
+export type SituacaoIntegridade = "ok" | "falhou" | "ausente";
+
+export type InspecaoBackup = {
+  backup: Backup;
+  versao: number;
+  exportadoEm: string;
+  /** Contadas nos dados (não confiam no cabeçalho). */
+  contagens: ResumoImportacao;
+  periodo?: { de: string; ate: string };
+  /** Há coordenadas de casa nos dados da cópia. */
+  temPosicaoDeCasa: boolean;
+  /** `ausente`: arquivo da v1, sem soma. `falhou`: soma ou contagens não conferem (arquivo cortado ou alterado). */
+  integridade: SituacaoIntegridade;
+};
+
+/**
+ * Lê e confere um arquivo de backup **sem gravar nada**: formato, versão, soma de verificação e contagens.
+ * Lança `BackupInvalidoError` para JSON quebrado, formato desconhecido ou versão mais nova que a suportada.
+ */
+export async function inspecionarBackup(json: string): Promise<InspecaoBackup> {
+  const backup = lerBackup(json);
+  const bruto = JSON.parse(json) as { colecoes?: unknown };
+  const contagens = contar(backup.colecoes) as ResumoImportacao;
+  let integridade: SituacaoIntegridade = "ausente";
+  if (backup.meta) {
+    const somaOk = (await sha256Hex(JSON.stringify(bruto.colecoes))) === backup.meta.integridade.valor;
+    const contagensOk = Object.entries(backup.meta.contagens).every(([k, v]) => contagens[k as keyof ResumoImportacao] === v);
+    integridade = somaOk && contagensOk ? "ok" : "falhou";
+  }
+  return {
+    backup,
+    versao: backup.versao,
+    exportadoEm: backup.exportadoEm,
+    contagens,
+    periodo: periodoDasCompras(backup.colecoes.compras),
+    temPosicaoDeCasa: backup.colecoes.perfis.some((p) => p.localizacaoCasa !== undefined),
+    integridade,
   };
 }
 

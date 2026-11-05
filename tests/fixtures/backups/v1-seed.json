@@ -1,0 +1,921 @@
+{
+  "versao": 1,
+  "exportadoEm": "2026-11-05T12:00:00.000Z",
+  "colecoes": {
+    "casas": [
+      {
+        "id": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "nome": "Casa (seed)"
+      }
+    ],
+    "perfis": [
+      {
+        "id": "33e588a6-080d-4b54-9c8f-208a5bf11e92",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "arredondarLocalizacao": true,
+        "folgaDias": 2,
+        "limiarAlertaPrecoPct": 20,
+        "economiaMinimaDivisaoCentavos": 500,
+        "janelaPrecoDias": 60,
+        "carro": {
+          "consumoKmPorLitro": 10,
+          "precoCombustivelCentavos": 600,
+          "desgasteCentavosPorKm": 30
+        },
+        "bikeCentavosPorKm": 5
+      }
+    ],
+    "agendas": [
+      {
+        "id": "2ac6faa0-e4da-4689-bd51-5e02057461f0",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "tipo": "feira_mensal",
+        "diaDoMes": 5
+      },
+      {
+        "id": "b89c47a6-1fba-4513-8047-4d8b6d3bbaf7",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "tipo": "mercado_semanal",
+        "diaDaSemana": 6
+      },
+      {
+        "id": "0e5f28d1-e19e-4038-81bb-cc6d46fba794",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "tipo": "hortifruti_semanal",
+        "diaDaSemana": 3
+      }
+    ],
+    "mercados": [
+      {
+        "id": "12b5a5a9-89dd-4c45-8131-8f69739f337a",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "08868231000638",
+        "nome": "CIA SANTOS (seed)",
+        "endereco": "AV EXEMPLO , 100 , CASA CAIADA , OLINDA , PE",
+        "tipo": "hortifruti",
+        "transporte": "bike_eletrica",
+        "distanciaKm": 4.2,
+        "tempoMinIda": 12
+      },
+      {
+        "id": "6f27d5fb-3435-443d-8850-9bf0e8a3ca79",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "11222333000181",
+        "nome": "SUPERMERCADO EXEMPLO (seed)",
+        "endereco": "RUA TESTE , 50 , CENTRO , RECIFE , PE",
+        "tipo": "supermercado",
+        "transporte": "carro",
+        "distanciaKm": 6,
+        "tempoMinIda": 15
+      }
+    ],
+    "produtos": [
+      {
+        "id": "f641812c-7281-4f56-b261-f6367685db6a",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "nome": "Tomate",
+        "categoria": "hortifruti",
+        "unidade": "kg",
+        "meta": 1,
+        "metaManual": false,
+        "frequencia": "semanal",
+        "tipoIda": "hortifruti_semanal",
+        "vidaUtilDias": 7,
+        "contavel": false,
+        "ativo": true
+      },
+      {
+        "id": "02d4941e-322e-4647-a8d9-02dc23a08a2d",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "nome": "Banana Prata",
+        "categoria": "hortifruti",
+        "unidade": "kg",
+        "meta": 1.2,
+        "metaManual": false,
+        "frequencia": "semanal",
+        "tipoIda": "hortifruti_semanal",
+        "vidaUtilDias": 7,
+        "contavel": false,
+        "ativo": true
+      },
+      {
+        "id": "f3766f74-0ff6-4191-9322-101fd3b85687",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "nome": "Cebola",
+        "categoria": "hortifruti",
+        "unidade": "kg",
+        "meta": 0.8,
+        "metaManual": false,
+        "frequencia": "semanal",
+        "tipoIda": "hortifruti_semanal",
+        "vidaUtilDias": 7,
+        "contavel": false,
+        "ativo": true
+      },
+      {
+        "id": "25bbaaa5-52ae-4f3e-8846-8e39e176c064",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "nome": "Arroz",
+        "categoria": "mercearia",
+        "unidade": "pacote",
+        "meta": 2,
+        "metaManual": false,
+        "frequencia": "mensal",
+        "tipoIda": "mercado_semanal",
+        "vidaUtilDias": 180,
+        "contavel": false,
+        "ativo": true
+      },
+      {
+        "id": "884916d2-9a90-4a3b-8203-b4f7974cd103",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "nome": "Feijão",
+        "categoria": "mercearia",
+        "unidade": "pacote",
+        "meta": 1,
+        "metaManual": false,
+        "frequencia": "mensal",
+        "tipoIda": "mercado_semanal",
+        "vidaUtilDias": 180,
+        "contavel": false,
+        "ativo": true
+      },
+      {
+        "id": "9c806859-c647-409c-961a-bf405b824cda",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "nome": "Café",
+        "categoria": "mercearia",
+        "unidade": "pacote",
+        "meta": 1,
+        "metaManual": false,
+        "frequencia": "mensal",
+        "tipoIda": "mercado_semanal",
+        "vidaUtilDias": 180,
+        "contavel": false,
+        "ativo": true
+      },
+      {
+        "id": "eed3e8a9-5c2f-4ddf-84b3-d051327e5eb4",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "nome": "Leite",
+        "categoria": "laticinios",
+        "unidade": "un",
+        "meta": 6,
+        "metaManual": false,
+        "frequencia": "mensal",
+        "tipoIda": "mercado_semanal",
+        "vidaUtilDias": 10,
+        "contavel": false,
+        "ativo": true
+      },
+      {
+        "id": "f092ae71-06f1-4e23-b9d0-b16d9005277f",
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "nome": "Detergente",
+        "categoria": "limpeza",
+        "unidade": "un",
+        "meta": 2,
+        "metaManual": false,
+        "frequencia": "mensal",
+        "tipoIda": "mercado_semanal",
+        "vidaUtilDias": 180,
+        "contavel": false,
+        "ativo": true
+      }
+    ],
+    "apelidos": [
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "08868231000638",
+        "codigo": "1",
+        "produtoId": "f641812c-7281-4f56-b261-f6367685db6a"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "08868231000638",
+        "codigo": "2",
+        "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "08868231000638",
+        "codigo": "3",
+        "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "08868231000638",
+        "codigo": "4",
+        "produtoId": "25bbaaa5-52ae-4f3e-8846-8e39e176c064"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "08868231000638",
+        "codigo": "5",
+        "produtoId": "884916d2-9a90-4a3b-8203-b4f7974cd103"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "08868231000638",
+        "codigo": "6",
+        "produtoId": "9c806859-c647-409c-961a-bf405b824cda"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "08868231000638",
+        "codigo": "7",
+        "produtoId": "eed3e8a9-5c2f-4ddf-84b3-d051327e5eb4"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "08868231000638",
+        "codigo": "8",
+        "produtoId": "f092ae71-06f1-4e23-b9d0-b16d9005277f"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "11222333000181",
+        "codigo": "1",
+        "produtoId": "f641812c-7281-4f56-b261-f6367685db6a"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "11222333000181",
+        "codigo": "2",
+        "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "11222333000181",
+        "codigo": "3",
+        "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "11222333000181",
+        "codigo": "4",
+        "produtoId": "25bbaaa5-52ae-4f3e-8846-8e39e176c064"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "11222333000181",
+        "codigo": "5",
+        "produtoId": "884916d2-9a90-4a3b-8203-b4f7974cd103"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "11222333000181",
+        "codigo": "6",
+        "produtoId": "9c806859-c647-409c-961a-bf405b824cda"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "11222333000181",
+        "codigo": "7",
+        "produtoId": "eed3e8a9-5c2f-4ddf-84b3-d051327e5eb4"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "cnpj": "11222333000181",
+        "codigo": "8",
+        "produtoId": "f092ae71-06f1-4e23-b9d0-b16d9005277f"
+      }
+    ],
+    "estoques": [],
+    "compras": [
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108088682310006386500200000100010000102",
+        "mercadoId": "12b5a5a9-89dd-4c45-8131-8f69739f337a",
+        "emissao": "2026-08-20T10:00:00",
+        "valorTotalCentavos": 1320,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "TOMATE",
+            "produtoId": "f641812c-7281-4f56-b261-f6367685db6a",
+            "quantidade": 1,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 300,
+            "valorTotalCentavos": 300
+          },
+          {
+            "codigo": "2",
+            "descricao": "BANANA PRATA",
+            "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d",
+            "quantidade": 1.2,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 450,
+            "valorTotalCentavos": 540
+          },
+          {
+            "codigo": "3",
+            "descricao": "CEBOLA",
+            "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687",
+            "quantidade": 0.8,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 600,
+            "valorTotalCentavos": 480
+          }
+        ],
+        "custoIdaCentavos": 42,
+        "importadoEm": "2026-08-20T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108112223330001816500200000100110000100",
+        "mercadoId": "6f27d5fb-3435-443d-8850-9bf0e8a3ca79",
+        "emissao": "2026-08-27T10:00:00",
+        "valorTotalCentavos": 10176,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "BANANA PRATA",
+            "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d",
+            "quantidade": 1.2,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 305,
+            "valorTotalCentavos": 366
+          },
+          {
+            "codigo": "2",
+            "descricao": "ARROZ",
+            "produtoId": "25bbaaa5-52ae-4f3e-8846-8e39e176c064",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 455,
+            "valorTotalCentavos": 910
+          },
+          {
+            "codigo": "3",
+            "descricao": "FEIJÃO",
+            "produtoId": "884916d2-9a90-4a3b-8203-b4f7974cd103",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 605,
+            "valorTotalCentavos": 605
+          },
+          {
+            "codigo": "4",
+            "descricao": "CAFÉ",
+            "produtoId": "9c806859-c647-409c-961a-bf405b824cda",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 755,
+            "valorTotalCentavos": 755
+          },
+          {
+            "codigo": "5",
+            "descricao": "LEITE",
+            "produtoId": "eed3e8a9-5c2f-4ddf-84b3-d051327e5eb4",
+            "quantidade": 6,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 905,
+            "valorTotalCentavos": 5430
+          },
+          {
+            "codigo": "6",
+            "descricao": "DETERGENTE",
+            "produtoId": "f092ae71-06f1-4e23-b9d0-b16d9005277f",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 1055,
+            "valorTotalCentavos": 2110
+          }
+        ],
+        "custoIdaCentavos": 1080,
+        "importadoEm": "2026-08-27T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108088682310006386500200000100210000106",
+        "mercadoId": "12b5a5a9-89dd-4c45-8131-8f69739f337a",
+        "emissao": "2026-09-03T10:00:00",
+        "valorTotalCentavos": 1350,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "TOMATE",
+            "produtoId": "f641812c-7281-4f56-b261-f6367685db6a",
+            "quantidade": 1,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 310,
+            "valorTotalCentavos": 310
+          },
+          {
+            "codigo": "2",
+            "descricao": "BANANA PRATA",
+            "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d",
+            "quantidade": 1.2,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 460,
+            "valorTotalCentavos": 552
+          },
+          {
+            "codigo": "3",
+            "descricao": "CEBOLA",
+            "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687",
+            "quantidade": 0.8,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 610,
+            "valorTotalCentavos": 488
+          }
+        ],
+        "custoIdaCentavos": 42,
+        "importadoEm": "2026-09-03T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108112223330001816500200000100310000104",
+        "mercadoId": "6f27d5fb-3435-443d-8850-9bf0e8a3ca79",
+        "emissao": "2026-09-10T10:00:00",
+        "valorTotalCentavos": 12417,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "TOMATE",
+            "produtoId": "f641812c-7281-4f56-b261-f6367685db6a",
+            "quantidade": 1,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 315,
+            "valorTotalCentavos": 315
+          },
+          {
+            "codigo": "2",
+            "descricao": "CEBOLA",
+            "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687",
+            "quantidade": 0.8,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 465,
+            "valorTotalCentavos": 372
+          },
+          {
+            "codigo": "3",
+            "descricao": "ARROZ",
+            "produtoId": "25bbaaa5-52ae-4f3e-8846-8e39e176c064",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 615,
+            "valorTotalCentavos": 1230
+          },
+          {
+            "codigo": "4",
+            "descricao": "FEIJÃO",
+            "produtoId": "884916d2-9a90-4a3b-8203-b4f7974cd103",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 765,
+            "valorTotalCentavos": 765
+          },
+          {
+            "codigo": "5",
+            "descricao": "CAFÉ",
+            "produtoId": "9c806859-c647-409c-961a-bf405b824cda",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 915,
+            "valorTotalCentavos": 915
+          },
+          {
+            "codigo": "6",
+            "descricao": "LEITE",
+            "produtoId": "eed3e8a9-5c2f-4ddf-84b3-d051327e5eb4",
+            "quantidade": 6,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 1065,
+            "valorTotalCentavos": 6390
+          },
+          {
+            "codigo": "7",
+            "descricao": "DETERGENTE",
+            "produtoId": "f092ae71-06f1-4e23-b9d0-b16d9005277f",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 1215,
+            "valorTotalCentavos": 2430
+          }
+        ],
+        "custoIdaCentavos": 1080,
+        "importadoEm": "2026-09-10T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108088682310006386500200000100410000100",
+        "mercadoId": "12b5a5a9-89dd-4c45-8131-8f69739f337a",
+        "emissao": "2026-09-17T10:00:00",
+        "valorTotalCentavos": 1380,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "TOMATE",
+            "produtoId": "f641812c-7281-4f56-b261-f6367685db6a",
+            "quantidade": 1,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 320,
+            "valorTotalCentavos": 320
+          },
+          {
+            "codigo": "2",
+            "descricao": "BANANA PRATA",
+            "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d",
+            "quantidade": 1.2,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 470,
+            "valorTotalCentavos": 564
+          },
+          {
+            "codigo": "3",
+            "descricao": "CEBOLA",
+            "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687",
+            "quantidade": 0.8,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 620,
+            "valorTotalCentavos": 496
+          }
+        ],
+        "custoIdaCentavos": 42,
+        "importadoEm": "2026-09-17T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108112223330001816500200000100510000108",
+        "mercadoId": "6f27d5fb-3435-443d-8850-9bf0e8a3ca79",
+        "emissao": "2026-09-24T10:00:00",
+        "valorTotalCentavos": 8250,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "ARROZ",
+            "produtoId": "25bbaaa5-52ae-4f3e-8846-8e39e176c064",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 325,
+            "valorTotalCentavos": 650
+          },
+          {
+            "codigo": "2",
+            "descricao": "FEIJÃO",
+            "produtoId": "884916d2-9a90-4a3b-8203-b4f7974cd103",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 475,
+            "valorTotalCentavos": 475
+          },
+          {
+            "codigo": "3",
+            "descricao": "CAFÉ",
+            "produtoId": "9c806859-c647-409c-961a-bf405b824cda",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 625,
+            "valorTotalCentavos": 625
+          },
+          {
+            "codigo": "4",
+            "descricao": "LEITE",
+            "produtoId": "eed3e8a9-5c2f-4ddf-84b3-d051327e5eb4",
+            "quantidade": 6,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 775,
+            "valorTotalCentavos": 4650
+          },
+          {
+            "codigo": "5",
+            "descricao": "DETERGENTE",
+            "produtoId": "f092ae71-06f1-4e23-b9d0-b16d9005277f",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 925,
+            "valorTotalCentavos": 1850
+          }
+        ],
+        "custoIdaCentavos": 1080,
+        "importadoEm": "2026-09-24T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108088682310006386500200000100610000103",
+        "mercadoId": "12b5a5a9-89dd-4c45-8131-8f69739f337a",
+        "emissao": "2026-10-01T10:00:00",
+        "valorTotalCentavos": 1410,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "TOMATE",
+            "produtoId": "f641812c-7281-4f56-b261-f6367685db6a",
+            "quantidade": 1,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 330,
+            "valorTotalCentavos": 330
+          },
+          {
+            "codigo": "2",
+            "descricao": "BANANA PRATA",
+            "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d",
+            "quantidade": 1.2,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 480,
+            "valorTotalCentavos": 576
+          },
+          {
+            "codigo": "3",
+            "descricao": "CEBOLA",
+            "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687",
+            "quantidade": 0.8,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 630,
+            "valorTotalCentavos": 504
+          }
+        ],
+        "custoIdaCentavos": 42,
+        "importadoEm": "2026-10-01T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108112223330001816500200000100710000101",
+        "mercadoId": "6f27d5fb-3435-443d-8850-9bf0e8a3ca79",
+        "emissao": "2026-10-08T10:00:00",
+        "valorTotalCentavos": 10572,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "BANANA PRATA",
+            "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d",
+            "quantidade": 1.2,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 335,
+            "valorTotalCentavos": 402
+          },
+          {
+            "codigo": "2",
+            "descricao": "ARROZ",
+            "produtoId": "25bbaaa5-52ae-4f3e-8846-8e39e176c064",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 485,
+            "valorTotalCentavos": 970
+          },
+          {
+            "codigo": "3",
+            "descricao": "FEIJÃO",
+            "produtoId": "884916d2-9a90-4a3b-8203-b4f7974cd103",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 635,
+            "valorTotalCentavos": 635
+          },
+          {
+            "codigo": "4",
+            "descricao": "CAFÉ",
+            "produtoId": "9c806859-c647-409c-961a-bf405b824cda",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 785,
+            "valorTotalCentavos": 785
+          },
+          {
+            "codigo": "5",
+            "descricao": "LEITE",
+            "produtoId": "eed3e8a9-5c2f-4ddf-84b3-d051327e5eb4",
+            "quantidade": 6,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 935,
+            "valorTotalCentavos": 5610
+          },
+          {
+            "codigo": "6",
+            "descricao": "DETERGENTE",
+            "produtoId": "f092ae71-06f1-4e23-b9d0-b16d9005277f",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 1085,
+            "valorTotalCentavos": 2170
+          }
+        ],
+        "custoIdaCentavos": 1080,
+        "importadoEm": "2026-10-08T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108088682310006386500200000100810000107",
+        "mercadoId": "12b5a5a9-89dd-4c45-8131-8f69739f337a",
+        "emissao": "2026-10-15T10:00:00",
+        "valorTotalCentavos": 1440,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "TOMATE",
+            "produtoId": "f641812c-7281-4f56-b261-f6367685db6a",
+            "quantidade": 1,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 340,
+            "valorTotalCentavos": 340
+          },
+          {
+            "codigo": "2",
+            "descricao": "BANANA PRATA",
+            "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d",
+            "quantidade": 1.2,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 490,
+            "valorTotalCentavos": 588
+          },
+          {
+            "codigo": "3",
+            "descricao": "CEBOLA",
+            "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687",
+            "quantidade": 0.8,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 640,
+            "valorTotalCentavos": 512
+          }
+        ],
+        "custoIdaCentavos": 42,
+        "importadoEm": "2026-10-15T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108112223330001816500200000100910000105",
+        "mercadoId": "6f27d5fb-3435-443d-8850-9bf0e8a3ca79",
+        "emissao": "2026-10-22T10:00:00",
+        "valorTotalCentavos": 12831,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "TOMATE",
+            "produtoId": "f641812c-7281-4f56-b261-f6367685db6a",
+            "quantidade": 1,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 345,
+            "valorTotalCentavos": 345
+          },
+          {
+            "codigo": "2",
+            "descricao": "CEBOLA",
+            "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687",
+            "quantidade": 0.8,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 495,
+            "valorTotalCentavos": 396
+          },
+          {
+            "codigo": "3",
+            "descricao": "ARROZ",
+            "produtoId": "25bbaaa5-52ae-4f3e-8846-8e39e176c064",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 645,
+            "valorTotalCentavos": 1290
+          },
+          {
+            "codigo": "4",
+            "descricao": "FEIJÃO",
+            "produtoId": "884916d2-9a90-4a3b-8203-b4f7974cd103",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 795,
+            "valorTotalCentavos": 795
+          },
+          {
+            "codigo": "5",
+            "descricao": "CAFÉ",
+            "produtoId": "9c806859-c647-409c-961a-bf405b824cda",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 945,
+            "valorTotalCentavos": 945
+          },
+          {
+            "codigo": "6",
+            "descricao": "LEITE",
+            "produtoId": "eed3e8a9-5c2f-4ddf-84b3-d051327e5eb4",
+            "quantidade": 6,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 1095,
+            "valorTotalCentavos": 6570
+          },
+          {
+            "codigo": "7",
+            "descricao": "DETERGENTE",
+            "produtoId": "f092ae71-06f1-4e23-b9d0-b16d9005277f",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 1245,
+            "valorTotalCentavos": 2490
+          }
+        ],
+        "custoIdaCentavos": 1080,
+        "importadoEm": "2026-10-22T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108088682310006386500200000101010000100",
+        "mercadoId": "12b5a5a9-89dd-4c45-8131-8f69739f337a",
+        "emissao": "2026-10-29T10:00:00",
+        "valorTotalCentavos": 1470,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "TOMATE",
+            "produtoId": "f641812c-7281-4f56-b261-f6367685db6a",
+            "quantidade": 1,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 350,
+            "valorTotalCentavos": 350
+          },
+          {
+            "codigo": "2",
+            "descricao": "BANANA PRATA",
+            "produtoId": "02d4941e-322e-4647-a8d9-02dc23a08a2d",
+            "quantidade": 1.2,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 500,
+            "valorTotalCentavos": 600
+          },
+          {
+            "codigo": "3",
+            "descricao": "CEBOLA",
+            "produtoId": "f3766f74-0ff6-4191-9322-101fd3b85687",
+            "quantidade": 0.8,
+            "unidade": "KG",
+            "valorUnitarioCentavos": 650,
+            "valorTotalCentavos": 520
+          }
+        ],
+        "custoIdaCentavos": 42,
+        "importadoEm": "2026-10-29T12:00:00.000Z"
+      },
+      {
+        "casaId": "3188349c-b538-4ebc-b8e1-d73f27737653",
+        "chave": "26261108112223330001816500200000101110000109",
+        "mercadoId": "6f27d5fb-3435-443d-8850-9bf0e8a3ca79",
+        "emissao": "2026-11-05T10:00:00",
+        "valorTotalCentavos": 8610,
+        "pagamento": "Cartão (seed)",
+        "itens": [
+          {
+            "codigo": "1",
+            "descricao": "ARROZ",
+            "produtoId": "25bbaaa5-52ae-4f3e-8846-8e39e176c064",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 355,
+            "valorTotalCentavos": 710
+          },
+          {
+            "codigo": "2",
+            "descricao": "FEIJÃO",
+            "produtoId": "884916d2-9a90-4a3b-8203-b4f7974cd103",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 505,
+            "valorTotalCentavos": 505
+          },
+          {
+            "codigo": "3",
+            "descricao": "CAFÉ",
+            "produtoId": "9c806859-c647-409c-961a-bf405b824cda",
+            "quantidade": 1,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 655,
+            "valorTotalCentavos": 655
+          },
+          {
+            "codigo": "4",
+            "descricao": "LEITE",
+            "produtoId": "eed3e8a9-5c2f-4ddf-84b3-d051327e5eb4",
+            "quantidade": 6,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 805,
+            "valorTotalCentavos": 4830
+          },
+          {
+            "codigo": "5",
+            "descricao": "DETERGENTE",
+            "produtoId": "f092ae71-06f1-4e23-b9d0-b16d9005277f",
+            "quantidade": 2,
+            "unidade": "UNID",
+            "valorUnitarioCentavos": 955,
+            "valorTotalCentavos": 1910
+          }
+        ],
+        "custoIdaCentavos": 1080,
+        "importadoEm": "2026-11-05T12:00:00.000Z"
+      }
+    ],
+    "listas": [],
+    "itensLista": [],
+    "conferencias": []
+  }
+}
