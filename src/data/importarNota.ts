@@ -1,5 +1,5 @@
 // Importação de nota: orquestra domínio e repositórios. Nunca persiste CPF nem o texto bruto.
-import { chaveDeNome, novoProduto } from "@/domain/catalogo";
+import { chaveDeNome, metaAutomatica, novoProduto } from "@/domain/catalogo";
 import { sugerirTipoMercado } from "@/domain/mercados";
 import { suggestName, type NotaParseada } from "@/domain/nfce/parser";
 import type { Compra, Mercado, Produto } from "@/domain/types";
@@ -111,5 +111,17 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
     itens,
     importadoEm: (entrada.agora ?? new Date()).toISOString(),
   });
+  await atualizarMetasAutomaticas(repos, itens.flatMap((i) => (i.produtoId ? [i.produtoId] : [])));
   return { compra, mercado, produtosCriados };
+}
+
+/** Meta = média da quantidade por compra, enquanto o usuário não a editar à mão (`metaManual`). */
+export async function atualizarMetasAutomaticas(repos: Repositorios, produtoIds: readonly string[]): Promise<void> {
+  const compras = await repos.compras.listar();
+  for (const id of new Set(produtoIds)) {
+    const produto = await repos.produtos.obter(id);
+    if (!produto || produto.metaManual) continue;
+    const meta = metaAutomatica(id, compras);
+    if (meta !== undefined && meta !== produto.meta) await repos.produtos.salvar({ ...produto, meta });
+  }
 }

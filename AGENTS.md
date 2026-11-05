@@ -109,6 +109,7 @@ despensa-web/
 │  │  ├─ importar/                 passos da tela Importar (chave, SEFAZ, colar, conferência)
 │  │  ├─ compras/                  lista de compras, detalhe, apagar e Backup (exportar/importar)
 │  │  ├─ precos/                   lista de preços e histórico
+│  │  ├─ catalogo/                 tela Catálogo (lista por categoria, formulário, mesclar)
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
@@ -132,7 +133,8 @@ despensa-web/
 │  │  ├─ repositorios.ts           interfaces dos repositórios
 │  │  ├─ indexeddb/                implementação e migrações numeradas
 │  │  ├─ backup.ts                 exportar e importar com validação
-│  │  ├─ importarNota.ts           orquestra a importação (mercado, produtos, apelidos, compra)
+│  │  ├─ importarNota.ts           orquestra a importação (mercado, produtos, apelidos, compra, meta)
+│  │  ├─ catalogo.ts               edição com meta manual, liberar meta, mesclar produtos
 │  │  ├─ eventos.ts                emissor de mudanças (aoMudar, emitirMudanca)
 │  │  └─ useRepositorio.ts         hook que reexecuta a consulta quando a coleção muda
 │  ├─ lib/
@@ -264,10 +266,11 @@ Casa itens da nota com `ItemLista` por `produtoId` (via `ApelidoMercado`). Três
 
 - Importação (`data/importarNota.ts`): o nome do produto de cada item é resolvido por nome (sem caixa/acento); se existir, reutiliza o produto, senão cria. O apelido `cnpj + código → produto` é regravado a cada importação. Nota com a mesma chave só é salva com `substituir`. Estoque e metas por média entram nas C-21/C-26.
 
-- Produto nasce das notas. `unidade`: `KG` → `kg`, `UNID` → `un`, `PCT` → `pacote`. Categoria por tipo do mercado (hortifruti) ou dicionário de palavras-chave; padrão `outros`.
+- Produto nasce das notas. `unidade`: `KG` → `kg`, `UNID` → `un`, `PCT` → `pacote`, `L` → `l`. Categoria: mercado de hortifruti → `hortifruti`; senão palavras-chave em `categorias.ts` (da mais específica à mais geral; palavra-chave com espaço no fim casa a palavra inteira, sem espaço casa o começo da palavra); padrão `outros`. Tipo de ida: hortifruti → `hortifruti_semanal`, o resto → `mercado_semanal`.
 - `meta` inicial = média da quantidade comprada por compra; atualizada a cada compra enquanto `metaManual` for falso.
 - Vida útil padrão (dias): hortifruti 7, laticínios 10, carnes 3, mercearia 180, limpeza 365, higiene 365, bebidas 90, outros 90.
-- Sugestão (nunca automática): produto durável comprado em 3 ou mais idas semanais seguidas → sugerir `feira_mensal`.
+- Sugestão (nunca automática), `sugestaoDeTipoDeIda`: produto durável (`vidaUtilDias` > 14), ativo e que não é de feira mensal, comprado em 3 ou mais **semanas civis (segunda a domingo) seguidas** → sugerir `feira_mensal`; a interface mostra a sugestão com botão para aplicar.
+- Meta automática (`metaAutomatica`): média da quantidade por compra (itens do mesmo produto na mesma nota somam), recalculada a cada importação enquanto `metaManual` for falso. Editar a meta à mão (`salvarProdutoEditado`) trava; `liberarMetaAutomatica` destrava. Mesclar (`mesclarProdutos`) move apelidos, itens de compra, itens de lista e estoque (o do destino prevalece) e apaga a origem.
 
 ### 6.8 Valores padrão (editáveis em Ajustes)
 

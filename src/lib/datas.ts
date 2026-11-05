@@ -51,3 +51,8 @@ export function ultimoDiaDoMes(ano: number, mes: number): number {
 export function montarData(ano: number, mes: number, dia: number): string {
   return `${String(ano).padStart(4, "0")}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 }
+
+/** Número da semana civil (segunda a domingo): datas da mesma semana têm o mesmo número, semanas seguidas diferem em 1. */
+export function semanaCivil(data: string): number {
+  return Math.floor((diaCivil(data) + 3) / 7); // 01/01/1970 foi quinta-feira
+}
