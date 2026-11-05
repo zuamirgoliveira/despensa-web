@@ -8,6 +8,6 @@ export function SeloPreco({ alerta }: { alerta?: AlertaPreco }) {
   return alerta.tipo === "acima" ? (
     <Badge tom="aviso">Preço {pct}% acima da sua média</Badge>
   ) : (
-    <Badge tom="verde">Preço {pct}% abaixo da média</Badge>
+    <Badge tom="sucesso">Preço {pct}% abaixo da média</Badge>
   );
 }

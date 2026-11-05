@@ -1,10 +1,11 @@
 export { Alert } from "./Alert";
 export { Badge } from "./Badge";
-export { Button } from "./Button";
+export { Button, LinkBotao, classesBotao } from "./Button";
 export { Card } from "./Card";
 export { Details } from "./Details";
 export { Dialog } from "./Dialog";
 export { EmptyState } from "./EmptyState";
+export { Icone } from "./Icone";
 export { Input } from "./Input";
 export { Progress } from "./Progress";
 export { Select } from "./Select";

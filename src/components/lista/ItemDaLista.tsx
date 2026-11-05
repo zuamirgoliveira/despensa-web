@@ -28,11 +28,11 @@ export function ItemDaLista({ item, produto, alerta, aoAlterar, aoRemover }: Pro
   const passo = produto ? passoDaUnidade(produto.unidade) : 1;
   const unidade = produto ? UNIDADE_ROTULO[produto.unidade] : "";
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-borda bg-white p-3">
+    <li className="flex flex-col gap-2 rounded-lg border border-borda bg-superficie p-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-medium">{nome}</p>
-          <p className="text-xs text-texto/70">{item.motivo ? MOTIVO[item.motivo] : ""}</p>
+          <p className="text-xs text-suave">{item.motivo ? MOTIVO[item.motivo] : ""}</p>
           <SeloPreco alerta={alerta} />
         </div>
         {item.urgente ? <Badge tom="erro">Urgente</Badge> : null}

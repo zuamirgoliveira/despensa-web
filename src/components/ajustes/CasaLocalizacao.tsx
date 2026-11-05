@@ -48,8 +48,8 @@ export function CasaLocalizacao({ perfil, aoSalvar }: { perfil: Perfil; aoSalvar
 
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">Localização da casa</h2>
-      <p className="text-sm text-texto/70">
+      <h2 className="text-sm">Localização da casa</h2>
+      <p className="text-sm text-suave">
         Usada só para estimar distância e custo das idas. Fica neste aparelho e é capturada uma única vez, quando você toca no botão: o app
         nunca acompanha onde você está.
       </p>

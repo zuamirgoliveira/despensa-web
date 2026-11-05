@@ -24,7 +24,7 @@ export function Gastos() {
   if (carregando || !dados) return <p aria-live="polite">Carregando...</p>;
   if (!dados.meses.length) {
     return (
-      <EmptyState titulo="Nenhum gasto ainda" acao={<Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-verde underline">Importar uma nota</Link>}>
+      <EmptyState titulo="Nenhum gasto ainda" acao={<Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-primario underline">Importar uma nota</Link>}>
         Os gastos aparecem depois da primeira nota importada.
       </EmptyState>
     );
@@ -35,8 +35,8 @@ export function Gastos() {
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">Custo real por mês</h2>
-        <p className="text-sm text-texto/70">Itens + custo das idas.</p>
+        <h2 className="text-sm">Custo real por mês</h2>
+        <p className="text-sm text-suave">Itens + custo das idas.</p>
         <GraficoSerie
           valores={cronologico.map((m) => m.custoRealCentavos)}
           rotulos={cronologico.map((m) => rotuloMes(m.mes))}
@@ -46,8 +46,8 @@ export function Gastos() {
       </Card>
 
       <Card className="flex flex-col gap-2" aria-label="Inflação pessoal">
-        <h2 className="text-lg font-semibold">Inflação pessoal</h2>
-        <p className="text-sm text-texto/70">
+        <h2 className="text-sm">Inflação pessoal</h2>
+        <p className="text-sm text-suave">
           Variação do custo de uma cesta fixa: só os produtos que você comprou nos dois meses, a preço normalizado. Comprar mais ou menos não muda o índice.
         </p>
         {comInflacao.length === 0 ? (
@@ -74,7 +74,7 @@ export function Gastos() {
         )}
       </Card>
 
-      <h2 className="text-lg font-semibold">Mês a mês</h2>
+      <h2 className="text-sm">Mês a mês</h2>
       <ul className="flex flex-col gap-3">
         {dados.meses.map((m) => {
           const maior = Math.max(...Object.values(m.porCategoria).map((v) => v ?? 0), 1);
@@ -82,11 +82,12 @@ export function Gastos() {
             <li key={m.mes}>
               <Card className="p-3">
                 <Details
+                  semBorda
                   aberto={m === dados.meses[0]}
                   titulo={
                     <span className="flex w-full items-center justify-between gap-2">
                       <span>{rotuloMes(m.mes)}</span>
-                      <span aria-label={`Custo real de ${rotuloMes(m.mes)}`}>{brl(m.custoRealCentavos)}</span>
+                      <span className="numero whitespace-nowrap" aria-label={`Custo real de ${rotuloMes(m.mes)}`}>{brl(m.custoRealCentavos)}</span>
                     </span>
                   }
                 >
@@ -103,7 +104,7 @@ export function Gastos() {
                             <span>{brl(v)}</span>
                           </div>
                           <div className="h-2 rounded bg-borda" aria-hidden>
-                            <div className="h-2 rounded bg-verde" style={{ width: `${(v / maior) * 100}%` }} />
+                            <div className="h-2 rounded bg-primario" style={{ width: `${(v / maior) * 100}%` }} />
                           </div>
                         </li>
                       ))}

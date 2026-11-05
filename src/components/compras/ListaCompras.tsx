@@ -39,7 +39,7 @@ export function ListaCompras() {
       <EmptyState
         titulo="Nenhuma compra ainda"
         acao={
-          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-verde underline">
+          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-primario underline">
             Importar uma nota
           </Link>
         }
@@ -58,15 +58,16 @@ export function ListaCompras() {
             <li key={c.chave}>
               <Card className="flex flex-col gap-2 p-3">
                 <Details
+                  semBorda
                   titulo={
                     <span className="flex w-full items-center justify-between gap-2">
                       <span>
                         <span className="block">{mercado?.apelido || mercado?.nome || "Mercado"}</span>
-                        <span className="block text-sm font-normal text-texto/70">
+                        <span className="block text-sm font-normal text-suave">
                           {dataBR(c.emissao)} {horaBR(c.emissao)}
                         </span>
                       </span>
-                      <span className="font-semibold">{brl(c.valorTotalCentavos)}</span>
+                      <span className="numero whitespace-nowrap font-semibold">{brl(c.valorTotalCentavos)}</span>
                     </span>
                   }
                 >
@@ -77,7 +78,7 @@ export function ListaCompras() {
                   ) : null}
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-texto/70">
+                      <tr className="text-left text-suave">
                         <th className="py-1 pr-2 font-medium">Produto</th>
                         <th className="py-1 pr-2 text-right font-medium">Qtd.</th>
                         <th className="py-1 pr-2 text-right font-medium">Unit.</th>

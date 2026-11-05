@@ -17,9 +17,9 @@ export function GraficoPreco({ valores, sufixo }: { valores: readonly number[]; 
       viewBox={`0 0 ${L} ${A}`}
       className="h-24 w-full"
     >
-      <polyline fill="none" stroke="#1f6f4a" strokeWidth="2" points={pts.map((p) => `${p.x},${p.y}`).join(" ")} />
+      <polyline fill="none" className="stroke-primario" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" points={pts.map((p) => `${p.x},${p.y}`).join(" ")} />
       {pts.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="3" fill="#1f6f4a" />
+        <circle key={i} cx={p.x} cy={p.y} r="4" className="fill-primario stroke-superficie" strokeWidth="1.5" />
       ))}
     </svg>
   );

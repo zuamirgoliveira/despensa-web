@@ -6,7 +6,7 @@ export function EmptyState({ titulo, children, acao }: Props) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-borda p-6 text-center">
       <p className="text-lg font-medium">{titulo}</p>
-      {children ? <div className="text-sm text-texto/70">{children}</div> : null}
+      {children ? <div className="text-sm text-suave">{children}</div> : null}
       {acao}
     </div>
   );

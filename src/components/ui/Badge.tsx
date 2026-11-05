@@ -1,11 +1,12 @@
 import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-type Tom = "neutro" | "verde" | "aviso" | "erro";
+type Tom = "neutro" | "info" | "sucesso" | "aviso" | "erro";
 
 const TONS: Record<Tom, string> = {
-  neutro: "bg-fundo text-texto border-borda",
-  verde: "bg-verde/10 text-verde border-verde/30",
+  neutro: "bg-fundo text-texto border-borda-forte",
+  info: "bg-primario/10 text-primario border-primario/30",
+  sucesso: "bg-sucesso/10 text-sucesso border-sucesso/30",
   aviso: "bg-aviso/10 text-aviso border-aviso/30",
   erro: "bg-erro/10 text-erro border-erro/30",
 };

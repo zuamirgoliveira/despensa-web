@@ -67,7 +67,7 @@ export function Catalogo() {
       <EmptyState
         titulo="O catálogo está vazio"
         acao={
-          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-verde underline">
+          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-primario underline">
             Importar uma nota
           </Link>
         }
@@ -87,11 +87,11 @@ export function Catalogo() {
         </label>
       </div>
 
-      {grupos.length === 0 ? <p className="text-sm text-texto/70">Nenhum produto encontrado.</p> : null}
+      {grupos.length === 0 ? <p className="text-sm text-suave">Nenhum produto encontrado.</p> : null}
 
       {grupos.map((g) => (
         <section key={g.categoria} aria-labelledby={`cat-${g.categoria}`} className="flex flex-col gap-2">
-          <h2 id={`cat-${g.categoria}`} className="text-lg font-semibold">
+          <h2 id={`cat-${g.categoria}`} className="text-sm">
             {CATEGORIA_ROTULO[g.categoria]}
           </h2>
           <ul className="flex flex-col gap-2">
@@ -101,10 +101,11 @@ export function Catalogo() {
                 <li key={p.id}>
                   <Card className="p-3">
                     <Details
+                      semBorda
                       titulo={
                         <span className="flex w-full items-center justify-between gap-2">
                           <span>{p.nome}</span>
-                          <span className="flex items-center gap-2 text-sm font-normal text-texto/70">
+                          <span className="flex items-center gap-2 text-sm font-normal text-suave">
                             {p.ativo ? null : <Badge>arquivado</Badge>}
                             {numeroBR(p.meta)} {UNIDADE_ROTULO[p.unidade]} · {TIPO_IDA_ROTULO[p.tipoIda]}
                           </span>

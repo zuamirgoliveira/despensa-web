@@ -29,7 +29,7 @@ const estaticos = listar(join(next, "static"))
   .map((p) => "/_next/static/" + relative(join(next, "static"), p).split(sep).join("/"))
   .sort();
 
-const publicos = ["/manifest.webmanifest", ...listar(join(raiz, "public", "icons")).map((p) => aUrl(p, join(raiz, "public")))];
+const publicos = ["/manifest.webmanifest", "/theme-init.js", ...listar(join(raiz, "public", "icons")).map((p) => aUrl(p, join(raiz, "public")))];
 
 if (!rotas.includes("/")) {
   console.error("gen-precache: a rota / não foi encontrada em .next/server/app. O build rodou?");

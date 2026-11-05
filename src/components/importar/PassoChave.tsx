@@ -158,7 +158,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
 
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">1. Chave da nota</h2>
+      <h2 className="text-sm">1. Chave da nota</h2>
       <Input
         rotulo="Chave de acesso (44 dígitos)"
         inputMode="numeric"
@@ -229,7 +229,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
               }}
             >
               {agruparChave(c.chave)}
-              <span className="font-sans text-xs text-texto/70">{c.trocas} dígito(s) corrigido(s)</span>
+              <span className="font-sans text-xs text-suave">{c.trocas} dígito(s) corrigido(s)</span>
             </Button>
           ))}
         </div>

@@ -32,17 +32,17 @@ export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuan
   const [preco, setPreco] = useState(() => centavosParaCampo(item.precoCentavos));
 
   return (
-    <li className={cn("flex flex-col gap-3 rounded-lg border p-3", pego ? "border-verde/40 bg-verde/5" : "border-borda bg-white")}>
+    <li className={cn("flex flex-col gap-3 rounded-lg border p-3", pego ? "border-primario/40 bg-primario/5" : "border-borda bg-superficie")}>
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className={cn("text-lg font-medium", pego && "line-through decoration-verde/60")}>{nome}</p>
+        <div className="min-w-0 flex-1">
+          <p className={cn("break-words text-lg font-medium", pego && "line-through decoration-primario/60")}>{nome}</p>
           {item.status === "nao_encontrado" ? <Badge tom="aviso">Não encontrei: volta na próxima ida</Badge> : null}
           {item.status === "adiado" ? <Badge tom="aviso">Adiado</Badge> : null}
-          {item.status === "extra" ? <Badge tom="verde">Extra</Badge> : null}
+          {item.status === "extra" ? <Badge tom="info">Extra</Badge> : null}
           {item.urgente ? <Badge tom="erro">Urgente</Badge> : null}
           <SeloPreco alerta={alerta} />
         </div>
-        <div className="flex items-center gap-2" role="group" aria-label={`Quantidade de ${nome}`}>
+        <div className="flex shrink-0 items-center gap-1" role="group" aria-label={`Quantidade de ${nome}`}>
           <Button variante="secundario" className="min-w-11 px-0" aria-label={`Diminuir ${nome}`} onClick={() => aoQuantidade(quantidade - passo)}>
             −
           </Button>
@@ -56,12 +56,12 @@ export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuan
       </div>
 
       {item.status !== "extra" ? (
-        <Button className="min-h-14 text-lg" variante={pego ? "secundario" : "primario"} aria-pressed={pego} onClick={aoPegar}>
+        <Button tamanho="grande" variante={pego ? "secundario" : "primario"} aria-pressed={pego} onClick={aoPegar}>
           {pego ? "Peguei ✓ (desfazer)" : "Peguei"}
         </Button>
       ) : null}
 
-      <div className="grid grid-cols-[1fr_auto_auto] items-end gap-2">
+      <div className="flex flex-col gap-2">
         <Input
           rotulo={`Preço unitário de ${nome} (opcional)`}
           inputMode="decimal"
@@ -71,14 +71,14 @@ export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuan
           onBlur={() => aoPreco(reaisParaCentavos(preco))}
         />
         {item.status !== "extra" ? (
-          <>
+          <div className="grid grid-cols-2 gap-2">
             <Button variante="secundario" aria-label={`Não encontrei ${nome}`} onClick={() => aoEstado("nao_encontrado")}>
               Não encontrei
             </Button>
             <Button variante="secundario" aria-label={`Adiar ${nome}`} onClick={() => aoEstado("adiado")}>
               Adiar
             </Button>
-          </>
+          </div>
         ) : (
           <Button variante="secundario" aria-label={`Remover ${nome}`} onClick={aoRemover}>
             Remover

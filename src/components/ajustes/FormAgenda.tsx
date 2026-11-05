@@ -51,7 +51,7 @@ export function FormAgenda({ tipo, casaId, agenda, mercados, aoSalvar }: Props) 
           ))}
         </Select>
       </div>
-      {mensal ? <p className="text-xs text-texto/70">Em meses mais curtos, a ida cai no último dia do mês.</p> : null}
+      {mensal ? <p className="text-xs text-suave">Em meses mais curtos, a ida cai no último dia do mês.</p> : null}
       {erro ? <Alert tipo="erro">{erro}</Alert> : null}
       <Button variante="secundario" onClick={() => void salvar()}>
         Salvar agenda

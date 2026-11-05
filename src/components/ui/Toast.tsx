@@ -22,7 +22,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={valor}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex flex-col items-center gap-2 px-4">
+      <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex flex-col items-center gap-2 px-4">
         {itens.map((i) => (
           <ToastItem key={i.id} item={i} aoFechar={() => setItens((a) => a.filter((x) => x.id !== i.id))} />
         ))}
@@ -40,8 +40,8 @@ function ToastItem({ item, aoFechar }: { item: Item; aoFechar: () => void }) {
     <div
       role={item.tipo === "erro" ? "alert" : "status"}
       className={cn(
-        "pointer-events-auto max-w-md rounded-lg px-4 py-3 text-sm text-white shadow-lg",
-        item.tipo === "erro" ? "bg-erro" : "bg-texto",
+        "pointer-events-auto max-w-md rounded-lg px-4 py-3 text-sm shadow-lg",
+        item.tipo === "erro" ? "bg-erro text-erro-fg" : "bg-texto text-fundo",
       )}
     >
       {item.texto}

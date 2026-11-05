@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Button, Card, Input, Progress } from "@/components/ui";
+import { Alert, Button, Card, Input, LinkBotao, Progress } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { carregarFila, registrarConferencia, registrarNivel } from "@/data/conferencia";
 import { proximaIdaDoTipo } from "@/domain/agenda";
@@ -121,7 +120,7 @@ export function Conferencia() {
         {idas.map((i) => (
           <Button key={i.tipo} variante="secundario" className="h-auto justify-between py-3" onClick={() => void iniciar(i.tipo)}>
             <span>{TIPO_IDA_ROTULO[i.tipo]}</span>
-            <span className="text-sm font-normal text-texto/70">{dataBR(i.data)}</span>
+            <span className="text-sm font-normal text-suave">{dataBR(i.data)}</span>
           </Button>
         ))}
         {idas.length === 0 ? <Alert>Nenhuma agenda de ida configurada. Defina as datas em Ajustes.</Alert> : null}
@@ -135,18 +134,13 @@ export function Conferencia() {
     const seg = fim.segundos % 60;
     return (
       <Card className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">{fila.length === 0 ? "Nada para conferir" : "Conferência concluída"}</h2>
+        <h2 className="text-sm">{fila.length === 0 ? "Nada para conferir" : "Conferência concluída"}</h2>
         <p>
           {fila.length === 0
             ? "Nenhum produto precisa de conferência para esta ida."
             : `${conferidos} de ${fila.length} produtos conferidos em ${min > 0 ? `${min} min ` : ""}${seg} s.`}
         </p>
-        <Link
-          href={`/lista?ida=${tipo}`}
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-verde px-4 py-2 font-medium text-white"
-        >
-          Gerar lista
-        </Link>
+        <LinkBotao href={`/lista?ida=${tipo}`}>Gerar lista</LinkBotao>
       </Card>
     );
   }
@@ -156,13 +150,13 @@ export function Conferencia() {
   return (
     <div className="flex flex-col gap-4">
       <Progress rotulo="Progresso da conferência" valor={indice} maximo={fila.length} />
-      <p className="text-sm text-texto/70" aria-live="polite">
+      <p className="text-sm text-suave" aria-live="polite">
         Produto {indice + 1} de {fila.length} · {item.local}
       </p>
       <Card className="flex flex-col gap-4">
         <div>
-          <h2 className="text-2xl font-semibold">{produto.nome}</h2>
-          <p className="text-sm text-texto/70">{MOTIVO[item.motivo]}</p>
+          <h2 className="font-sans text-xl font-semibold">{produto.nome}</h2>
+          <p className="text-sm text-suave">{MOTIVO[item.motivo]}</p>
           {item.nivelAtual ? <p className="text-sm">Registrado: {ROTULO_NIVEL[item.nivelAtual]}</p> : null}
         </div>
 

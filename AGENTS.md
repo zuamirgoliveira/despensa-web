@@ -88,6 +88,7 @@ despensa-web/
 │  ├─ arquitetura.md               camadas e fluxo de dados
 │  ├─ seguranca.md                 resultado do checklist de segurança
 │  ├─ qualidade.md                 métricas de Lighthouse e bundle
+│  ├─ design.md                    identidade visual, paleta dos dois temas, tipografia, layout mobile
 │  ├─ spike-mapas.md               comparação e decisão do serviço de mapas
 │  ├─ parametros-iniciais.md       valores de seed informados pelo dono
 │  └─ bloqueios.md                 pendências que dependem de ação humana
@@ -95,6 +96,7 @@ despensa-web/
 ├─ public/
 │  ├─ manifest.webmanifest         manifest estático com share_target
 │  ├─ sw.js                        service worker manual
+│  ├─ theme-init.js                aplica data-tema antes da primeira pintura (sem flash)
 │  ├─ icons/                       ícones 192, 512, maskable
 │  └─ vendor/tesseract/            GERADO no build (não versionado)
 ├─ scripts/
@@ -105,7 +107,7 @@ despensa-web/
 ├─ src/
 │  ├─ app/                         rotas e layouts (App Router)
 │  ├─ components/
-│  │  ├─ ui/                       primitivos: Button, Card, Input, Textarea, Select, Badge, Alert, Toast, Progress, Details, EmptyState, Dialog…
+│  │  ├─ ui/                       primitivos: Button/LinkBotao, Card, Input, Textarea, Select, Badge, Alert, Icone, Toast, Progress, Details, EmptyState, Dialog…
 │  │  ├─ importar/                 passos da tela Importar (chave, SEFAZ, colar, conferência)
 │  │  ├─ compras/                  lista de compras, detalhe e apagar
 │  │  ├─ ajustes/                  Ajustes: agenda, regras, custos e Backup (exportar/importar)
@@ -167,6 +169,7 @@ despensa-web/
 │  │  ├─ format.ts                 brl, dataBR, horaBR, kg
 │  │  ├─ datas.ts                  datas sem hora, hojeRecife (injetável)
 │  │  ├─ rotas.ts                  lista de rotas do app (pré-cache)
+│  │  ├─ tema.ts                   preferência Claro/Escuro/Sistema (localStorage + data-tema)
 │  │  └─ security-headers.ts       fonte única dos headers e da CSP
 │  └─ config/seed.ts               valores iniciais aplicados na primeira abertura
 ├─ tests/                          Vitest (espelha src/) + fixtures/
@@ -214,6 +217,19 @@ app/ (telas) → components/ → data/ (repositórios) → schemas/
 - **Idioma do código:** entidades e regras de negócio em português (`produto`, `mercado`, `compra`); utilitários e infraestrutura em inglês.
 
 ---
+
+### 5.4 Aparência: tema, tokens e layout
+
+Decisões e valores completos em [docs/design.md](docs/design.md). Resumo técnico:
+
+- **Tokens semânticos.** As cores são variáveis CSS de canais RGB em `src/app/globals.css` (`--fundo`, `--superficie`, `--borda`, `--borda-forte`, `--texto`, `--suave`, `--primario`, `--primario-fg`, `--destaque`, `--sucesso`, `--aviso`, `--erro`, `--erro-fg`, `--cabecalho`, `--cabecalho-fg`, `--externo`), expostas em `tailwind.config.ts` (`bg-superficie`, `text-suave`, `bg-primario/10`…). **Componentes usam só esses nomes**: nunca hex, nunca `dark:` e nunca as cores antigas (`verde`, `text-texto/70`). SVG usa `stroke-primario`/`fill-suave` (classes), não hex.
+- **Temas.** Claro, Escuro e Sistema (padrão), escolhidos em Ajustes → Aparência. Sistema é CSS puro (`@media (prefers-color-scheme: dark)` com `:root:not([data-tema="claro"])`); a escolha explícita é o atributo `data-tema="claro|escuro"` em `<html>`, guardada em `localStorage` (`despensa-tema`, fora do backup) e aplicada antes da pintura por `public/theme-init.js` (arquivo estático e síncrono em `<head>`; **sem** `dangerouslySetInnerHTML`). `lib/tema.ts` lê/grava/aplica. Os dois blocos escuros do CSS devem ser idênticos (`tests/lib/contraste.test.ts` confere e calcula os contrastes).
+- **Paleta (identidade de Pernambuco, minimalista).** Base azul-marinho (`#0B1A3D`, `#060F26`, `#030A1A`), primário azul sóbrio no claro e azul celeste no escuro, **dourado só como detalhe** (ponto da marca, barra da aba ativa), **vermelho só para erro/perigo**, verde só para **sucesso**. Dourado e vermelho nunca no mesmo componente. Cor nunca é o único sinal: `Alert` leva ícone (`Icone`), tendências levam ▲▼.
+- **Tipografia.** Michroma (`font-titulo`, peso 400) só em `h1`, `h2`, legendas de seção e na marca; Inter em todo o resto (botões, números, tabelas, nomes de dados). `h1`/`h2` já recebem Michroma pelo CSS base; para um `h2` com nome vindo de dados use `font-sans`. Números monetários: classe `numero` (tabular) e `whitespace-nowrap`.
+- **Layout.** Mobile primeiro, retrato (390×844; mínimo 360×640). Coluna única centralizada de no máximo `max-w-coluna` (40rem); em telas maiores só crescem as margens (fundo `externo`, borda fina nas laterais), sem layout de duas colunas. `Cabecalho` (navy, rola com a página) + `main` com `pb-28` + `BarraAbas` fixa, limitada à mesma coluna e com `safe-area-inset-bottom`. Use `min-h-dvh`, nunca `100vh`.
+- **Botões.** `Button` para ações; `LinkBotao`/`classesBotao` para links com aparência de botão (não copie classes). Variantes `primario`, `secundario`, `perigo`; tamanho `grande` (56 px) no modo compra. Alvo ≥ 44 px, foco com contorno `primario`.
+- **Acordeão em Card:** `Details` com `semBorda` para não duplicar a borda.
+- **Movimento:** transições curtas; `prefers-reduced-motion` desliga animações (regra global em `globals.css`).
 
 ## 6. Regras de negócio implementadas
 
@@ -390,7 +406,7 @@ Consulta pública de PE: `https://nfce.sefaz.pe.gov.br/nfce-web/consNfce`, prote
 - Pré-cache: `npm run build` roda `scripts/gen-precache.mjs` depois do `next build`, que escreve `public/precache.json` (não versionado) com as rotas (HTML em `.next/server/app`) e os estáticos. Rota nova precisa ser pré-renderizada para entrar; **rotas dinâmicas (`[id]`) não são pré-renderizadas: use rota estática com parâmetro na query** (ex.: `/compra?lista=<id>`) para funcionar offline.
 - Navegação: rede primeiro com limite de 4 s, depois cache; a chave do cache é o caminho sem query (`/importar?text=…` usa o HTML de `/importar`). RSC (`?_rsc=`) não é cacheado: offline devolve erro e o Next faz navegação completa (o log "Failed to fetch RSC payload… Falling back to browser navigation" é esperado).
 - Registro: `RegistrarSW` (em `layout.tsx`) registra `/sw.js?v=<NEXT_PUBLIC_BUILD_ID>` (o parâmetro muda a cada build e força a instalação do SW novo) só em produção ou `localhost`. O SW usa `skipWaiting`; ao trocar de controlador a interface mostra "Nova versão disponível" com botão Atualizar.
-- Alterou rota, asset ou estratégia: incremente a versão do cache.
+- Alterou rota, asset ou estratégia: incremente a versão do cache (hoje `despensa-v2`; `theme-init.js` entra no pré-cache).
 - Funcionalidades que dependem de rede (mapas) degradam sem bloquear (ver seção 9.4).
 
 ---
@@ -433,6 +449,7 @@ Qualquer nova origem ou diretiva exige entrada nesta tabela e atualização do t
 
 - Nunca usar `innerHTML`, `dangerouslySetInnerHTML` ou `eval`. Texto vindo da SEFAZ, de QR ou de backup é sempre renderizado como texto pelo React.
 - Nunca usar `window.confirm/alert/prompt`; usar o componente de diálogo próprio.
+- `localStorage` só para a preferência de tema (`despensa-tema`); dados do usuário vão sempre pelo repositório (IndexedDB).
 - Nunca persistir CPF, dados de cartão ou o texto bruto da nota.
 - Nunca usar `watchPosition` nem rastrear localização. Capturar posição apenas sob ação explícita do usuário, uma vez.
 - Segredos não existem no cliente. Variáveis `NEXT_PUBLIC_*` são públicas por definição; só colocar valores que possam ser públicos.
@@ -484,8 +501,8 @@ Diretório `/opt/docker/despensa-web` (dono `deploy`), `.env` com permissão 600
 - Funções de domínio puras, pequenas, com entrada e saída tipadas. Sem efeitos colaterais, sem `Date.now()` ou `new Date()` direto (usar parâmetro `hoje` ou `hojeRecife()`).
 - Componentes: um por arquivo, nomes em PascalCase, props tipadas. Classes Tailwind compostas com `clsx` + `tailwind-merge` (helper `cn`).
 - Imports com alias `@/…`. Sem imports circulares entre camadas.
-- Tailwind 3.4: tokens em `tailwind.config.ts` — verde `#1f6f4a`, fundo `#f6f8f7`, borda `#d6ddd9`, texto `#1d2420`, erro `#9b1c1c`, aviso `#8a5a00`.
-- Mobile-first: viewport de referência 390×844; alvos de toque ≥ 44 px; foco visível; rótulos acessíveis; contraste AA.
+- Tailwind 3.4: tokens semânticos de tema (seção 5.4 e `docs/design.md`); sem cores hexadecimais nos componentes.
+- Mobile-first: viewport de referência 390×844 (mínimo 360×640), coluna de até 40rem centralizada; alvos de toque ≥ 44 px; foco visível; rótulos acessíveis; contraste AA nos dois temas (verificado por `tests/lib/contraste.test.ts` e e2e); sem rolagem horizontal.
 - Textos de interface em pt-BR. Datas `dd/mm/aaaa`, hora `HH:mm`, moeda `R$ 1.234,56`.
 
 ### 11.2 Git
@@ -497,7 +514,7 @@ Diretório `/opt/docker/despensa-web` (dono `deploy`), `.env` com permissão 600
 ### 11.3 Testes
 
 - **Vitest** (`tests/`, espelha `src/`): toda regra de `src/domain` com testes tabelados, incluindo bordas (zero, vazio, mês curto, ano bissexto, limites de tolerância). Relógio sempre injetado. Repositórios testados com `fake-indexeddb`, incluindo migração e backup ida e volta.
-- **Playwright** (`e2e/`): roda contra `next start` para exercitar CSP e service worker. Câmera simulada com flags do Chrome (`--use-fake-ui-for-media-stream`, `--use-fake-device-for-media-stream`, `--use-file-for-fake-video-capture`). Falha o teste se aparecer violação de CSP no console. Cobre offline (navegar e recarregar todas as rotas).
+- **Playwright** (`e2e/`): roda contra `next start` para exercitar CSP e service worker. Câmera simulada com flags do Chrome (`--use-fake-ui-for-media-stream`, `--use-fake-device-for-media-stream`, `--use-file-for-fake-video-capture`). Falha o teste se aparecer violação de CSP no console. Cobre offline (navegar e recarregar todas as rotas). Acessibilidade roda nos dois temas e em 360×640 (`acessibilidade.spec.ts`); `tema.spec.ts` cobre Claro/Escuro/Sistema, persistência e a coluna em telas largas. O contraste dos tokens é testado em Vitest (`tests/lib/contraste.test.ts`).
 - E2E: `e2e/global-setup.ts` gera o vídeo falso da câmera (`test-results/camera-qr.y4m`, a partir de `tests/fixtures/fotos/qr-nota.png`, com `ffmpeg`); sem `ffmpeg` o teste da câmera é pulado. `tests/fixtures/foto-nota-real.jpeg` **não é versionada** (mostra final de cartão); o teste de OCR com ela é pulado quando o arquivo não existe (ex.: no CI). Imagens sintéticas (QR, ruído, chave com DV errado, sem chave) vêm de `scripts/gerar-fixtures-fotos.py`.
 - Fixtures em `tests/fixtures/`: notas reais em texto (sem CPF) e fotos. Ao encontrar nota que o parser não lê, adicione-a como fixture e corrija sem quebrar as anteriores.
 - E2E: `playwright.config.ts` nunca reaproveita servidor já em pé (`reuseExistingServer: false`, porta por `E2E_PORT`): um `next start` esquecido de uma rodada interrompida serve build antigo e gera falhas falsas. Se a porta estiver ocupada, use `E2E_PORT=3105 npm run e2e`.
@@ -534,6 +551,7 @@ Nova dependência: registrar aqui (pacote, versão, tipo, motivo) no mesmo commi
 10. Rastrear localização contínua do usuário.
 11. Alterar migração de IndexedDB já publicada.
 12. Mudar headers de segurança sem atualizar a seção 9 e o teste correspondente.
+13. Usar cor hexadecimal, `dark:` ou token antigo (`verde`) em componente; usar dourado e vermelho no mesmo componente; usar Michroma em botão, número ou parágrafo; deixar a cor como único sinal de estado.
 
 ---
 

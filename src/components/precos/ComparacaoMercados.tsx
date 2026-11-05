@@ -34,7 +34,7 @@ export function ComparacaoMercados() {
       <EmptyState
         titulo="Falta um segundo mercado"
         acao={
-          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-verde underline">
+          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-primario underline">
             Importar uma nota
           </Link>
         }
@@ -47,8 +47,8 @@ export function ComparacaoMercados() {
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-2" aria-label="Cesta por mercado">
-        <h2 className="text-lg font-semibold">Cesta por mercado</h2>
-        <p className="text-sm text-texto/70">Meta de cada produto × último preço. Compare só cestas com a mesma cobertura.</p>
+        <h2 className="text-sm">Cesta por mercado</h2>
+        <p className="text-sm text-suave">Meta de cada produto × último preço. Compare só cestas com a mesma cobertura.</p>
         <ul className="flex flex-col gap-1">
           {mercadosComPreco.map((m) => {
             const c = custoDaCesta(dados.produtos, m.id, dados.comparacoes);
@@ -57,7 +57,7 @@ export function ComparacaoMercados() {
                 <span>{m.apelido || m.nome}</span>
                 <span className="text-right">
                   <span className="font-semibold">{brl(c.totalCentavos)}</span>
-                  <span className="block text-xs text-texto/70">
+                  <span className="block text-xs text-suave">
                     preços de {c.cobertos} de {c.totalItens} itens
                   </span>
                 </span>
@@ -67,8 +67,8 @@ export function ComparacaoMercados() {
         </ul>
       </Card>
 
-      <h2 className="text-lg font-semibold">Por produto</h2>
-      {comMaisDeUm.length === 0 ? <p className="text-sm text-texto/70">Nenhum produto tem preço em dois mercados ainda.</p> : null}
+      <h2 className="text-sm">Por produto</h2>
+      {comMaisDeUm.length === 0 ? <p className="text-sm text-suave">Nenhum produto tem preço em dois mercados ainda.</p> : null}
       <ul className="flex flex-col gap-3">
         {comMaisDeUm
           .sort((a, b) => (produtoPorId.get(a.produtoId)?.nome ?? "").localeCompare(produtoPorId.get(b.produtoId)?.nome ?? "", "pt-BR"))
@@ -78,12 +78,12 @@ export function ComparacaoMercados() {
             return (
               <li key={c.produtoId}>
                 <Card className="p-3">
-                  <Details titulo={<span className="flex w-full justify-between gap-2"><span>{produto?.nome ?? "Produto"}</span><span className="text-sm font-normal text-texto/70">{c.mercados.length} mercados</span></span>}>
+                  <Details titulo={<span className="flex w-full justify-between gap-2"><span>{produto?.nome ?? "Produto"}</span><span className="text-sm font-normal text-suave">{c.mercados.length} mercados</span></span>}>
                     <ul className="flex flex-col gap-1 text-sm">
                       {c.mercados.map((m) => (
                         <li key={m.mercadoId} className="flex items-center justify-between gap-2">
                           <span>
-                            {nomeMercado(m.mercadoId)} {m.mercadoId === c.melhorMercadoId ? <Badge tom="verde">{c.empate ? "empate" : "melhor"}</Badge> : null}
+                            {nomeMercado(m.mercadoId)} {m.mercadoId === c.melhorMercadoId ? <Badge tom="sucesso">{c.empate ? "empate" : "melhor"}</Badge> : null}
                           </span>
                           <span>
                             {brl(m.normalizadoCentavos)}

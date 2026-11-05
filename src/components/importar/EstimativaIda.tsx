@@ -75,7 +75,7 @@ export function EstimativaIda({ mercadoId, aoConcluir }: Props) {
 
   return (
     <Card className="flex flex-col gap-3" aria-label="Estimativa da ida">
-      <h2 className="text-lg font-semibold">Quanto custou a ida?</h2>
+      <h2 className="text-sm">Quanto custou a ida?</h2>
 
       {estado.fase === "carregando" ? <p aria-live="polite">Estimando a distância...</p> : null}
 
@@ -100,7 +100,7 @@ export function EstimativaIda({ mercadoId, aoConcluir }: Props) {
         <>
           <Alert tipo="aviso">{estado.motivo}</Alert>
           {estado.motivo === MOTIVO_MANUAL.sem_casa ? (
-            <Link href="/ajustes" className="inline-flex min-h-11 items-center font-medium text-verde underline">
+            <Link href="/ajustes" className="inline-flex min-h-11 items-center font-medium text-primario underline">
               Ir para Ajustes
             </Link>
           ) : null}

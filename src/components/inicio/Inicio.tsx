@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Alert, Card, EmptyState } from "@/components/ui";
+import { Alert, Card, EmptyState, LinkBotao } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { useRepositorio } from "@/data/useRepositorio";
 import { resumirDia } from "@/domain/inicio";
@@ -9,9 +9,6 @@ import { hojeRecife } from "@/lib/datas";
 import { dataBR } from "@/lib/format";
 import { TIPO_IDA_ROTULO } from "@/lib/rotulos";
 
-const LINK = "inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2 font-medium";
-const PRIMARIO = `${LINK} bg-verde text-white`;
-const SECUNDARIO = `${LINK} border border-borda bg-white text-texto`;
 
 function emDias(n: number): string {
   return n === 0 ? "hoje" : n === 1 ? "amanhã" : `em ${n} dias`;
@@ -35,16 +32,16 @@ export function Inicio() {
         <EmptyState
           titulo="Bem-vindo à Despensa"
           acao={
-            <Link href="/importar" className={PRIMARIO}>
+            <LinkBotao href="/importar">
               Importar a primeira nota
-            </Link>
+            </LinkBotao>
           }
-        >
+       >
           Importe a nota de uma compra e o app aprende o que você costuma comprar. Depois ele monta a lista de cada ida.
         </EmptyState>
-        <Link href="/ajustes" className={SECUNDARIO}>
+        <LinkBotao href="/ajustes" variante="secundario">
           Ajustar agenda e custos
-        </Link>
+        </LinkBotao>
       </div>
     );
   }
@@ -65,7 +62,7 @@ export function Inicio() {
 
       {proxima ? (
         <Card className="flex flex-col gap-3">
-          <p className="text-sm text-texto/70">Próxima ida</p>
+          <p className="text-sm text-suave">Próxima ida</p>
           <p className="text-2xl font-semibold">{TIPO_IDA_ROTULO[proxima.tipo]}</p>
           <p aria-label="Data da próxima ida">
             {dataBR(proxima.data)} · {emDias(proxima.diasAte)}
@@ -76,20 +73,20 @@ export function Inicio() {
               : `${dados.quantosVencem} ${dados.quantosVencem === 1 ? "produto vence" : "produtos vencem"} nesta ida.`}
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <Link href={`/conferencia?ida=${proxima.tipo}`} className={PRIMARIO}>
+            <LinkBotao href={`/conferencia?ida=${proxima.tipo}`}>
               Conferir despensa
-            </Link>
-            <Link href={`/lista?ida=${proxima.tipo}`} className={SECUNDARIO}>
+            </LinkBotao>
+            <LinkBotao href={`/lista?ida=${proxima.tipo}`} variante="secundario">
               Ver lista
-            </Link>
+            </LinkBotao>
           </div>
         </Card>
       ) : (
         <Card className="flex flex-col gap-2">
           <p>Nenhuma agenda de ida configurada.</p>
-          <Link href="/ajustes" className={SECUNDARIO}>
+          <LinkBotao href="/ajustes" variante="secundario">
             Definir a agenda
-          </Link>
+          </LinkBotao>
         </Card>
       )}
 
@@ -105,9 +102,9 @@ export function Inicio() {
         </Alert>
       ) : null}
 
-      <Link href="/importar" className={SECUNDARIO}>
+      <LinkBotao href="/importar" variante="secundario">
         Importar nota
-      </Link>
+      </LinkBotao>
     </div>
   );
 }

@@ -52,7 +52,7 @@ export function Painel() {
   if (carregando || !dados) return <p aria-live="polite">Carregando...</p>;
   if (!dados.tem) {
     return (
-      <EmptyState titulo="O painel começa com a primeira nota" acao={<Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-verde underline">Importar uma nota</Link>}>
+      <EmptyState titulo="O painel começa com a primeira nota" acao={<Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-primario underline">Importar uma nota</Link>}>
         Depois de algumas compras, você acompanha aqui se as idas e as emergências estão caindo. Até lá não há números para mostrar.
       </EmptyState>
     );
@@ -62,7 +62,7 @@ export function Painel() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-texto/70">Este mês contra o mês anterior. ▼ melhorou · ▲ piorou.</p>
+      <p className="text-sm text-suave">Este mês contra o mês anterior. ▼ melhorou · ▲ piorou.</p>
       {atual.idas === 0 ? <Alert tipo="info">Nenhuma compra neste mês ainda: os números abaixo contam só o que já aconteceu.</Alert> : null}
       {DEFS.map((d) => {
         const a = d.valor(atual);
@@ -71,20 +71,20 @@ export function Painel() {
         return (
           <Card key={d.chave} className="flex flex-col gap-1 p-3" aria-label={d.rotulo}>
             <div className="flex items-baseline justify-between gap-2">
-              <h2 className="font-medium">{d.rotulo}</h2>
-              <p className="text-xl font-semibold" aria-label={`${d.rotulo}: valor do mês`}>
+              <h2 className="text-sm">{d.rotulo}</h2>
+              <p className="numero shrink-0 whitespace-nowrap text-xl font-semibold" aria-label={`${d.rotulo}: valor do mês`}>
                 {a === undefined ? "—" : d.formatar(a)}
                 {SETA[t] ? (
-                  <span className={t === "melhorou" ? "ml-1 text-verde" : t === "piorou" ? "ml-1 text-erro" : "ml-1 text-texto/70"} aria-label={`tendência: ${t}`}>
+                  <span className={t === "melhorou" ? "ml-1 text-primario" : t === "piorou" ? "ml-1 text-erro" : "ml-1 text-suave"} aria-label={`tendência: ${t}`}>
                     {SETA[t]}
                   </span>
                 ) : null}
               </p>
             </div>
-            <p className="text-xs text-texto/70">Mês anterior: {b === undefined ? "—" : d.formatar(b)}</p>
+            <p className="text-xs text-suave">Mês anterior: {b === undefined ? "—" : d.formatar(b)}</p>
             <p className="text-sm">{d.texto(a, t)}</p>
             {d.chave === "idas" && tipos.length ? (
-              <ul className="text-xs text-texto/70">
+              <ul className="text-xs text-suave">
                 {tipos.map(([tipo, n]) => (
                   <li key={tipo}>
                     {tipo === "sem_lista" ? "Sem lista" : TIPO_IDA_ROTULO[tipo as keyof typeof TIPO_IDA_ROTULO]}: {n}

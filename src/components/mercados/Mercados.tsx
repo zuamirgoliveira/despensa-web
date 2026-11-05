@@ -24,7 +24,7 @@ export function Mercados() {
       <EmptyState
         titulo="Nenhum mercado ainda"
         acao={
-          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-verde underline">
+          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-primario underline">
             Importar uma nota
           </Link>
         }
@@ -41,11 +41,11 @@ export function Mercados() {
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-1" aria-label="Idas do mês">
-        <h2 className="text-lg font-semibold">Este mês</h2>
+        <h2 className="text-sm">Este mês</h2>
         <p>
           {e.idas} {e.idas === 1 ? "ida" : "idas"} ao mercado · {e.minutos} min de deslocamento (ida e volta)
         </p>
-        <p className="text-sm text-texto/70">
+        <p className="text-sm text-suave">
           {e.custoTotalCentavos > 0 ? `Custo das idas: ${brl(e.custoTotalCentavos)}. ` : ""}
           Tempo e número de idas são só informação: não entram no custo.
           {e.semEstimativa > 0 ? ` ${e.semEstimativa} ${e.semEstimativa === 1 ? "ida está" : "idas estão"} sem tempo estimado.` : ""}

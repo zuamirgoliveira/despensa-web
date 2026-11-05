@@ -5,6 +5,7 @@ import { Card, useToast } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { useRepositorio } from "@/data/useRepositorio";
 import { TIPOS_IDA } from "@/schemas";
+import { Aparencia } from "./Aparencia";
 import { Backup } from "./Backup";
 import { CasaLocalizacao } from "./CasaLocalizacao";
 import { FormAgenda } from "./FormAgenda";
@@ -25,9 +26,10 @@ export function Ajustes() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Aparencia />
       <Card className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Agenda das idas</h2>
-        <p className="text-sm text-texto/70">A lista de cada ida é calculada pelas datas abaixo.</p>
+        <h2 className="text-sm">Agenda das idas</h2>
+        <p className="text-sm text-suave">A lista de cada ida é calculada pelas datas abaixo.</p>
         {TIPOS_IDA.map((tipo) => (
           <FormAgenda
             key={`${tipo}-${agendas.find((a) => a.tipo === tipo)?.id ?? "nova"}`}
@@ -40,9 +42,9 @@ export function Ajustes() {
         ))}
       </Card>
       <Card className="flex flex-col gap-1">
-        <h2 className="text-lg font-semibold">Mercados</h2>
-        <p className="text-sm text-texto/70">Distância, meio de transporte e custo de ida de cada mercado.</p>
-        <Link href="/mercados" className="inline-flex min-h-11 items-center font-medium text-verde underline">
+        <h2 className="text-sm">Mercados</h2>
+        <p className="text-sm text-suave">Distância, meio de transporte e custo de ida de cada mercado.</p>
+        <Link href="/mercados" className="inline-flex min-h-11 items-center font-medium text-primario underline">
           Ver mercados
         </Link>
       </Card>

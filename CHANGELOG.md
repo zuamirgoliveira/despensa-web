@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0 (design, temas e mobile)
+
+- **Identidade visual:** nova paleta azul-marinho com detalhes em dourado e vermelho só para erro, verde só para sucesso (`docs/design.md`).
+- **Temas:** Claro, Escuro e Sistema (padrão), em Ajustes → Aparência; sem flash na abertura; preferência só neste aparelho.
+- **Layout mobile:** cabeçalho com a marca, barra inferior com ícones, coluna única de até 640 px centralizada em telas largas, títulos em Michroma e texto em Inter.
+- **Componentes:** tokens semânticos, `LinkBotao`, ícones de estado nos avisos, acordeões sem borda dupla, gráficos legíveis nos dois temas, modo compra com campos empilhados.
+- **Acessibilidade:** teste automático de contraste dos tokens (AA) e e2e nos dois temas e em 360×640.
+
 ## 0.1.0 (E0.5 + E1 + E2)
 
 Primeira versão completa, em ordem de construção.

@@ -27,7 +27,7 @@ export function ListaPrecos() {
       <EmptyState
         titulo="Nenhum preço ainda"
         acao={
-          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-verde underline">
+          <Link href="/importar" className="inline-flex min-h-11 items-center font-medium text-primario underline">
             Importar uma nota
           </Link>
         }
@@ -50,13 +50,14 @@ export function ListaPrecos() {
           <li key={`${h.produtoId}|${h.base}`}>
             <Card className="p-3">
               <Details
+                semBorda
                 titulo={
                   <span className="flex w-full items-center justify-between gap-2">
                     <span>{nome(h.produtoId)}</span>
-                    <span className="flex items-center gap-2 font-semibold">
+                    <span className="numero flex shrink-0 items-center gap-2 whitespace-nowrap font-semibold">
                       {brl(h.ultimo.normalizadoCentavos)}/{suf}
                       {mostraVariacao ? (
-                        <Badge tom={v > 0 ? "erro" : "verde"} aria-label={`variação de ${v.toFixed(1)}%`}>
+                        <Badge tom={v > 0 ? "erro" : "sucesso"} aria-label={`variação de ${v.toFixed(1)}%`}>
                           {v > 0 ? "▲" : "▼"} {Math.abs(v).toFixed(1).replace(".", ",")}%
                         </Badge>
                       ) : null}
@@ -64,7 +65,7 @@ export function ListaPrecos() {
                   </span>
                 }
               >
-                <p className="mb-2 text-sm text-texto/70">
+                <p className="mb-2 text-sm text-suave">
                   Menor {brl(h.menorCentavos)}/{suf} · maior {brl(h.maiorCentavos)}/{suf} · média {brl(h.mediaCentavos)}/{suf}
                 </p>
                 <GraficoPreco valores={h.pontos.map((p) => p.normalizadoCentavos)} sufixo={`/${suf}`} />

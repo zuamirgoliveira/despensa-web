@@ -13,7 +13,7 @@ export function Progress({ valor, maximo = 100, rotulo, className }: Props) {
       aria-valuenow={Math.min(valor, maximo)}
       className={cn("h-2 w-full overflow-hidden rounded-full bg-borda", className)}
     >
-      <div className="h-full bg-verde transition-[width]" style={{ width: `${pct}%` }} />
+      <div className="h-full bg-primario transition-[width]" style={{ width: `${pct}%` }} />
     </div>
   );
 }

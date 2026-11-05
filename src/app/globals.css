@@ -2,6 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-fundo text-texto;
+/*
+ * Tema: variáveis de canais RGB (docs/design.md). Claro é o padrão; o escuro vale
+ * (a) quando o sistema pede e o usuário não escolheu claro, ou (b) quando o usuário escolheu escuro
+ * (atributo data-tema em <html>, definido por public/theme-init.js e pelo seletor em Ajustes).
+ * Mantenha os dois blocos escuros idênticos: tests/lib/contraste.test.ts lê este arquivo.
+ */
+:root {
+  color-scheme: light;
+  --fundo: 244 246 250;
+  --externo: 227 232 241;
+  --superficie: 255 255 255;
+  --borda: 213 219 230;
+  --borda-forte: 124 135 153;
+  --texto: 11 26 61;
+  --suave: 75 85 99;
+  --primario: 30 63 154;
+  --primario-fg: 255 255 255;
+  --destaque: 154 107 0;
+  --sucesso: 23 101 58;
+  --aviso: 122 79 0;
+  --erro: 179 18 46;
+  --erro-fg: 255 255 255;
+  --cabecalho: 11 26 61;
+  --cabecalho-fg: 255 255 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    color-scheme: dark;
+    --fundo: 6 15 38;
+    --externo: 3 10 26;
+    --superficie: 11 26 61;
+    --borda: 34 52 94;
+    --borda-forte: 111 130 171;
+    --texto: 229 231 235;
+    --suave: 168 176 192;
+    --primario: 108 180 240;
+    --primario-fg: 6 15 38;
+    --destaque: 217 166 46;
+    --sucesso: 95 208 138;
+    --aviso: 240 184 74;
+    --erro: 255 141 160;
+    --erro-fg: 6 15 38;
+    --cabecalho: 6 15 38;
+    --cabecalho-fg: 255 255 255;
+  }
+}
+
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+  --fundo: 6 15 38;
+  --externo: 3 10 26;
+  --superficie: 11 26 61;
+  --borda: 34 52 94;
+  --borda-forte: 111 130 171;
+  --texto: 229 231 235;
+  --suave: 168 176 192;
+  --primario: 108 180 240;
+  --primario-fg: 6 15 38;
+  --destaque: 217 166 46;
+  --sucesso: 95 208 138;
+  --aviso: 240 184 74;
+  --erro: 255 141 160;
+  --erro-fg: 6 15 38;
+  --cabecalho: 6 15 38;
+  --cabecalho-fg: 255 255 255;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    background-color: rgb(var(--externo));
+  }
+  body {
+    @apply bg-externo font-sans text-texto antialiased;
+  }
+  /* Títulos em Michroma (só existe o peso 400: sem negrito sintético). Nunca em botões, números ou tabelas. */
+  h1,
+  h2 {
+    @apply font-titulo font-normal;
+    font-synthesis-weight: none;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  .numero {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

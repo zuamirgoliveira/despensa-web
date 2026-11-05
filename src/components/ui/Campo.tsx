@@ -25,7 +25,7 @@ export function Campo({ rotulo, erro, ajuda, className, children }: Props): Reac
           {erro}
         </p>
       ) : ajuda ? (
-        <p id={descId} className="text-sm text-texto/70">
+        <p id={descId} className="text-sm text-suave">
           {ajuda}
         </p>
       ) : null}
@@ -34,6 +34,6 @@ export function Campo({ rotulo, erro, ajuda, className, children }: Props): Reac
 }
 
 export const CLASSE_CONTROLE =
-  "min-h-11 w-full rounded-lg border border-borda bg-white px-3 py-2 text-base text-texto " +
-  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-verde " +
+  "min-h-11 w-full rounded-lg border border-borda-forte bg-superficie px-3 py-2 text-base text-texto " +
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primario " +
   "aria-[invalid=true]:border-erro disabled:opacity-60";

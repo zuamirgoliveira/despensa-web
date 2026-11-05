@@ -49,8 +49,8 @@ export function Backup() {
 
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">Backup</h2>
-      <p className="text-sm text-texto/70">Seus dados ficam só neste aparelho. Exporte um arquivo de vez em quando e guarde fora do celular.</p>
+      <h2 className="text-sm">Backup</h2>
+      <p className="text-sm text-suave">Seus dados ficam só neste aparelho. Exporte um arquivo de vez em quando e guarde fora do celular.</p>
       <div className="grid grid-cols-2 gap-2">
         <Button variante="secundario" onClick={() => void baixar()}>
           Exportar backup

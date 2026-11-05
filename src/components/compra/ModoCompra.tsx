@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Card, EmptyState, Input, Progress } from "@/components/ui";
+import { Alert, Button, Card, EmptyState, Input, LinkBotao, Progress } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import {
   adicionarExtra, alternarPego, definirOrcamento, definirPreco, definirQuantidadePega, iniciarCompra, marcarEstado, removerDaCompra,
@@ -61,7 +61,7 @@ export function ModoCompra() {
 
   if (semLista) {
     return (
-      <EmptyState titulo="Lista não encontrada" acao={<Link href="/lista" className="inline-flex min-h-11 items-center font-medium text-verde underline">Ir para a lista</Link>}>
+      <EmptyState titulo="Lista não encontrada" acao={<Link href="/lista" className="inline-flex min-h-11 items-center font-medium text-primario underline">Ir para a lista</Link>}>
         Abra o modo compra a partir de uma lista.
       </EmptyState>
     );
@@ -85,7 +85,7 @@ export function ModoCompra() {
     <div className="flex flex-col gap-4">
       <div className="sticky top-0 z-30 -mx-4 flex flex-col gap-2 border-b border-borda bg-fundo px-4 py-3">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-sm text-texto/70">
+          <p className="text-sm text-suave">
             {TIPO_IDA_ROTULO[lista.tipoIda]} · {dataBR(lista.data)}
           </p>
           <p className="text-sm" aria-live="polite">
@@ -96,7 +96,7 @@ export function ModoCompra() {
         <p className="text-2xl font-semibold" aria-label="Total corrente">
           {brl(total)}
           {lista.estimativaCentavos !== undefined ? (
-            <span className="ml-2 text-sm font-normal text-texto/70">de {brl(lista.estimativaCentavos)} estimados</span>
+            <span className="ml-2 text-sm font-normal text-suave">de {brl(lista.estimativaCentavos)} estimados</span>
           ) : null}
         </p>
         {estado === "estourou" ? <Alert tipo="erro">Passou do orçamento de {brl(lista.orcamentoCentavos as number)}.</Alert> : null}
@@ -107,7 +107,7 @@ export function ModoCompra() {
 
       {grupos.map((g) => (
         <section key={g.titulo} aria-labelledby={`g-${g.titulo}`} className="flex flex-col gap-2">
-          <h2 id={`g-${g.titulo}`} className="text-lg font-semibold">
+          <h2 id={`g-${g.titulo}`} className="text-sm">
             {g.titulo}
           </h2>
           <ul className="flex flex-col gap-3">
@@ -129,7 +129,7 @@ export function ModoCompra() {
       ))}
 
       <Card className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Adicionar extra</h2>
+        <h2 className="text-sm">Adicionar extra</h2>
         <Input rotulo="Nome do extra" value={extra.nome} onChange={(e) => setExtra({ ...extra, nome: e.target.value })} />
         <div className="grid grid-cols-2 gap-3">
           <Input rotulo="Quantidade do extra" inputMode="decimal" value={extra.quantidade} onChange={(e) => setExtra({ ...extra, quantidade: e.target.value })} />
@@ -153,12 +153,9 @@ export function ModoCompra() {
         />
       </Card>
 
-      <Link
-        href={`/importar?lista=${lista.id}`}
-        className="inline-flex min-h-14 items-center justify-center rounded-lg bg-verde px-4 py-2 text-lg font-medium text-white"
-      >
+      <LinkBotao href={`/importar?lista=${lista.id}`} tamanho="grande">
         Terminar compra
-      </Link>
+      </LinkBotao>
     </div>
   );
 }

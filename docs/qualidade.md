@@ -17,7 +17,7 @@ Como repetir: o script na seção "Como medir" abaixo.
 
 ## Acessibilidade e toque (automatizado)
 
-`e2e/acessibilidade.spec.ts`, em 11 rotas e no 390×844:
+`e2e/acessibilidade.spec.ts`, em 11 rotas, nos temas claro e escuro, no 390×844:
 
 - `lang="pt-BR"`, meta viewport, **um** `h1` por tela.
 - Todo botão, link, campo, select e textarea visível tem **nome acessível** (rótulo, `aria-label` ou texto).
@@ -25,7 +25,7 @@ Como repetir: o script na seção "Como medir" abaixo.
 - Sem rolagem horizontal.
 - Foco visível na barra inferior; menu **Mais** abre com Enter e fecha com Esc.
 
-Contraste: a paleta (`#1f6f4a` sobre branco, `#1d2420` sobre `#f6f8f7`, `#9b1c1c`, `#8a5a00`) atende AA (≥ 4,5:1) para texto normal. Texto auxiliar usa `text-texto/70` sobre branco, ainda acima de 4,5:1.
+Contraste: os tokens dos temas Claro e Escuro (`docs/design.md`, seção 2) são verificados por `tests/lib/contraste.test.ts`, que lê `src/app/globals.css`: texto, texto auxiliar, primário, sucesso, aviso e erro ≥ 4,5:1 sobre fundo e superfície; botões e tons a 12% ≥ 4,5:1; contorno de controles e detalhe dourado ≥ 3:1. O e2e de acessibilidade roda as 11 rotas nos dois temas e em 360×640 (sem rolagem horizontal).
 
 ## Lighthouse (mobile): pendente
 

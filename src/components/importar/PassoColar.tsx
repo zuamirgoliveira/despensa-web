@@ -21,7 +21,7 @@ export function PassoColar({ texto, aoMudarTexto, aoLer, mensagem }: Props) {
 
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">3. Colar o texto da nota</h2>
+      <h2 className="text-sm">3. Colar o texto da nota</h2>
       <Textarea
         rotulo="Texto copiado da página da SEFAZ"
         value={texto}

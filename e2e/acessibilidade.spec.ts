@@ -41,19 +41,31 @@ async function alvosPequenos(page: Page): Promise<string[]> {
 }
 
 test.describe("acessibilidade e toque (390×844)", () => {
-  for (const rota of ROTAS) {
-    test(`${rota}: idioma, título, rótulos e alvos de toque`, async ({ page }) => {
-      await page.goto(rota);
-      await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
-      await expect(page.locator('meta[name="viewport"]')).toHaveAttribute("content", /width=device-width/);
-      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-      await page.waitForLoadState("networkidle");
-      expect(await semNomeAcessivel(page)).toEqual([]);
-      expect(await alvosPequenos(page)).toEqual([]);
-      // sem rolagem horizontal no celular
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-    });
+  for (const esquema of ["light", "dark"] as const) {
+    for (const rota of ROTAS) {
+      test(`${rota} (${esquema}): idioma, título, rótulos e alvos de toque`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: esquema });
+        await page.goto(rota);
+        await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR");
+        await expect(page.locator('meta[name="viewport"]')).toHaveAttribute("content", /width=device-width/);
+        await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+        await page.waitForLoadState("networkidle");
+        expect(await semNomeAcessivel(page)).toEqual([]);
+        expect(await alvosPequenos(page)).toEqual([]);
+        // sem rolagem horizontal no celular
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+      });
+    }
   }
+
+  test("360×640: sem rolagem horizontal em todas as rotas", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 640 });
+    for (const rota of ROTAS) {
+      await page.goto(rota);
+      await page.waitForLoadState("networkidle");
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), rota).toBe(true);
+    }
+  });
 
   test("foco visível e navegação por teclado na barra inferior", async ({ page }) => {
     await page.goto("/");

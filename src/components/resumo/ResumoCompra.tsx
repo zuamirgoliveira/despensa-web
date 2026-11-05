@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Alert, Badge, Card, Details, EmptyState } from "@/components/ui";
+import { Alert, Badge, Card, Details, EmptyState, LinkBotao } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { resumoDaLista } from "@/data/reconciliacao";
 import { useRepositorio } from "@/data/useRepositorio";
@@ -27,7 +27,7 @@ export function ResumoCompra() {
   if (listaId === undefined || carregando) return <p aria-live="polite">Carregando...</p>;
   if (!dados) {
     return (
-      <EmptyState titulo="Resumo não encontrado" acao={<Link href="/compras" className="inline-flex min-h-11 items-center font-medium text-verde underline">Ver compras</Link>}>
+      <EmptyState titulo="Resumo não encontrado" acao={<Link href="/compras" className="inline-flex min-h-11 items-center font-medium text-primario underline">Ver compras</Link>}>
         Este resumo existe depois que uma nota é associada a uma lista.
       </EmptyState>
     );
@@ -39,7 +39,7 @@ export function ResumoCompra() {
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-1">
-        <p className="text-sm text-texto/70">
+        <p className="text-sm text-suave">
           {TIPO_IDA_ROTULO[lista.tipoIda]} · lista de {dataBR(lista.data)} · nota de {dataBR(compra.emissao)}
         </p>
         <p className="text-2xl font-semibold" aria-label="Total gasto">
@@ -72,7 +72,7 @@ export function ResumoCompra() {
       </Details>
 
       <Details titulo={`Faltou (${resumo.faltou})`} aberto={resumo.faltou > 0}>
-        {resumo.faltou ? <p className="mb-2 text-sm text-texto/70">Ficaram pendentes e voltam na próxima ida.</p> : <p className="text-sm">Tudo da lista foi comprado.</p>}
+        {resumo.faltou ? <p className="mb-2 text-sm text-suave">Ficaram pendentes e voltam na próxima ida.</p> : <p className="text-sm">Tudo da lista foi comprado.</p>}
         <ul className="flex flex-col gap-1 text-sm">
           {r.ficouDeFora.map((i) => (
             <li key={i.id}>{nome(i.produtoId, i.nomeAvulso)}</li>
@@ -96,9 +96,9 @@ export function ResumoCompra() {
         </ul>
       </Details>
 
-      <Link href="/compras" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-borda bg-white px-4 py-2 font-medium">
+      <LinkBotao href="/compras" variante="secundario">
         Ver compras
-      </Link>
+      </LinkBotao>
     </div>
   );
 }

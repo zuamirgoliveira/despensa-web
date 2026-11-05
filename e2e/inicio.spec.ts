@@ -89,6 +89,6 @@ test("barra inferior: Início, Importar, Lista, Compras e o menu Mais", async ({
   await nav.getByRole("link", { name: "Mercados", exact: true }).click();
   await expect(page).toHaveURL(/\/mercados$/);
   await expect(mais).toHaveAttribute("aria-expanded", "false"); // fechou ao navegar
-  await expect(mais).toHaveClass(/text-verde/); // "Mais" fica destacado quando a tela atual está nele
+  await expect(mais).toHaveClass(/text-primario/); // "Mais" fica destacado quando a tela atual está nele
   await expect(nav.getByRole("link", { name: "Início", exact: true })).not.toHaveAttribute("aria-current", "page");
 });

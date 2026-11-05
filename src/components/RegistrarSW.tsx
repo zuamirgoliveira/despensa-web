@@ -28,7 +28,7 @@ export function RegistrarSW() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 top-0 z-50 flex items-center justify-between gap-2 bg-texto px-4 py-2 text-sm text-white"
+      className="fixed left-1/2 top-0 z-50 flex w-full max-w-coluna -translate-x-1/2 items-center justify-between gap-2 bg-texto px-4 py-2 text-sm text-fundo"
     >
       <span>Nova versão disponível.</span>
       <Button variante="secundario" className="min-h-11" onClick={() => location.reload()}>

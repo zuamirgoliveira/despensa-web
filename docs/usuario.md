@@ -2,6 +2,8 @@
 
 ## Primeira vez
 
+0. Em **Mais → Ajustes → Aparência**, escolha o tema: **Sistema** (padrão, segue o aparelho), **Claro** ou **Escuro**. A escolha vale só neste aparelho e não entra no backup.
+
 1. Abra o endereço do app no Android e **instale** (menu do navegador → Adicionar à tela inicial).
 2. Em **Mais → Ajustes**: confira a agenda das idas (dia da feira, dia do mercado, dia do hortifruti), a folga e os custos do carro/bike. Toque em **Estou em casa agora** (uma vez) para o app estimar a distância até os mercados.
 3. Importe a primeira nota (veja "Depois"). O catálogo nasce das notas.

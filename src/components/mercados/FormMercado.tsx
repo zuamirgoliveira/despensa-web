@@ -92,8 +92,8 @@ export function FormMercado({ mercado, perfil, aoSalvar }: { mercado: Mercado; p
   return (
     <Card className="flex flex-col gap-3">
       <div>
-        <h2 className="text-lg font-semibold">{nome}</h2>
-        <p className="text-xs text-texto/70">{mercado.endereco || "Endereço não informado"}</p>
+        <h2 className="font-sans text-base font-semibold">{nome}</h2>
+        <p className="text-xs text-suave">{mercado.endereco || "Endereço não informado"}</p>
       </div>
       <Input rotulo="Apelido" value={v.apelido} onChange={(e) => setV({ ...v, apelido: e.target.value })} />
       <div className="grid grid-cols-2 gap-3">

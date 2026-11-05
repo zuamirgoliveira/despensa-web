@@ -740,6 +740,23 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 
 ---
 
+# FASE 6: Design, temas e mobile (marco M4)
+
+Origem: pedido de repensar layout, UX e paleta (Pernambuco, minimalista), com tema claro/escuro/sistema, mobile e acessibilidade. Decisões em [design.md](design.md).
+
+| ID | Tarefa | Depende de |
+| -- | ------ | ---------- |
+| D-01 | Diretrizes de design (`docs/design.md`) | n/a |
+| D-02 | Infraestrutura de tema (variáveis CSS, `theme-init.js`, Claro/Escuro/Sistema em Ajustes) | D-01 |
+| D-03 | Componentes base (`ui/`) nos tokens, Michroma nos títulos | D-02 |
+| D-04 | Shell mobile: cabeçalho, coluna centralizada, barra inferior e menu Mais | D-03 |
+| D-05 | Revisão por tela (retrato 390×844 e 360×640) | D-04 |
+| D-06 | Gráficos SVG e selos com a nova paleta | D-03 |
+| D-07 | Acessibilidade: teste de contraste dos tokens, e2e nos dois temas | D-05, D-06 |
+| D-08 | Documentação (AGENTS.md, qualidade, usuário, CHANGELOG) e regressão final | D-07 |
+
+---
+
 ## 2. Checklist de acompanhamento
 
 ### Zuma
@@ -800,6 +817,14 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-38 Segurança final
 - [x] C-39 Performance e acessibilidade (Lighthouse pendente: ver docs/qualidade.md)
 - [x] C-40 Documentação final
+- [x] D-01 Diretrizes de design
+- [x] D-02 Infraestrutura de tema
+- [x] D-03 Componentes base
+- [x] D-04 Shell mobile
+- [x] D-05 Revisão por tela
+- [x] D-06 Gráficos e selos
+- [x] D-07 Acessibilidade (contraste e e2e)
+- [x] D-08 Documentação e regressão final
 
 ---
 

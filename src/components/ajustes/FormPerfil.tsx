@@ -29,7 +29,7 @@ export function FormPerfil({ perfil, aoSalvar }: { perfil: Perfil; aoSalvar: () 
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Regras da lista e dos preços</h2>
+        <h2 className="text-sm">Regras da lista e dos preços</h2>
         <Input
           rotulo="Folga em dias"
           inputMode="numeric"
@@ -63,7 +63,7 @@ export function FormPerfil({ perfil, aoSalvar }: { perfil: Perfil; aoSalvar: () 
       </Card>
 
       <Card className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Custo da ida</h2>
+        <h2 className="text-sm">Custo da ida</h2>
         <Input rotulo="Consumo do carro (km por litro)" inputMode="decimal" value={v.consumoKmPorLitro} onChange={muda("consumoKmPorLitro")} erro={erros.consumoKmPorLitro} />
         <Input rotulo="Preço do combustível (R$ por litro)" inputMode="decimal" value={v.precoCombustivel} onChange={muda("precoCombustivel")} erro={erros.precoCombustivel} />
         <Input rotulo="Desgaste do carro (R$ por km)" inputMode="decimal" value={v.desgastePorKm} onChange={muda("desgastePorKm")} erro={erros.desgastePorKm} />

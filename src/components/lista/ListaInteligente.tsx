@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Card, Details, EmptyState, Input, useToast } from "@/components/ui";
+import { Alert, Button, Card, Details, EmptyState, Input, LinkBotao, useToast } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { adicionarAvulso, alterarQuantidade, dividirLista, garantirLista, removerItem, restaurarItem, SemAgendaError, tipoMaisProximo } from "@/data/lista";
 import { useRepositorio } from "@/data/useRepositorio";
@@ -152,7 +152,7 @@ export function ListaInteligente() {
       </div>
 
       <Card className="flex flex-col gap-1">
-        <p className="text-sm text-texto/70">
+        <p className="text-sm text-suave">
           {TIPO_IDA_ROTULO[lista.tipoIda]} · {dataBR(lista.data)}
         </p>
         <p className="text-2xl font-semibold" aria-label="Estimativa de custo">
@@ -161,7 +161,7 @@ export function ListaInteligente() {
         <p className="text-sm">{visiveis.length} {visiveis.length === 1 ? "item" : "itens"} · estimativa pelo último preço pago</p>
         {estimativa.semPreco.length ? (
           <Details titulo={`Sem preço (${estimativa.semPreco.length})`} className="mt-2">
-            <p className="text-sm text-texto/70">Ficam fora da soma:</p>
+            <p className="text-sm text-suave">Ficam fora da soma:</p>
             <ul className="list-disc pl-5 text-sm">
               {estimativa.semPreco.map((id) => (
                 <li key={id}>{nomeDoItem(id)}</li>
@@ -207,7 +207,7 @@ export function ListaInteligente() {
       {visiveis.length === 0 ? (
         <EmptyState titulo="Nenhum item na lista">
           Confira a despensa para o app saber o que falta, ou adicione itens avulsos abaixo.
-          <Link href={`/conferencia?ida=${tipo}`} className="mt-2 inline-flex min-h-11 items-center font-medium text-verde underline">
+          <Link href={`/conferencia?ida=${tipo}`} className="mt-2 inline-flex min-h-11 items-center font-medium text-primario underline">
             Conferir despensa
           </Link>
         </EmptyState>
@@ -222,7 +222,7 @@ export function ListaInteligente() {
 
       {grupos.map((g) => (
         <section key={g.titulo} aria-labelledby={`g-${g.titulo}`} className="flex flex-col gap-2">
-          <h2 id={`g-${g.titulo}`} className="text-lg font-semibold">
+          <h2 id={`g-${g.titulo}`} className="text-sm">
             {g.titulo}
           </h2>
           <ul className="flex flex-col gap-2">
@@ -241,7 +241,7 @@ export function ListaInteligente() {
       ))}
 
       <Card className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Adicionar item avulso</h2>
+        <h2 className="text-sm">Adicionar item avulso</h2>
         <div className="grid grid-cols-[1fr_6rem] gap-3">
           <Input rotulo="Nome do item" value={nome} onChange={(e) => setNome(e.target.value)} />
           <Input rotulo="Quantidade" inputMode="decimal" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} />
@@ -276,12 +276,7 @@ export function ListaInteligente() {
         >
           Regerar lista
         </Button>
-        <Link
-          href={`/compra?lista=${lista.id}`}
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-verde px-4 py-2 font-medium text-white"
-        >
-          Iniciar compra
-        </Link>
+        <LinkBotao href={`/compra?lista=${lista.id}`}>Iniciar compra</LinkBotao>
       </div>
     </div>
   );

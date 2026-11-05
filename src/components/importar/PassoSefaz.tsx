@@ -27,8 +27,8 @@ export function PassoSefaz({ chave }: { chave: ChaveValida | null }) {
 
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">2. Consultar na SEFAZ</h2>
-      <p className="text-sm text-texto/70">
+      <h2 className="text-sm">2. Consultar na SEFAZ</h2>
+      <p className="text-sm text-suave">
         O site da SEFAZ pede um captcha: quem resolve é você. O app só copia a chave e abre a página.
       </p>
       <Button disabled={!url} onClick={() => void abrir()}>

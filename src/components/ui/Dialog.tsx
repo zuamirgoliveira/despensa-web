@@ -43,10 +43,10 @@ export function Dialog({
         e.preventDefault();
         aoCancelar();
       }}
-      className="w-[min(92vw,26rem)] rounded-xl border border-borda p-0 text-texto backdrop:bg-black/40"
+      className="w-[min(92vw,26rem)] rounded-xl border border-borda bg-superficie p-0 text-texto backdrop:bg-black/50"
     >
       <div className="flex flex-col gap-4 p-4">
-        <h2 id={tituloId} className="text-lg font-semibold">
+        <h2 id={tituloId} className="text-sm">
           {titulo}
         </h2>
         {children ? <div className="text-sm">{children}</div> : null}
