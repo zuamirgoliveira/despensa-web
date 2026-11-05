@@ -34,3 +34,8 @@ export function numeroBR(n: number, casas = 3): string {
   const f = 10 ** casas;
   return String(Math.round(n * f) / f).replace(".", ",");
 }
+
+/** Mostra a chave de 44 dígitos em grupos de 4 (aceita digitação parcial). */
+export function agruparChave(digitos: string): string {
+  return digitos.replace(/\D/g, "").slice(0, 44).replace(/(\d{4})(?=\d)/g, "$1 ");
+}

@@ -15,8 +15,9 @@ test("manifest válido com ícones e share_target", async ({ request }) => {
 
 test("share_target abre /importar com o texto na URL", async ({ page }) => {
   await page.goto("/importar?text=ola");
-  await expect(page).toHaveURL(/\/importar\?text=ola/);
   await expect(page.getByRole("heading", { name: "Importar" })).toBeVisible();
+  await expect(page.getByLabel("Texto copiado da página da SEFAZ")).toHaveValue("ola");
+  await expect(page).toHaveURL(/\/importar$/); // a URL é limpa depois de receber o texto
 });
 
 test("service worker: todas as rotas funcionam offline, inclusive ao recarregar", async ({ page, context }) => {

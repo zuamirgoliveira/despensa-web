@@ -770,7 +770,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-08 Layout e componentes
 - [x] C-09 PWA e offline
 - [x] C-10 QR e OCR
-- [ ] C-11 Tela Importar
+- [x] C-11 Tela Importar
 - [ ] C-12 Compras, Preços e Backup
 - [ ] C-13 e2e de paridade
 - [ ] C-14 Docker

@@ -106,10 +106,14 @@ despensa-web/
 │  ├─ app/                         rotas e layouts (App Router)
 │  ├─ components/
 │  │  ├─ ui/                       primitivos: Button, Card, Input, Textarea, Select, Badge, Alert, Toast, Progress, Details, EmptyState, Dialog…
+│  │  ├─ importar/                 passos da tela Importar (chave, SEFAZ, colar, conferência)
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
 │  │  ├─ nfce/parser.ts            texto da SEFAZ → nota estruturada
+│  │  ├─ nfce/sefaz.ts             URL de consulta por UF
+│  │  ├─ catalogo.ts               produto novo a partir de item de nota, chave de nome
+│  │  ├─ mercados.ts               tipo sugerido pelo nome do emitente
 │  │  ├─ estoque.ts                níveis, consumo, cobertura
 │  │  ├─ agenda.ts                 ocorrências das idas
 │  │  ├─ lista.ts                  geração da lista por cobertura
@@ -126,6 +130,7 @@ despensa-web/
 │  │  ├─ repositorios.ts           interfaces dos repositórios
 │  │  ├─ indexeddb/                implementação e migrações numeradas
 │  │  ├─ backup.ts                 exportar e importar com validação
+│  │  ├─ importarNota.ts           orquestra a importação (mercado, produtos, apelidos, compra)
 │  │  ├─ eventos.ts                emissor de mudanças (aoMudar, emitirMudanca)
 │  │  └─ useRepositorio.ts         hook que reexecuta a consulta quando a coleção muda
 │  ├─ lib/
@@ -240,6 +245,8 @@ Casa itens da nota com `ItemLista` por `produtoId` (via `ApelidoMercado`). Três
 - Inflação pessoal: variação do custo de uma **cesta fixa** (produtos comprados nos dois meses, mesma quantidade de referência, preço normalizado).
 
 ### 6.7 Catálogo (`categorias.ts` e fluxo de importação)
+
+- Importação (`data/importarNota.ts`): o nome do produto de cada item é resolvido por nome (sem caixa/acento); se existir, reutiliza o produto, senão cria. O apelido `cnpj + código → produto` é regravado a cada importação. Nota com a mesma chave só é salva com `substituir`. Estoque e metas por média entram nas C-21/C-26.
 
 - Produto nasce das notas. `unidade`: `KG` → `kg`, `UNID` → `un`, `PCT` → `pacote`. Categoria por tipo do mercado (hortifruti) ou dicionário de palavras-chave; padrão `outros`.
 - `meta` inicial = média da quantidade comprada por compra; atualizada a cada compra enquanto `metaManual` for falso.

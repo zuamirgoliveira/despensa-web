@@ -1,10 +1,10 @@
-import { EmptyState } from "@/components/ui";
+import { ImportarNota } from "@/components/importar/ImportarNota";
 import { Pagina } from "@/components/Pagina";
 
 export default function Page() {
   return (
     <Pagina titulo="Importar">
-      <EmptyState titulo="Em breve" />
+      <ImportarNota />
     </Pagina>
   );
 }

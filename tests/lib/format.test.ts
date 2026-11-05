@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brl, dataBR, horaBR, kg, numeroBR } from "@/lib/format";
+import { agruparChave, brl, dataBR, horaBR, kg, numeroBR } from "@/lib/format";
 
 describe("brl", () => {
   it.each([
@@ -39,5 +39,16 @@ describe("kg / numeroBR", () => {
     expect(numeroBR(1.5)).toBe("1,5");
     expect(numeroBR(3)).toBe("3");
     expect(numeroBR(1.23456, 2)).toBe("1,23");
+  });
+});
+
+describe("agruparChave", () => {
+  it("agrupa de 4 em 4, aceita parcial e limita a 44 dígitos", () => {
+    expect(agruparChave("")).toBe("");
+    expect(agruparChave("12345")).toBe("1234 5");
+    expect(agruparChave("2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8720 99")).toBe(
+      "2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8720",
+    );
+    expect(agruparChave("ab12-34")).toBe("1234");
   });
 });
