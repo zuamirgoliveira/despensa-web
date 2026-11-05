@@ -8,3 +8,4 @@
 | C-15 / Z-08 | Z-04 a Z-06: domínio, VPS e secrets do GitHub. | Zuma | aberto |
 | C-15 | `actionlint` não foi executado (não estava instalado e baixá-lo foi bloqueado no ambiente). Os dois workflows foram validados só como YAML. Rode `actionlint` localmente ou observe o primeiro run no GitHub. | Zuma | aberto, baixa prioridade |
 | C-28 e seguintes | Z-10: decisão do serviço de mapas. A C-28 foi implementada (e2e com serviço simulado) com a recomendação do spike (Nominatim + OSRM FOSSGIS, sem chave) atrás da interface `Mapas`. Se você escolher outro serviço, só `src/lib/mapas.ts` e o `connect-src` mudam. | Zuma | recomendação aplicada, aguardando confirmação |
+| C-39 | Lighthouse (mobile) não pôde ser executado aqui (baixar/executar pacote externo foi bloqueado). Bundle e acessibilidade foram medidos por outros meios (`docs/qualidade.md`). Rodar o comando da seção "Lighthouse" e anotar os números. | Zuma | aberto |

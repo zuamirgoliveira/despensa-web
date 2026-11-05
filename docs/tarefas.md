@@ -798,7 +798,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-36 Painel
 - [x] C-37 e2e E2
 - [x] C-38 Segurança final
-- [ ] C-39 Performance e acessibilidade
+- [x] C-39 Performance e acessibilidade (Lighthouse pendente: ver docs/qualidade.md)
 - [ ] C-40 Documentação final
 
 ---
