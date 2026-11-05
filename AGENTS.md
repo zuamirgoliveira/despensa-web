@@ -117,6 +117,7 @@ despensa-web/
 │  │  ├─ resumo/                   tela Resumo da compra (comprado, faltou, fora da lista)
 │  │  ├─ mercados/                 tela Mercados (tipo, transporte, distância, custo da ida)
 │  │  ├─ inicio/                   tela Início ("Hoje"): próxima ida, lembretes
+│  │  ├─ gastos/                   tela Gastos: custo real, categorias, deslocamento, inflação
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
@@ -304,7 +305,7 @@ Casa itens da nota com `ItemLista` por `produtoId` (resolvido pelo apelido na im
 - Melhor mercado (`melhorMercadoPorProduto`): menor preço normalizado **mais recente por mercado**, dentro da janela `Perfil.janelaPrecoDias` (padrão 60, editável em Ajustes; 60 dias é inclusivo). Empate é sinalizado. Cesta (`custoDaCesta`): produtos ativos com meta × último preço no mercado; informa a cobertura ("preços de N de M itens"). `sugerirMercadoPreferido`: com preços de ≥ 2 mercados, sem empate, melhor ≠ preferido atual e mais barato que o limiar de 10% (contra o preferido, ou contra a média dos outros); **nunca troca sozinho**: a tela Preços → Comparar oferece o botão.
 - `economiaLiquida = economiaDePreço − custoDaIdaExtra` (`economia.ts`). `proporDivisao` avalia cada mercado alternativo **com custo de ida conhecido**: soma a economia dos itens que lá são mais baratos que no mercado habitual (economia percentual normalizada aplicada ao gasto no habitual) e desconta a ida extra; só propõe se o líquido for positivo **e** ≥ `Perfil.economiaMinimaDivisaoCentavos` (padrão R$ 5,00), escolhendo a melhor alternativa. Mercado habitual = o da agenda da ida (`AgendaIda.mercadoId`), senão o mais usado (`mercadoHabitual`). `dividirLista` cria uma segunda lista (mesma ida, `Lista.mercadoId` do alternativo) e **move** os itens (nada se perde); regerar a original não traz de volta o que está na lista irmã. Bike elétrica (custo ~0) tende a propor.
 - Aviso de ida pouco vantajosa (`avisoIdaPoucoVantajosa`, mostrado na lista quando o custo da ida do mercado habitual é conhecido): custo da ida ≥ 40% do total estimado (exatamente 40% avisa), ou menos de 5 itens; limites parametrizáveis. Texto: "Esta ida tem N itens, R$ X, e custa R$ Y para ir e voltar. Dá para esperar a feira mensal?".
-- Inflação pessoal: variação do custo de uma **cesta fixa** (produtos comprados nos dois meses, mesma quantidade de referência, preço normalizado).
+- Gastos (`gastos.ts`, tela `/gastos`): `gastosPorMes` (itens por categoria; item sem produto → `outros`; deslocamento = Σ `custoIdaCentavos`; custo real = itens + deslocamento). **Inflação pessoal** (`inflacaoPessoal`, `serieDeInflacao`): variação do custo de uma **cesta fixa** = só produtos comprados nos dois meses **na mesma base de preço**; preço = média normalizada do mês; quantidades do mês base mantidas (equivale à média dos reajustes ponderada pelo gasto do mês base), então comprar mais ou menos de um produto não distorce. Gráficos em SVG próprio (`GraficoSerie`).
 
 ### 6.7 Catálogo (`categorias.ts` e fluxo de importação)
 

@@ -16,7 +16,7 @@ describe("rotaAtiva", () => {
 describe("ROTAS", () => {
   it("barra: Início, Importar, Lista, Compras; o resto cabe no menu Mais", () => {
     expect(ROTAS.filter((r) => r.naBarra).map((r) => r.rotulo)).toEqual(["Início", "Importar", "Lista", "Compras"]);
-    expect(ROTAS.filter((r) => r.noMais).map((r) => r.rotulo)).toEqual(["Conferir despensa", "Catálogo", "Preços", "Mercados", "Ajustes"]);
+    expect(ROTAS.filter((r) => r.noMais).map((r) => r.rotulo)).toEqual(["Conferir despensa", "Catálogo", "Preços", "Gastos", "Mercados", "Ajustes"]);
   });
   it("nenhuma rota está na barra e no Mais ao mesmo tempo, e não há href repetido", () => {
     expect(ROTAS.filter((r) => r.naBarra && r.noMais)).toEqual([]);
