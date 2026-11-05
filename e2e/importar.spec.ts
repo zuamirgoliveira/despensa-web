@@ -15,6 +15,23 @@ test.beforeEach(async ({ context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 });
 
+test("chave com um dígito divergente: oferece as trocas de 1 dígito e nunca aplica sozinho", async ({ page }) => {
+  const { erros } = vigiarConsole(page);
+  await page.goto("/importar");
+  const campo = page.getByLabel("Chave de acesso (44 dígitos)");
+  // chave de nota real de impressão pontilhada, transcrita com o 9 do grupo 10 que no papel é 5
+  await campo.fill("2626 1141 4993 3900 0161 6500 5000 1238 5490 9136 4469");
+  await expect(page.getByText("Dígito verificador não confere")).toBeVisible();
+  const grupo = page.getByRole("group", { name: "Correções possíveis" });
+  await expect(grupo).toBeVisible();
+  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 9136 4469"); // não mudou sozinho
+  await grupo.getByRole("button", { name: "Grupo 10, dígito 1: trocar 9 por 5" }).click();
+  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 5136 4469");
+  await expect(page.getByText(/Chave válida: nota 123854, série 5/)).toBeVisible();
+  await expect(grupo).toBeHidden();
+  semViolacaoDeCsp(erros);
+});
+
 test("chave: parcial, inválida e válida", async ({ page }) => {
   const { erros } = vigiarConsole(page);
   await page.goto("/importar");

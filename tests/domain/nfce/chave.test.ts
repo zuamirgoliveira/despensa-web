@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  correcoesDeUmDigito,
   leituraAproximada,
   calcDV,
   chaveDoOCR,
@@ -193,5 +194,27 @@ describe("leituraAproximada", () => {
   });
   it("preserva os grupos como o OCR leu (grupo com ≠ 4 dígitos mostra o erro) e descarta letras", () => {
     expect(leituraAproximada("1626 1141 44983 3906 0161 b50 00 1238 5496 3136 4469")).toBe("1626 1141 44983 3906 0161 50 00 1238 5496 3136 4469");
+  });
+});
+
+describe("correcoesDeUmDigito", () => {
+  // chave de uma nota real (impressão pontilhada) transcrita com 1 dígito divergente do papel
+  const TRANSCRITA = "26261141499339000161650050001238549091364469";
+
+  it("sugere trocas de 1 dígito que tornam a chave válida, com a posição", () => {
+    const r = correcoesDeUmDigito(TRANSCRITA);
+    expect(r.length).toBeGreaterThan(0);
+    for (const c of r) {
+      expect(chavePlausivel(c.chave)).toBe(true);
+      expect(c.chave[c.posicao - 1]).toBe(c.para);
+      expect(TRANSCRITA[c.posicao - 1]).toBe(c.de);
+    }
+    // o 9 do grupo 10 pode ser um 5 (confusão comum em impressão pontilhada)
+    expect(r).toContainEqual(expect.objectContaining({ posicao: 37, de: "9", para: "5" }));
+  });
+  it("chave já válida, tamanho errado ou lixo não geram sugestões", () => {
+    expect(correcoesDeUmDigito("26261108868231000638650020000689031020778720")).toEqual([]);
+    expect(correcoesDeUmDigito("123")).toEqual([]);
+    expect(correcoesDeUmDigito("")).toEqual([]);
   });
 });

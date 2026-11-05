@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Card, Input, Progress } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import type { ChaveDecodificada } from "@/domain/nfce/chave";
-import { formatCNPJ, decodeKey, onlyDigits } from "@/domain/nfce/chave";
+import { correcoesDeUmDigito, formatCNPJ, decodeKey, onlyDigits, type Correcao } from "@/domain/nfce/chave";
 import { dataBR, agruparChave } from "@/lib/format";
 import { lerChaveDeImagem } from "@/lib/imagemChave";
 import { iniciarScanner, type Scanner } from "@/lib/qr";
@@ -30,6 +30,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
   const [previa, setPrevia] = useState<string | null>(null);
   const [candidatas, setCandidatas] = useState<Candidata[]>([]);
   const [aproximada, setAproximada] = useState<string | null>(null);
+  const [correcoes, setCorrecoes] = useState<Correcao[]>([]);
   const dica = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const video = useRef<HTMLVideoElement>(null);
@@ -43,10 +44,14 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
     const d = onlyDigits(valor).slice(0, 44);
     setTexto(agruparChave(d));
     aoMudarChave(null, null);
+    setCorrecoes([]);
     if (d.length === 0) return setMsg(null);
     if (d.length < 44) return setMsg({ texto: `${d.length}/44 dígitos`, tipo: "info" });
     const k = decodeKey(d);
-    if (!k.ok) return setMsg({ texto: k.error, tipo: "erro" });
+    if (!k.ok) {
+      setCorrecoes(correcoesDeUmDigito(d)); // sugestões de 1 dígito; o usuário confere no papel e escolhe
+      return setMsg({ texto: k.error, tipo: "erro" });
+    }
     if (!k.ehNFCe) return setMsg({ texto: "Esta chave não é de NFC-e (modelo 65).", tipo: "erro" });
     const repos = await criarRepositorios();
     const ja = await repos.compras.obter(k.chave);
@@ -235,6 +240,18 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
       {imgMsg ? <Alert tipo={imgMsg.tipo === "erro" ? "erro" : imgMsg.tipo === "ok" ? "info" : "aviso"}>{imgMsg.texto}</Alert> : null}
       {progresso !== null ? <Progress rotulo="Lendo a foto" valor={progresso} maximo={1} /> : null}
 
+      {correcoes.length ? (
+        <div className="flex flex-col gap-2" role="group" aria-label="Correções possíveis">
+          <p className="text-sm text-suave">
+            Se só um dígito estiver errado, estas trocas deixam a chave válida. Confira no papel (o número da nota e a data estão impressos logo abaixo da chave) e escolha a que bate:
+          </p>
+          {correcoes.map((c) => (
+            <Button key={`${c.posicao}-${c.para}`} variante="secundario" onClick={() => void validar(c.chave)}>
+              Grupo {Math.floor((c.posicao - 1) / 4) + 1}, dígito {((c.posicao - 1) % 4) + 1}: trocar {c.de} por {c.para}
+            </Button>
+          ))}
+        </div>
+      ) : null}
       {aproximada ? (
         <div className="flex flex-col gap-2" role="group" aria-label="Leitura aproximada">
           <p className="text-sm text-suave">Leitura aproximada (pode ter dígitos errados), ainda não usada:</p>

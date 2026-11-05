@@ -118,10 +118,31 @@ export function chavePlausivel(k: string): boolean {
 
 // Troca típica do OCR em papel térmico: dígito lido -> dígitos que podem ser o verdadeiro.
 const CONFUSAO: Readonly<Record<string, string>> = {
-  0: "86", 1: "7", 2: "7", 3: "85", 4: "9", 5: "63", 6: "580", 7: "12", 8: "0369", 9: "840",
+  0: "86", 1: "7", 2: "7", 3: "85", 4: "9", 5: "639", 6: "580", 7: "12", 8: "0369", 9: "8405",
 };
 
 export type Candidata = { chave: string; trocas: number };
+
+/** Uma correção de um dígito: posição 1 a 44, dígito atual e dígito proposto. */
+export type Correcao = { chave: string; posicao: number; de: string; para: string };
+
+/**
+ * Para uma chave de 44 dígitos com dígito verificador errado (ex.: digitada com um número trocado):
+ * as trocas de **um** dígito, por confusões típicas de leitura (tabela do OCR), que a tornam válida.
+ * São sugestões para o usuário conferir no papel: nunca são aplicadas sozinhas.
+ */
+export function correcoesDeUmDigito(chave: string): Correcao[] {
+  const s = onlyDigits(chave);
+  if (s.length !== 44 || chavePlausivel(s)) return [];
+  const out: Correcao[] = [];
+  for (let i = 0; i < 44; i++) {
+    for (const c of CONFUSAO[s[i]] || "") {
+      const nova = troca(s, i, c);
+      if (chavePlausivel(nova)) out.push({ chave: nova, posicao: i + 1, de: s[i], para: c });
+    }
+  }
+  return out;
+}
 
 const troca = (str: string, i: number, c: string): string => str.slice(0, i) + c + str.slice(i + 1);
 
