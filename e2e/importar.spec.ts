@@ -32,6 +32,25 @@ test("chave com um dígito divergente: oferece as trocas de 1 dígito e nunca ap
   semViolacaoDeCsp(erros);
 });
 
+test("campo da chave: editar no meio mantém o cursor (apagar e digitar no meio de um grupo)", async ({ page }) => {
+  await page.goto("/importar");
+  const campo = page.getByLabel("Chave de acesso (44 dígitos)");
+  await campo.fill("2626 1141 4993 3900 0161 6500 5000 1238 5490 9136 4469");
+  // cursor no meio do grupo 10 ("9136"): depois do '9'
+  await campo.press("Home");
+  for (let i = 0; i < 9 * 5 + 1; i++) await campo.press("ArrowRight"); // 9 grupos + espaços = 45; +1 = depois do '9'
+  await campo.press("Backspace"); // apaga o '9' do grupo 10
+  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 1364 469");
+  await campo.press("5"); // digita no mesmo lugar (o cursor não foi para o fim)
+  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 5136 4469");
+  await expect(page.getByText(/Chave válida: nota 123854/)).toBeVisible();
+  // apagar cruzando o espaço: cursor no início do grupo 11 e Backspace apaga o último dígito do grupo 10
+  await campo.press("Home");
+  for (let i = 0; i < 10 * 5; i++) await campo.press("ArrowRight");
+  await campo.press("Backspace");
+  await expect(campo).toHaveValue("2626 1141 4993 3900 0161 6500 5000 1238 5490 5134 469");
+});
+
 test("chave: parcial, inválida e válida", async ({ page }) => {
   const { erros } = vigiarConsole(page);
   await page.goto("/importar");

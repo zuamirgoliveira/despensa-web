@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent } from "react";
 import { Alert, Button, Card, Input, Progress } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import type { ChaveDecodificada } from "@/domain/nfce/chave";
 import { correcoesDeUmDigito, formatCNPJ, decodeKey, onlyDigits, type Correcao } from "@/domain/nfce/chave";
 import { dataBR, agruparChave } from "@/lib/format";
 import { lerChaveDeImagem } from "@/lib/imagemChave";
+import { editarChave } from "@/lib/campoChave";
 import { iniciarScanner, type Scanner } from "@/lib/qr";
 import type { Candidata } from "@/domain/nfce/chave";
 
@@ -32,6 +33,21 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
   const [aproximada, setAproximada] = useState<string | null>(null);
   const [correcoes, setCorrecoes] = useState<Correcao[]>([]);
   const dica = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Posição do cursor a restaurar depois que o React regrava o campo (senão ele pula para o fim). */
+  const cursorPendente = useRef<{ el: HTMLInputElement; pos: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const c = cursorPendente.current;
+    if (c && document.activeElement === c.el) c.el.setSelectionRange(c.pos, c.pos);
+    cursorPendente.current = null;
+  });
+
+  function aoDigitar(e: ChangeEvent<HTMLInputElement>): void {
+    const el = e.target;
+    const edicao = editarChave(texto, el.value, el.selectionStart ?? el.value.length, (e.nativeEvent as InputEvent).inputType);
+    cursorPendente.current = { el, pos: edicao.cursor };
+    void validar(edicao.texto);
+  }
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const scanner = useRef<Scanner | null>(null);
@@ -188,7 +204,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
         inputMode="numeric"
         autoComplete="off"
         value={texto}
-        onChange={(e) => void validar(e.target.value)}
+        onChange={aoDigitar}
         placeholder="0000 0000 0000 ..."
       />
       {msg ? <Alert tipo={msg.tipo === "erro" ? "erro" : msg.tipo === "ok" ? "info" : "aviso"}>{msg.texto}</Alert> : null}
