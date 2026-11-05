@@ -764,7 +764,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-02 AGENTS.md e README
 - [x] C-03 Headers e CSP
 - [x] C-04 Modelos e schemas
-- [ ] C-05 Chave e QR
+- [x] C-05 Chave e QR
 - [ ] C-06 Parser da nota
 - [ ] C-07 Repositórios e backup
 - [ ] C-08 Layout e componentes
