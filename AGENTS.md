@@ -89,6 +89,7 @@ despensa-web/
 │  ├─ seguranca.md                 resultado do checklist de segurança
 │  ├─ qualidade.md                 métricas de Lighthouse e bundle
 │  ├─ design.md                    identidade visual, paleta dos dois temas, tipografia, layout mobile
+│  ├─ pos-mvp.md                   ideias avaliadas e adiadas (IA, análises, treino do OCR, compra sem nota)
 │  ├─ spike-mapas.md               comparação e decisão do serviço de mapas
 │  ├─ parametros-iniciais.md       valores de seed informados pelo dono
 │  └─ bloqueios.md                 pendências que dependem de ação humana
@@ -127,6 +128,7 @@ despensa-web/
 │  │  ├─ nfce/parser.ts            texto da SEFAZ → nota estruturada
 │  │  ├─ nfce/sefaz.ts             URL de consulta por UF
 │  │  ├─ catalogo.ts               produto novo a partir de item de nota, chave de nome
+│  │  ├─ normalizacao.ts           nome normalizado, chave de produto, parecidos e sugestões de mesclagem
 │  │  ├─ mercados.ts               tipo sugerido pelo nome do emitente
 │  │  ├─ estoque.ts                níveis, consumo, cobertura
 │  │  ├─ inicio.ts                 próxima ida, produtos que vencem e lembretes da tela Início
@@ -331,7 +333,10 @@ Métricas do mês contra o mês anterior, com tendência (▼ melhorou, ▲ pior
 
 ### 6.7 Catálogo (`categorias.ts` e fluxo de importação)
 
-- Importação (`data/importarNota.ts`): o nome do produto de cada item é resolvido por nome (sem caixa/acento); se existir, reutiliza o produto, senão cria. O apelido `cnpj + código → produto` é regravado a cada importação. Nota com a mesma chave só é salva com `substituir`. Estoque e metas por média entram nas C-21/C-26.
+- **Normalização de nomes (`domain/normalizacao.ts`, sem IA):** `normalizarDescricao(descricao)` devolve `{ nome, chave, palavras, tamanho }`: minúsculas, sem acento nem pontuação, artigos (`de`, `da`, `do`...) fora da chave, palavras sem ordem, e o tamanho extraído e canônico (`500g`, `500 g`, `500GR`, `0,5kg` → `500g`; `1 LT` → `1l`; `1,5kg`). Sufixos da nota (`PCT 180`, `UN`, `KG` no fim) saem do nome (o tamanho da embalagem para preço continua vindo de `extrairEmbalagem` sobre a descrição do item da compra). `chaveDeProduto(nome)` é a **identidade do produto**: nomes só diferentes em caixa, acento, ordem, espaços ou escrita do tamanho têm a mesma chave e viram **um** produto (inclusive produtos antigos digitados à mão). Tamanho faz parte da identidade (`Maionese Liza 500g` ≠ `Maionese Liza 400g` ≠ `Maionese Liza`). `chaveDeNome` (caixa/acento) segue para busca e reconciliação.
+- **Parecidos (só sugestão):** `produtosParecidos(nome, produtos)` lista até 3 produtos ativos com mesmas palavras e tamanho diferente/ausente (`motivo: tamanho`) ou com 2 de 3 palavras em comum (Jaccard ≥ 0,66, `motivo: parecido`); marcas diferentes (`Maionese Helmaz` × `Maionese Liza`) **não** são sugeridas. Na conferência de importação, item `novo` mostra "Usar “…”" por parecido; escolher só troca o nome do campo (a ligação mercado + código → produto é gravada ao salvar). Nada une sozinho além de chave igual. `sugerirMesclagens(produtos, compras)` alimenta a tela **Catálogo → Possíveis duplicados** (pares `igual` / `tamanho` / `parecido`, destino sugerido = o mais comprado), que só mescla (`mesclarProdutos`) após diálogo de confirmação e aviso para fazer backup.
+- IA para esse problema, análises com IA e treino do OCR estão **adiados** (`docs/pos-mvp.md`); qualquer uso exige backend e decisão registrada aqui (regras 2 e 3 da seção 13).
+- Importação (`data/importarNota.ts`): o nome do produto de cada item é resolvido por `chaveDeProduto` (ver acima); se existir, reutiliza o produto, senão cria (nome sugerido = `normalizarDescricao(descricao).nome`). O apelido `cnpj + código → produto` é regravado a cada importação. Nota com a mesma chave só é salva com `substituir`. Estoque e metas por média entram nas C-21/C-26.
 
 - Produto nasce das notas. `unidade`: `KG` → `kg`, `UNID` → `un`, `PCT` → `pacote`, `L` → `l`. Categoria: mercado de hortifruti → `hortifruti`; senão palavras-chave em `categorias.ts` (da mais específica à mais geral; palavra-chave com espaço no fim casa a palavra inteira, sem espaço casa o começo da palavra); padrão `outros`. Tipo de ida: hortifruti → `hortifruti_semanal`, o resto → `mercado_semanal`.
 - `meta` inicial = média da quantidade comprada por compra; atualizada a cada compra enquanto `metaManual` for falso.

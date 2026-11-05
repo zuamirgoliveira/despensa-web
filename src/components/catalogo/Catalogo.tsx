@@ -11,6 +11,7 @@ import type { Produto } from "@/domain/types";
 import { CATEGORIAS } from "@/schemas";
 import { CATEGORIA_ROTULO, TIPO_IDA_ROTULO, UNIDADE_ROTULO } from "@/lib/rotulos";
 import { numeroBR } from "@/lib/format";
+import { DuplicadosCatalogo } from "./DuplicadosCatalogo";
 import { FormProduto } from "./FormProduto";
 
 export function Catalogo() {
@@ -79,6 +80,7 @@ export function Catalogo() {
 
   return (
     <>
+      <DuplicadosCatalogo produtos={dados.produtos} compras={dados.compras} />
       <div className="flex flex-col gap-2">
         <Input rotulo="Buscar produto" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} />
         <label className="flex min-h-11 items-center gap-2 text-sm">

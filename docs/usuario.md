@@ -30,6 +30,14 @@
 2. O app atualiza o estoque, fecha a lista e mostra o **resumo**: o que foi comprado, o que faltou (volta na próxima lista) e o que veio fora da lista.
 3. Na primeira nota de um mercado novo, confirme se foi de carro ou de bike elétrica; o custo da ida entra na compra. Sem internet ou sem casa cadastrada, decida depois em **Mercados**.
 
+## Produtos repetidos com nomes diferentes
+
+A nota de cada mercado escreve o produto de um jeito. O app junta sozinho o que é **exatamente o mesmo** mudando só a escrita: `Maionese LIZA 500g`, `maionese liza 500 g` e `MAIONESE LIZA 500GR` viram o mesmo produto.
+
+- **Marca diferente** (Helmaz × Liza) continua sendo outro produto.
+- **Tamanho diferente ou ausente** (`Maionese Liza` × `Maionese Liza 500g`): o app não junta sozinho. Na conferência da nota aparece "Já existe algo parecido: é o mesmo produto?" com um botão **Usar “…”**. Tocando, o item passa a usar o produto que já existe, e nas próximas notas daquele mercado ele já vem certo.
+- **O que já estava repetido:** em **Mais → Catálogo → Possíveis duplicados** o app lista os pares que parecem iguais. Você escolhe qual manter e confirma. Vale fazer um backup antes (Ajustes → Backup), porque mesclar não tem volta.
+
 ## Para acompanhar
 
 - **Preços**: histórico por produto (preço normalizado, variação, gráfico) e **Comparar** mercados.

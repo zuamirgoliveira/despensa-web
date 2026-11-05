@@ -83,3 +83,37 @@ test("a nota popula o catálogo; busca, edição de meta, arquivar e mesclar", a
   await expect(banana.getByText(/04\/11\/2026/)).toHaveCount(2);
   semViolacaoDeCsp(erros);
 });
+
+test("possíveis duplicados: aponta o mesmo produto escrito de outro jeito e só mescla com confirmação", async ({ page }) => {
+  const { erros } = vigiarConsole(page);
+  // @ts-expect-error módulo .mjs de script, sem tipos
+  const { gerarSeed } = await import("../scripts/seed-dev.mjs");
+  const seed = gerarSeed(new Date());
+  const modelo = seed.colecoes.produtos[0];
+  seed.colecoes.produtos.push(
+    { ...modelo, id: "00000000-0000-4000-8000-0000000000a1", nome: "Maionese LIZA 500g" },
+    { ...modelo, id: "00000000-0000-4000-8000-0000000000a2", nome: "maionese liza 500 g" },
+  );
+  await page.goto("/ajustes");
+  await page.getByLabel("Arquivo de backup").setInputFiles({ name: "seed.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(seed)) });
+  await expect(page.getByText(/Importado:/)).toBeVisible();
+
+  await page.goto("/catalogo");
+  await expect(page.getByRole("heading", { name: "Possíveis duplicados (1)" })).toBeVisible();
+  await expect(page.getByText("Mesmo produto escrito de outro jeito.")).toBeVisible();
+  const itens = page.getByRole("listitem").filter({ hasText: /maionese liza 500 ?g/i });
+  await expect(itens).toHaveCount(3); // o aviso de duplicado + os dois produtos
+
+  await page.getByRole("button", { name: /^Manter “Maionese LIZA 500g”$/ }).click();
+  await expect(page.getByRole("dialog", { name: "Mesclar produtos?" })).toBeVisible();
+  // cancelar não muda nada
+  await page.getByRole("button", { name: "Cancelar" }).click();
+  await expect(page.getByRole("heading", { name: "Possíveis duplicados (1)" })).toBeVisible();
+
+  await page.getByRole("button", { name: /^Manter “Maionese LIZA 500g”$/ }).click();
+  await page.getByRole("button", { name: "Mesclar", exact: true }).click();
+  await expect(page.getByText("Produtos mesclados.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Possíveis duplicados/ })).toHaveCount(0);
+  await expect(itens).toHaveCount(1); // sem o aviso, e um produto só
+  semViolacaoDeCsp(erros);
+});

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 (nomes de produto, chave da nota e tema)
+
+- **Produtos iguais com descrição diferente:** nomes normalizados (caixa, acento, ordem das palavras, artigos e tamanho: `500g`, `500 g`, `500GR` viram `500g`); chave igual une sozinha; parecido só sugere na conferência; nova seção "Possíveis duplicados" no Catálogo, com mesclagem confirmada.
+- **Chave da nota:** campo mantém o cursor ao editar no meio; sugestão de correção de 1 dígito quando o DV não confere; aviso quando a nota saiu com chave inválida (contingência); leitura aproximada quando o OCR falha; câmera do QR em alta resolução com foco e dica.
+- **Tema:** a escolha Claro/Escuro/Sistema persiste mesmo quando um proxy altera o HTML (falha de hidratação).
+- **Navegação:** menu Mais como folha inferior com ícones.
+- Pós-MVP registrado em `docs/pos-mvp.md` (IA, análises, treino do OCR, compra sem nota).
+
 ## 0.2.0 (design, temas e mobile)
 
 - **Identidade visual:** nova paleta azul-marinho com detalhes em dourado e vermelho só para erro, verde só para sucesso (`docs/design.md`).
