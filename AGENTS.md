@@ -203,7 +203,9 @@ Todas as fórmulas vivem em `src/domain/` e têm teste tabelado.
 - `cobertura (dias) = estoque ÷ consumo`; `Infinity` se consumo for 0 ou indefinido.
 - `estoqueNaData = max(0, estoqueAgora − consumo × dias)`.
 - Produto comprado volta a `cheio`.
-- "Provavelmente acabando": cobertura estimada < 2 dias e nível ainda não é `acabando`/`acabou` → pede confirmação.
+- "Provavelmente acabando" (`sugerirProvavelmenteAcabando(produto, estoque, compras, hoje)`): cobertura estimada de hoje < 2 dias e nível ainda não é `acabando`/`acabou` → pede confirmação. O estoque de hoje = estoque do nível confirmado − consumo × dias desde `confirmadoEm` (`estoqueAgora`).
+- `quantidadeReferencia(produto, compras)`: a meta; sem meta, a última quantidade comprada. `comprasDoProduto` soma os itens do mesmo produto na mesma nota. `aplicarCompra(estoques, compra, confirmadoEm, gerarId)` devolve só os registros de estoque que mudam ou nascem (`cheio`, `quantidadeExata` zerada).
+- Datas: `diasEntre`, `adicionarDias`, `soData`, `hojeRecife` em `src/lib/datas.ts` (dias civis, validam datas inexistentes).
 
 ### 6.2 Agenda (`agenda.ts`)
 
