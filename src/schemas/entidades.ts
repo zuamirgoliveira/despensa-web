@@ -146,6 +146,8 @@ export const compraSchema = z.object({
   itens: z.array(itemCompraSchema),
   custoIdaCentavos: centavosNaoNegSchema.optional(),
   listaId: idSchema.optional(),
+  /** Quantos itens da nota já tinham apelido no catálogo na importação (métrica "itens casados"). */
+  itensCasados: z.number().int().nonnegative().optional(),
   importadoEm: instanteSchema,
 });
 
@@ -193,4 +195,6 @@ export const conferenciaSchema = z.object({
   iniciadaEm: instanteSchema,
   duracaoSegundos: z.number().int().nonnegative(),
   produtosConferidos: z.number().int().nonnegative(),
+  /** Produtos marcados como "acabou" nesta conferência que ainda não estavam como acabou (ruptura). */
+  rupturas: z.number().int().nonnegative().default(0),
 });

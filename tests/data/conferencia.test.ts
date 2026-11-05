@@ -62,3 +62,19 @@ describe("registrarConferencia", () => {
     expect(await repos.conferencias.obter(r.id)).toEqual(r);
   });
 });
+
+describe("rupturas", () => {
+  it("marcar 'acabou' um produto que não estava acabado é ruptura; repetir não é", async () => {
+    const p = await novo("Arroz");
+    expect((await registrarNivel(repos, p, "metade", new Date())).ruptura).toBe(false);
+    expect((await registrarNivel(repos, p, "acabou", new Date())).ruptura).toBe(true);
+    expect((await registrarNivel(repos, p, "acabou", new Date())).ruptura).toBe(false);
+    const sem = await novo("Sal");
+    expect((await registrarNivel(repos, sem, "acabou", new Date())).ruptura).toBe(true); // sem registro anterior
+  });
+  it("a sessão guarda as rupturas (padrão 0)", async () => {
+    const a = await registrarConferencia(repos, { tipoIda: "mercado_semanal", iniciadaEm: "2026-11-08T10:00:00.000Z", duracaoSegundos: 10, produtosConferidos: 2 });
+    const b = await registrarConferencia(repos, { tipoIda: "mercado_semanal", iniciadaEm: "2026-11-08T10:00:00.000Z", duracaoSegundos: 10, produtosConferidos: 2, rupturas: 3 });
+    expect([a.rupturas, b.rupturas]).toEqual([0, 3]);
+  });
+});

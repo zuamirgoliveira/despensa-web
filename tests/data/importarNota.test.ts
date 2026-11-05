@@ -87,3 +87,14 @@ describe("importação da nota de exemplo", () => {
     expect(await repos.produtos.listar()).toHaveLength(0);
   });
 });
+
+describe("itens casados com o catálogo", () => {
+  it("primeira importação: nenhum casado; segunda: todos; substituir mantém o valor da primeira", async () => {
+    const a = await salvarNotaImportada(repos, { nota, chave: CHAVE, nomes: await nomesSugeridos() });
+    expect(a.compra.itensCasados).toBe(0);
+    const b = await salvarNotaImportada(repos, { nota: { ...nota, emissao: "2026-11-11T10:00:00" }, chave: "26261108868231000638650020000689041020778728", nomes: {} });
+    expect(b.compra.itensCasados).toBe(16);
+    const c = await salvarNotaImportada(repos, { nota, chave: CHAVE, nomes: {}, substituir: true });
+    expect(c.compra.itensCasados).toBe(0);
+  });
+});

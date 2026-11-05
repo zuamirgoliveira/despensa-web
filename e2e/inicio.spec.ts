@@ -77,7 +77,7 @@ test("barra inferior: Início, Importar, Lista, Compras e o menu Mais", async ({
 
   await mais.click();
   await expect(mais).toHaveAttribute("aria-expanded", "true");
-  for (const nome of ["Conferir despensa", "Catálogo", "Preços", "Gastos", "Mercados", "Ajustes"]) await expect(nav.getByRole("link", { name: nome, exact: true })).toBeVisible();
+  for (const nome of ["Conferir despensa", "Catálogo", "Preços", "Painel", "Gastos", "Mercados", "Ajustes"]) await expect(nav.getByRole("link", { name: nome, exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(mais).toHaveAttribute("aria-expanded", "false");
 

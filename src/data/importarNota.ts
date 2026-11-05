@@ -79,7 +79,10 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
   const produtosCriados: Produto[] = [];
 
   const itens: Compra["itens"] = [];
+  const anterior = await repos.compras.obter(chave);
+  let casados = 0;
   for (const item of nota.itens) {
+    if (await repos.apelidos.obter([mercado.cnpj, item.codigo])) casados++;
     const nome = (nomes[item.codigo] ?? "").trim() || suggestName(item.descricao);
     let produto = porNome.get(chaveDeNome(nome));
     if (!produto) {
@@ -109,6 +112,8 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
     valorTotalCentavos: nota.valorPagarCentavos ?? nota.somaItensCentavos,
     pagamento: nota.pagamento ?? "",
     itens,
+    // reimportar a mesma nota (substituir) mantém o valor da primeira importação
+    itensCasados: anterior?.itensCasados ?? casados,
     importadoEm: (entrada.agora ?? new Date()).toISOString(),
   });
   await atualizarMetasAutomaticas(repos, itens.flatMap((i) => (i.produtoId ? [i.produtoId] : [])));

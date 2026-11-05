@@ -333,7 +333,7 @@ describe("migração 002 (conferências)", () => {
     const novo = await criarRepositorios({ indexedDB: f, nomeBanco: "antigo" });
     expect((await novo.casas.obter(c.id))?.nome).toBe("Casa antiga");
     const reg = await novo.conferencias.salvar({
-      id: crypto.randomUUID(), casaId: c.id, tipoIda: "mercado_semanal", iniciadaEm: "2026-11-05T10:00:00Z", duracaoSegundos: 95, produtosConferidos: 8,
+      id: crypto.randomUUID(), casaId: c.id, tipoIda: "mercado_semanal", iniciadaEm: "2026-11-05T10:00:00Z", duracaoSegundos: 95, produtosConferidos: 8, rupturas: 0,
     });
     expect(await novo.conferencias.obter(reg.id)).toEqual(reg);
     novo.fechar();
@@ -347,7 +347,7 @@ describe("migração 002 (conferências)", () => {
 
   it("registro de conferência valida os campos", async () => {
     await expect(
-      repos.conferencias.salvar({ id: crypto.randomUUID(), casaId: casa.id, tipoIda: "mercado_semanal", iniciadaEm: "2026-11-05T10:00:00Z", duracaoSegundos: -1, produtosConferidos: 0 }),
+      repos.conferencias.salvar({ id: crypto.randomUUID(), casaId: casa.id, tipoIda: "mercado_semanal", iniciadaEm: "2026-11-05T10:00:00Z", duracaoSegundos: -1, produtosConferidos: 0, rupturas: 0 }),
     ).rejects.toBeInstanceOf(DadoInvalidoError);
   });
 });

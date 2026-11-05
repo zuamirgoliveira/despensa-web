@@ -35,6 +35,7 @@ export function Conferencia() {
   const [fila, setFila] = useState<ProdutoParaConferir[] | null>(null);
   const [indice, setIndice] = useState(0);
   const [conferidos, setConferidos] = useState(0);
+  const [rupturas, setRupturas] = useState(0);
   const [quantidade, setQuantidade] = useState("");
   const [fim, setFim] = useState<{ segundos: number } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -49,11 +50,12 @@ export function Conferencia() {
     setFila(lista);
     setIndice(0);
     setConferidos(0);
+    setRupturas(0);
     setQuantidade("");
     setFim(lista.length ? null : { segundos: 0 });
   }
 
-  async function terminar(total: number): Promise<void> {
+  async function terminar(total: number, rupturasTotal: number = rupturas): Promise<void> {
     const comeco = inicio.current ?? new Date();
     const segundos = segundosDesde(comeco);
     if (tipo && total > 0) {
@@ -62,6 +64,7 @@ export function Conferencia() {
         iniciadaEm: comeco.toISOString(),
         duracaoSegundos: segundos,
         produtosConferidos: total,
+        rupturas: rupturasTotal,
       });
     }
     setFim({ segundos });
@@ -71,11 +74,13 @@ export function Conferencia() {
     const q = quantidade.trim() === "" ? undefined : Number(quantidade.replace(",", "."));
     if (q !== undefined && (!Number.isFinite(q) || q < 0)) return setErro("Quantidade exata inválida.");
     setErro(null);
-    await registrarNivel(await criarRepositorios(), item.produto, nivel, new Date(), q);
+    const salvo = await registrarNivel(await criarRepositorios(), item.produto, nivel, new Date(), q);
     const total = conferidos + 1;
+    const rup = rupturas + (salvo.ruptura ? 1 : 0);
     setConferidos(total);
+    setRupturas(rup);
     setQuantidade("");
-    if (fila && indice + 1 >= fila.length) await terminar(total);
+    if (fila && indice + 1 >= fila.length) await terminar(total, rup);
     else setIndice((i) => i + 1);
   }
 

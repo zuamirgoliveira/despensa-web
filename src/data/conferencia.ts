@@ -24,20 +24,22 @@ export async function registrarNivel(
   nivel: Nivel,
   agora: Date,
   quantidadeExata?: number,
-): Promise<Estoque> {
+): Promise<Estoque & { ruptura: boolean }> {
   const atual = await repos.estoques.obterPorProduto(produto.id);
-  return repos.estoques.salvar({
+  const ruptura = nivel === "acabou" && atual?.nivel !== "acabou";
+  const salvo = await repos.estoques.salvar({
     ...(atual ?? { id: crypto.randomUUID(), casaId: produto.casaId, produtoId: produto.id }),
     nivel,
     quantidadeExata,
     confirmadoEm: agora.toISOString(),
   });
+  return { ...salvo, ruptura };
 }
 
 export async function registrarConferencia(
   repos: Repositorios,
-  r: Omit<RegistroConferencia, "id" | "casaId">,
+  r: Omit<RegistroConferencia, "id" | "casaId" | "rupturas"> & { rupturas?: number },
 ): Promise<RegistroConferencia> {
   const casa = await repos.iniciar();
-  return repos.conferencias.salvar({ id: crypto.randomUUID(), casaId: casa.id, ...r });
+  return repos.conferencias.salvar({ id: crypto.randomUUID(), casaId: casa.id, ...r, rupturas: r.rupturas ?? 0 });
 }
