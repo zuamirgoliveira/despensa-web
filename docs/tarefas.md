@@ -776,7 +776,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-14 Docker
 - [x] C-15 CI e deploy
 - [ ] C-16 Correções E0.5
-- [ ] C-17 Spike de mapas
+- [x] C-17 Spike de mapas
 - [ ] C-18 Estoque e cobertura
 - [ ] C-19 Agenda
 - [ ] C-20 Geração da lista

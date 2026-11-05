@@ -140,6 +140,7 @@ despensa-web/
 │  │  ├─ ocr.ts                    leitura da chave por Tesseract
 │  │  ├─ imagem.ts                 arquivo → canvas com EXIF
 │  │  ├─ mapas.ts                  cliente do serviço de mapas
+│  │  ├─ endereco.ts               normalização do endereço da nota (variantes de geocodificação)
 │  │  ├─ format.ts                 brl, dataBR, horaBR, kg
 │  │  ├─ datas.ts                  datas sem hora, hojeRecife (injetável)
 │  │  ├─ rotas.ts                  lista de rotas do app (pré-cache)
