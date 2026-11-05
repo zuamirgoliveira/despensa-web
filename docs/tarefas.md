@@ -768,7 +768,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-06 Parser da nota
 - [x] C-07 Repositórios e backup
 - [x] C-08 Layout e componentes
-- [ ] C-09 PWA e offline
+- [x] C-09 PWA e offline
 - [ ] C-10 QR e OCR
 - [ ] C-11 Tela Importar
 - [ ] C-12 Compras, Preços e Backup

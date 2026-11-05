@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { securityHeaders } from "./src/lib/security-headers";
 
 const config: NextConfig = {
+  env: { NEXT_PUBLIC_BUILD_ID: String(Date.now()) },
   output: "standalone",
   poweredByHeader: false,
   async headers() {

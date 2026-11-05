@@ -308,7 +308,9 @@ Consulta pública de PE: `https://nfce.sefaz.pe.gov.br/nfce-web/consNfce`, prote
   - Navegação (HTML) e requisições RSC (`?_rsc=`): rede primeiro, cache como reserva. Falha de RSC offline devolve erro para o Next fazer navegação completa, atendida pelo HTML em cache.
   - `install`: pré-cache das rotas listadas em `src/lib/rotas.ts` e dos estáticos do build. `skipWaiting` + `clients.claim`; `activate` apaga caches antigos.
   - `/vendor/tesseract/*` (~11 MB): **não** pré-cachear; cache sob demanda no primeiro uso.
-- Registro do SW só em produção ou `localhost`. Aviso discreto quando houver versão nova aguardando.
+- Pré-cache: `npm run build` roda `scripts/gen-precache.mjs` depois do `next build`, que escreve `public/precache.json` (não versionado) com as rotas (HTML em `.next/server/app`) e os estáticos. Rota nova precisa ser pré-renderizada para entrar; **rotas dinâmicas (`[id]`) não são pré-renderizadas: use rota estática com parâmetro na query** (ex.: `/compra?lista=<id>`) para funcionar offline.
+- Navegação: rede primeiro com limite de 4 s, depois cache; a chave do cache é o caminho sem query (`/importar?text=…` usa o HTML de `/importar`). RSC (`?_rsc=`) não é cacheado: offline devolve erro e o Next faz navegação completa (o log "Failed to fetch RSC payload… Falling back to browser navigation" é esperado).
+- Registro: `RegistrarSW` (em `layout.tsx`) registra `/sw.js?v=<NEXT_PUBLIC_BUILD_ID>` (o parâmetro muda a cada build e força a instalação do SW novo) só em produção ou `localhost`. O SW usa `skipWaiting`; ao trocar de controlador a interface mostra "Nova versão disponível" com botão Atualizar.
 - Alterou rota, asset ou estratégia: incremente a versão do cache.
 - Funcionalidades que dependem de rede (mapas) degradam sem bloquear (ver seção 9.4).
 

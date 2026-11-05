@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { BarraAbas } from "@/components/BarraAbas";
+import { RegistrarSW } from "@/components/RegistrarSW";
 import { ToastProvider } from "@/components/ui";
 import "./globals.css";
 
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ToastProvider>
           <main className="mx-auto min-h-dvh max-w-2xl px-4 pb-24 pt-4">{children}</main>
           <BarraAbas />
+          <RegistrarSW />
         </ToastProvider>
       </body>
     </html>

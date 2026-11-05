@@ -12,3 +12,6 @@ next-env.d.ts
 
 # Foto real da nota: não versionar sem pedido explícito (contém final de cartão)
 tests/fixtures/foto-nota-real.jpeg
+
+# Gerado pelo build (scripts/gen-precache.mjs)
+public/precache.json
