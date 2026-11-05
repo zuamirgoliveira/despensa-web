@@ -774,7 +774,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-12 Compras, Preços e Backup
 - [x] C-13 e2e de paridade
 - [x] C-14 Docker
-- [ ] C-15 CI e deploy
+- [x] C-15 CI e deploy
 - [ ] C-16 Correções E0.5
 - [ ] C-17 Spike de mapas
 - [ ] C-18 Estoque e cobertura

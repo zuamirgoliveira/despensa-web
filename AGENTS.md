@@ -401,7 +401,7 @@ Dados ficam no aparelho. O endereço e a posição de casa **não** são enviado
 - `ci.yml` (pull request): `npm ci`, lint, typecheck, test, build, e2e (Chromium do Playwright), upload do relatório.
 - `deploy.yml` (push na `main`): job `qualidade` (lint, typecheck, test, build) → job `deploy`: `docker build` com build-args, `docker save despensa-web:latest | gzip | ssh deploy@VPS "gunzip | docker load"` (a imagem **não** passa por registry), então SSH em `/opt/docker/despensa-web` executando `set -euxo pipefail; docker compose up -d --force-recreate --remove-orphans; docker image prune -af`.
 - Secrets do GitHub: `NEXT_PUBLIC_SITE_URL`, `VPS_HOST`, `VPS_USER` (`deploy`), `VPS_SSH_KEY`, e `NEXT_PUBLIC_MAPS_KEY` se aplicável. A chave SSH é escrita em arquivo temporário com permissão 600 e removida ao fim.
-- O job `qualidade` barra o deploy quando lint, tipos, testes ou build falham.
+- O job `qualidade` barra o deploy quando lint, tipos, testes ou build falham (acréscimo ao Padrão B). O `ci.yml` (PR) roda o mesmo e acrescenta ffmpeg, Chromium e e2e; o `deploy.yml` usa `concurrency` para nunca rodar dois deploys ao mesmo tempo.
 - A `main` deve estar sempre estável: todo push nela publica.
 
 ### 10.4 Servidor
