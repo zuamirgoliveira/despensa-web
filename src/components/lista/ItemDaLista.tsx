@@ -1,6 +1,8 @@
 "use client";
 
 import { Badge, Button } from "@/components/ui";
+import type { AlertaPreco } from "@/domain/precos";
+import { SeloPreco } from "./SeloPreco";
 import { passoDaUnidade, type MotivoItem } from "@/domain/lista";
 import type { ItemLista, Produto } from "@/domain/types";
 import { numeroBR } from "@/lib/format";
@@ -16,11 +18,12 @@ const MOTIVO: Record<MotivoItem | "manual", string> = {
 type Props = {
   item: ItemLista;
   produto?: Produto;
+  alerta?: AlertaPreco;
   aoAlterar: (quantidade: number) => void;
   aoRemover: () => void;
 };
 
-export function ItemDaLista({ item, produto, aoAlterar, aoRemover }: Props) {
+export function ItemDaLista({ item, produto, alerta, aoAlterar, aoRemover }: Props) {
   const nome = produto?.nome ?? item.nomeAvulso ?? "";
   const passo = produto ? passoDaUnidade(produto.unidade) : 1;
   const unidade = produto ? UNIDADE_ROTULO[produto.unidade] : "";
@@ -30,6 +33,7 @@ export function ItemDaLista({ item, produto, aoAlterar, aoRemover }: Props) {
         <div>
           <p className="font-medium">{nome}</p>
           <p className="text-xs text-texto/70">{item.motivo ? MOTIVO[item.motivo] : ""}</p>
+          <SeloPreco alerta={alerta} />
         </div>
         {item.urgente ? <Badge tom="erro">Urgente</Badge> : null}
       </div>

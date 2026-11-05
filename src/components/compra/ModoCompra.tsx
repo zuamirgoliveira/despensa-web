@@ -8,6 +8,7 @@ import {
   adicionarExtra, alternarPego, definirOrcamento, definirPreco, definirQuantidadePega, iniciarCompra, marcarEstado, removerDaCompra,
 } from "@/data/compra";
 import { useRepositorio } from "@/data/useRepositorio";
+import { alertasPorProduto } from "@/domain/precos";
 import { estadoDoOrcamento, ordenarParaCompra, progressoDaCompra, totalCorrente } from "@/domain/compra";
 import { agruparPorCategoria, type ItemVisao } from "@/lib/agruparLista";
 import { centavosParaCampo, reaisParaCentavos } from "@/lib/dinheiro";
@@ -36,13 +37,16 @@ export function ModoCompra() {
 
   const { dados } = useRepositorio(async () => {
     const r = await criarRepositorios();
-    const [lista, itens, produtos] = await Promise.all([
+    const casa = await r.iniciar();
+    const [lista, itens, produtos, compras, perfil] = await Promise.all([
       listaId ? r.listas.obter(listaId) : undefined,
       listaId ? r.itensLista.listarPorLista(listaId) : [],
       r.produtos.listar(),
+      r.compras.listar(),
+      r.perfis.obterDaCasa(casa.id),
     ]);
-    return { lista, itens, produtos: new Map(produtos.map((p) => [p.id, p])) };
-  }, ["listas", "itensLista", "produtos"], [listaId]);
+    return { lista, itens, produtos: new Map(produtos.map((p) => [p.id, p])), alertas: alertasPorProduto(compras, perfil?.limiarAlertaPrecoPct ?? 20) };
+  }, ["listas", "itensLista", "produtos", "compras", "perfis"], [listaId]);
 
   const itens = useMemo(() => dados?.itens ?? [], [dados]);
   const total = totalCorrente(itens);
@@ -112,6 +116,7 @@ export function ModoCompra() {
                 key={item.id}
                 item={item}
                 produto={produto}
+                alerta={item.produtoId ? dados.alertas.get(item.produtoId) : undefined}
                 aoPegar={async () => void (await alternarPego(await repos(), item))}
                 aoEstado={async (e) => void (await marcarEstado(await repos(), item, e))}
                 aoQuantidade={async (q) => void (await definirQuantidadePega(await repos(), item, q))}

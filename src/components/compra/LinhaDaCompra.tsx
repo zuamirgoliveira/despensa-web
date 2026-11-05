@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Badge, Button, Input } from "@/components/ui";
+import type { AlertaPreco } from "@/domain/precos";
+import { SeloPreco } from "@/components/lista/SeloPreco";
 import { quantidadeDoItem } from "@/domain/compra";
 import { passoDaUnidade } from "@/domain/lista";
 import type { ItemLista, Produto } from "@/domain/types";
@@ -13,6 +15,7 @@ import { cn } from "@/lib/cn";
 type Props = {
   item: ItemLista;
   produto?: Produto;
+  alerta?: AlertaPreco;
   aoPegar: () => void;
   aoEstado: (e: "nao_encontrado" | "adiado") => void;
   aoQuantidade: (q: number) => void;
@@ -20,7 +23,7 @@ type Props = {
   aoRemover: () => void;
 };
 
-export function LinhaDaCompra({ item, produto, aoPegar, aoEstado, aoQuantidade, aoPreco, aoRemover }: Props) {
+export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuantidade, aoPreco, aoRemover }: Props) {
   const nome = produto?.nome ?? item.nomeAvulso ?? "";
   const passo = produto ? passoDaUnidade(produto.unidade) : 1;
   const unidade = produto ? UNIDADE_ROTULO[produto.unidade] : "";
@@ -37,6 +40,7 @@ export function LinhaDaCompra({ item, produto, aoPegar, aoEstado, aoQuantidade, 
           {item.status === "adiado" ? <Badge tom="aviso">Adiado</Badge> : null}
           {item.status === "extra" ? <Badge tom="verde">Extra</Badge> : null}
           {item.urgente ? <Badge tom="erro">Urgente</Badge> : null}
+          <SeloPreco alerta={alerta} />
         </div>
         <div className="flex items-center gap-2" role="group" aria-label={`Quantidade de ${nome}`}>
           <Button variante="secundario" className="min-w-11 px-0" aria-label={`Diminuir ${nome}`} onClick={() => aoQuantidade(quantidade - passo)}>

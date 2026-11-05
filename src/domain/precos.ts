@@ -112,3 +112,39 @@ export function historicoDoProduto(compras: readonly Compra[], produtoId: string
   return historicoPorProduto(compras).filter((h) => h.produtoId === produtoId);
 }
 
+
+export type AlertaPreco = { tipo: "acima" | "abaixo"; pct: number };
+
+/** Mínimo de compras no histórico para o alerta de preço existir. */
+export const MIN_COMPRAS_PARA_ALERTA = 3;
+
+/**
+ * Alerta de preço: o último preço normalizado fica mais que `limiarPct`% acima da média das compras
+ * anteriores do usuário (e pelo menos 3 compras no histórico). Também avisa, discretamente, quando está
+ * mais que o limiar abaixo. "Mais que": exatamente no limiar não alerta.
+ */
+export function alertaDePreco(h: HistoricoProduto, limiarPct: number): AlertaPreco | undefined {
+  if (h.pontos.length < MIN_COMPRAS_PARA_ALERTA) return undefined;
+  const media = mediaDoUsuario(h.pontos.slice(0, -1));
+  if (!media) return undefined;
+  const pct = variacaoPct(h.ultimo.normalizadoCentavos, media);
+  if (pct === null) return undefined;
+  if (pct > limiarPct) return { tipo: "acima", pct };
+  if (-pct > limiarPct) return { tipo: "abaixo", pct: -pct };
+  return undefined;
+}
+
+/** Alertas por produto (usa o histórico mais recente de cada produto quando há mais de uma base). */
+export function alertasPorProduto(compras: readonly Compra[], limiarPct: number): Map<string, AlertaPreco> {
+  const maisRecente = new Map<string, HistoricoProduto>();
+  for (const h of historicoPorProduto(compras)) {
+    const atual = maisRecente.get(h.produtoId);
+    if (!atual || h.ultimo.emissao > atual.ultimo.emissao) maisRecente.set(h.produtoId, h);
+  }
+  const saida = new Map<string, AlertaPreco>();
+  for (const [id, h] of maisRecente) {
+    const a = alertaDePreco(h, limiarPct);
+    if (a) saida.set(id, a);
+  }
+  return saida;
+}

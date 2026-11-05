@@ -115,3 +115,46 @@ describe("mediaDoUsuario e histórico normalizado", () => {
 
   it("produto sem compras", () => expect(historicoDoProduto([], prod)).toEqual([]));
 });
+
+import { alertaDePreco, alertasPorProduto } from "@/domain/precos";
+
+describe("alertaDePreco", () => {
+  const casa = crypto.randomUUID();
+  const prod = crypto.randomUUID();
+  let n = 0;
+  const comp = (data: string, v: number, produtoId = prod): Compra => ({
+    casaId: casa, chave: String(++n).padStart(44, "0"), mercadoId: crypto.randomUUID(), emissao: `${data}T10:00:00`, valorTotalCentavos: v, pagamento: "", importadoEm: "2026-11-05T10:00:00Z",
+    itens: [{ codigo: "1", descricao: "TOMATE KG", produtoId, quantidade: 1, unidade: "KG", valorUnitarioCentavos: v, valorTotalCentavos: v }],
+  });
+  const h = (...precos: number[]) => historicoDoProduto(precos.map((v, i) => comp(`2026-10-${String(i + 1).padStart(2, "0")}`, v)), prod)[0];
+
+  it("2 compras não geram alerta, mesmo com salto grande", () => expect(alertaDePreco(h(100, 300), 20)).toBeUndefined());
+  it("3 compras com o último 25% acima da média anterior geram", () => {
+    expect(alertaDePreco(h(100, 100, 125), 20)).toEqual({ tipo: "acima", pct: 25 });
+  });
+  it("a média usa as compras anteriores, não o último preço", () => expect(alertaDePreco(h(80, 120, 150), 20)?.pct).toBe(50));
+  it("exatamente no limiar não alerta; um pouco acima sim", () => {
+    expect(alertaDePreco(h(100, 100, 120), 20)).toBeUndefined();
+    expect(alertaDePreco(h(100, 100, 121), 20)).toMatchObject({ tipo: "acima" });
+  });
+  it("limiar editado muda o resultado", () => {
+    expect(alertaDePreco(h(100, 100, 125), 30)).toBeUndefined();
+    expect(alertaDePreco(h(100, 100, 125), 10)).toMatchObject({ pct: 25 });
+  });
+  it("preço muito abaixo da média vira aviso discreto 'abaixo'", () => {
+    expect(alertaDePreco(h(100, 100, 70), 20)).toEqual({ tipo: "abaixo", pct: 30 });
+    expect(alertaDePreco(h(100, 100, 90), 20)).toBeUndefined();
+  });
+  it("média anterior zero não quebra", () => expect(alertaDePreco(h(0, 0, 50), 20)).toBeUndefined());
+
+  it("alertasPorProduto: só os produtos com alerta", () => {
+    const outro = crypto.randomUUID();
+    const compras = [
+      comp("2026-10-01", 100), comp("2026-10-02", 100), comp("2026-10-03", 150),
+      comp("2026-10-01", 100, outro), comp("2026-10-02", 100, outro),
+    ];
+    const m = alertasPorProduto(compras, 20);
+    expect([...m.keys()]).toEqual([prod]);
+    expect(m.get(prod)).toEqual({ tipo: "acima", pct: 50 });
+  });
+});

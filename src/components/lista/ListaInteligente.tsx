@@ -8,6 +8,7 @@ import { adicionarAvulso, alterarQuantidade, garantirLista, removerItem, restaur
 import { useRepositorio } from "@/data/useRepositorio";
 import { proximaIdaDoTipo } from "@/domain/agenda";
 import { estimarCusto } from "@/domain/lista";
+import { alertasPorProduto } from "@/domain/precos";
 import type { TipoIda } from "@/domain/types";
 import { TIPOS_IDA } from "@/schemas";
 import { agruparPorCategoria, agruparPorMercado, temMercadosDiferentes, type ItemVisao } from "@/lib/agruparLista";
@@ -49,15 +50,17 @@ export function ListaInteligente() {
 
   const { dados } = useRepositorio(async () => {
     const r = await criarRepositorios();
-    const [lista, itens, produtos, mercados, compras, agendas] = await Promise.all([
+    const casa = await r.iniciar();
+    const [lista, itens, produtos, mercados, compras, agendas, perfil] = await Promise.all([
       listaId ? r.listas.obter(listaId) : undefined,
       listaId ? r.itensLista.listarPorLista(listaId) : [],
       r.produtos.listar(),
       r.mercados.listar(),
       r.compras.listar(),
       r.agendas.listar(),
+      r.perfis.obterDaCasa(casa.id),
     ]);
-    return { lista, itens, produtos: new Map(produtos.map((p) => [p.id, p])), mercados, compras, agendas };
+    return { lista, itens, produtos: new Map(produtos.map((p) => [p.id, p])), mercados, compras, agendas, alertas: alertasPorProduto(compras, perfil?.limiarAlertaPrecoPct ?? 20) };
   }, ["listas", "itensLista", "produtos", "mercados", "compras", "agendas"], [listaId]);
 
   const visiveis = useMemo<ItemVisao[]>(
@@ -158,6 +161,7 @@ export function ListaInteligente() {
                 key={item.id}
                 item={item}
                 produto={produto}
+                alerta={item.produtoId ? dados.alertas.get(item.produtoId) : undefined}
                 aoAlterar={async (q) => void (await alterarQuantidade(await criarRepositorios(), item, q))}
                 aoRemover={async () => void (await removerItem(await criarRepositorios(), item))}
               />
