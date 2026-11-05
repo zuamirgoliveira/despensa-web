@@ -104,7 +104,7 @@ despensa-web/
 ├─ src/
 │  ├─ app/                         rotas e layouts (App Router)
 │  ├─ components/
-│  │  ├─ ui/                       primitivos: Button, Card, Input, Alert, Toast, Progress…
+│  │  ├─ ui/                       primitivos: Button, Card, Input, Textarea, Select, Badge, Alert, Toast, Progress, Details, EmptyState, Dialog…
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
