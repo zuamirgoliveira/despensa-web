@@ -286,6 +286,8 @@ Consulta pública de PE: `https://nfce.sefaz.pe.gov.br/nfce-web/consNfce`, prote
 - Item: `DESCRIÇÃO(Código: N)` + `Qtde.: x  UN: KG|UNID|L|PCT  Vl. Unit.: y` + `Vl. Total z`. O código é interno do mercado (PLU), **não é EAN**.
 - Conferências: soma dos itens × valor a pagar (tolerância R$ 0,05); contagem × "Qtd. total de itens"; `qtd × unitário ≈ total` (R$ 0,02); CNPJ e número do texto × chave. **Erros impedem salvar; avisos não.**
 - Tolerar espaços extras, quebras de linha, NBSP e milhar com ponto.
+- Saída em centavos (`valorUnitarioCentavos`, `valorTotalCentavos`, `valorPagarCentavos`, `somaItensCentavos`); `unidade` ∈ `KG|UNID|L|PCT` (`UN`/`UND` → `UNID`; unidade desconhecida gera aviso e vira `UNID`). `suggestName` e `extrairEmbalagem` ficam no `parser.ts`; `PCT 180` devolve `{ tipo: 'pct', tamanho: 180 }` sem `medida` (a C-31 assume gramas).
+- Fixtures de nota: `tests/fixtures/notas/*.txt`; o teste do parser roda sobre todas as que existirem.
 - **Nunca persistir CPF.** Se o texto contiver CPF, apenas sinalizar `cpfNaNota`.
 - Fixture de referência: nota Cia Santos, 16 itens, total R$ 77,24, chave `26261108868231000638650020000689031020778720`, sem erros nem avisos.
 
