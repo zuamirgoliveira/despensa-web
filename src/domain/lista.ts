@@ -64,7 +64,7 @@ export function ultimoPrecoUnitario(produtoId: string, compras: readonly Compra[
   return melhor?.preco;
 }
 
-type Situacao = {
+export type Situacao = {
   produto: Produto;
   /** Tipo de ida efetivo (perecível de feira mensal vira o tipo semanal compatível). */
   tipoProprio: TipoIda;
@@ -75,7 +75,7 @@ type Situacao = {
   aviso?: string;
 };
 
-function situacao(p: Produto, e: EntradaLista): Situacao {
+export function situacaoDoProduto(p: Produto, e: EntradaLista): Situacao {
   const registro = e.estoques.find((x) => x.produtoId === p.id);
   const consumo = consumoDiario(p, e.compras);
   const ref = quantidadeReferencia(p, e.compras);
@@ -196,7 +196,7 @@ export function gerarLista(e: EntradaLista): ResultadoLista | undefined {
   let total = 0;
 
   for (const p of e.produtos) {
-    const s = situacao(p, e);
+    const s = situacaoDoProduto(p, e);
     const d = decidir(s, ida, e);
     if (!d.entra) continue;
     if (s.aviso) avisos.push(s.aviso);

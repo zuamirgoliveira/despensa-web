@@ -56,3 +56,8 @@ export function montarData(ano: number, mes: number, dia: number): string {
 export function semanaCivil(data: string): number {
   return Math.floor((diaCivil(data) + 3) / 7); // 01/01/1970 foi quinta-feira
 }
+
+/** Segundos inteiros desde `inicio` até agora (relógio do sistema; só para a interface). */
+export function segundosDesde(inicio: Date): number {
+  return Math.round((Date.now() - inicio.getTime()) / 1000);
+}

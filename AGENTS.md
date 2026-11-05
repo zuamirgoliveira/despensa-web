@@ -111,6 +111,7 @@ despensa-web/
 │  │  ├─ ajustes/                  Ajustes: agenda, regras, custos e Backup (exportar/importar)
 │  │  ├─ precos/                   lista de preços e histórico
 │  │  ├─ catalogo/                 tela Catálogo (lista por categoria, formulário, mesclar)
+│  │  ├─ conferencia/              tela Conferir despensa (um produto por vez)
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
@@ -119,6 +120,7 @@ despensa-web/
 │  │  ├─ catalogo.ts               produto novo a partir de item de nota, chave de nome
 │  │  ├─ mercados.ts               tipo sugerido pelo nome do emitente
 │  │  ├─ estoque.ts                níveis, consumo, cobertura
+│  │  ├─ conferencia.ts            quais produtos conferir antes de uma ida, agrupados por local
 │  │  ├─ agenda.ts                 ocorrências das idas
 │  │  ├─ lista.ts                  geração da lista por cobertura
 │  │  ├─ reconciliacao.ts          nota × lista
@@ -134,6 +136,7 @@ despensa-web/
 │  │  ├─ repositorios.ts           interfaces dos repositórios
 │  │  ├─ indexeddb/                implementação e migrações numeradas
 │  │  ├─ backup.ts                 exportar e importar com validação
+│  │  ├─ conferencia.ts            fila da conferência, registrar nível e sessão
 │  │  ├─ importarNota.ts           orquestra a importação (mercado, produtos, apelidos, compra, meta)
 │  │  ├─ catalogo.ts               edição com meta manual, liberar meta, mesclar produtos
 │  │  ├─ eventos.ts                emissor de mudanças (aoMudar, emitirMudanca)
@@ -177,7 +180,7 @@ app/ (telas) → components/ → data/ (repositórios) → schemas/
 
 - Banco `despensa`, versionado (`criarRepositorios()` em `src/data/indexeddb/index.ts`; `criarRepositorios({ indexedDB, nomeBanco })` abre instância própria, usada nos testes com `fake-indexeddb`), com **migrações numeradas** em `src/data/indexeddb/migrations/NNN-descricao.ts`. Nunca editar migração já publicada; criar nova.
 - Todo registro: `id` (UUID v4 via `crypto.randomUUID()`) e `casaId`. Exceção de chave natural: `Compra.chave` (44 dígitos) e `ApelidoMercado` (`cnpj` + `codigo`).
-- Entidades: `Casa`, `Perfil`, `AgendaIda`, `Mercado`, `Produto`, `ApelidoMercado`, `Estoque`, `Compra` (com `ItemCompra[]`), `Lista`, `ItemLista`.
+- Entidades: `Casa`, `Perfil`, `AgendaIda`, `Mercado`, `Produto`, `ApelidoMercado`, `Estoque`, `Compra` (com `ItemCompra[]`), `Lista`, `ItemLista`, `RegistroConferencia` (migração 002: tempo e quantidade de produtos de cada conferência; o campo `conferencias` do backup é opcional para aceitar backups antigos).
 - Schemas em `src/schemas/` (`comum`, `constantes`, `entidades`); tipos em `src/domain/types.ts`. Valores de enum não têm acento (`laticinios`). `Compra` e `ApelidoMercado` não têm `id` (chave natural). Campos extras além do blueprint: `Produto.metaManual`, `Produto.contavel`, `ItemLista.removido`, `ItemLista.quantidadeEditada`, `Perfil.economiaMinimaDivisaoCentavos`, `Perfil.janelaPrecoDias`. `Perfil.bikeCentavosPorKm` aceita fração de centavo.
 - Todo dado lido de IndexedDB ou de arquivo de backup passa por Zod antes de ser usado.
 - **Backup:** JSON com `versao`, `exportadoEm` e todas as coleções. Importação é idempotente (sobrescreve por `id`/`chave`) e rejeita versão superior à suportada. Ao restaurar em aparelho novo, a casa padrão vazia (criada na primeira abertura, com perfil e agenda do seed) é removida para não haver duas casas; uma casa local com dados nunca é apagada.
@@ -210,6 +213,8 @@ Todas as fórmulas vivem em `src/domain/` e têm teste tabelado.
 - "Provavelmente acabando" (`sugerirProvavelmenteAcabando(produto, estoque, compras, hoje)`): cobertura estimada de hoje < 2 dias e nível ainda não é `acabando`/`acabou` → pede confirmação. O estoque de hoje = estoque do nível confirmado − consumo × dias desde `confirmadoEm` (`estoqueAgora`).
 - `quantidadeReferencia(produto, compras)`: a meta; sem meta, a última quantidade comprada. `comprasDoProduto` soma os itens do mesmo produto na mesma nota. `aplicarCompra(estoques, compra, confirmadoEm, gerarId)` devolve só os registros de estoque que mudam ou nascem (`cheio`, `quantidadeExata` zerada).
 - Datas: `diasEntre`, `adicionarDias`, `soData`, `hojeRecife` em `src/lib/datas.ts` (dias civis, validam datas inexistentes).
+
+- Conferência (`conferencia.ts`, tela `/conferencia?ida=<tipo>`): pergunta os produtos que a lista da ida incluiria, os de tipo próprio **sem registro de estoque**, **provavelmente acabando** ou **desatualizados** (sem confirmação há mais dias que o ciclo da ida); agrupa por `localCasa` ("Sem local" por último). `nivelEstimado` (≥ 75% cheio, ≥ 35% metade, > 5% acabando, senão acabou) alimenta o atalho "Mesmo que o estimado". Cada resposta grava o `Estoque` na hora; ao concluir (ou "Concluir antes") grava um `RegistroConferencia` com a duração; sair no meio não registra tempo.
 
 ### 6.2 Agenda (`agenda.ts`)
 

@@ -181,3 +181,13 @@ export const itemListaSchema = z
   .refine((v) => v.produtoId !== undefined || v.nomeAvulso !== undefined, {
     message: "Item precisa de produto ou nome avulso",
   });
+
+/** Registro de uma sessão de conferência da despensa (alimenta o painel: tempo médio de conferência). */
+export const conferenciaSchema = z.object({
+  id: idSchema,
+  casaId: idSchema,
+  tipoIda: z.enum(TIPOS_IDA),
+  iniciadaEm: instanteSchema,
+  duracaoSegundos: z.number().int().nonnegative(),
+  produtosConferidos: z.number().int().nonnegative(),
+});

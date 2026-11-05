@@ -782,7 +782,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-20 Geração da lista
 - [x] C-21 Catálogo
 - [x] C-22 Ajustes
-- [ ] C-23 Conferência
+- [x] C-23 Conferência
 - [ ] C-24 Lista
 - [ ] C-25 Modo compra
 - [ ] C-26 Reconciliação

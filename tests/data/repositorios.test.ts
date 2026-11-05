@@ -167,7 +167,7 @@ describe("migrações", () => {
   it("a partir do banco vazio cria todos os stores e índices", async () => {
     const db = await abrirBanco({ indexedDB: new IDBFactory(), nomeBanco: "novo" });
     expect([...db.objectStoreNames].sort()).toEqual(
-      ["agendas", "apelidos", "casas", "compras", "estoques", "itensLista", "listas", "mercados", "perfis", "produtos"],
+      ["agendas", "apelidos", "casas", "compras", "conferencias", "estoques", "itensLista", "listas", "mercados", "perfis", "produtos"],
     );
     expect(db.version).toBe(MIGRACOES[MIGRACOES.length - 1].versao);
     const tx = db.transaction("compras");
@@ -183,9 +183,10 @@ describe("migrações", () => {
     const r1 = await criarRepositorios({ indexedDB: f, nomeBanco: "m" });
     const c = (await r1.casas.listar())[0];
     r1.fechar();
-    const migracoes = [...MIGRACOES, { versao: 2, nome: "extra", aplicar }];
+    const proxima = MIGRACOES.length + 1;
+    const migracoes = [...MIGRACOES, { versao: proxima, nome: "extra", aplicar }];
     const db2 = await abrirBanco({ indexedDB: f, nomeBanco: "m", migracoes });
-    expect(db2.version).toBe(2);
+    expect(db2.version).toBe(proxima);
     expect(db2.objectStoreNames.contains("extra")).toBe(true);
     expect(aplicar).toHaveBeenCalledTimes(1);
     expect((await criarRepositoriosComBanco(db2).casas.listar())[0].id).toBe(c.id);
@@ -318,5 +319,35 @@ describe("restaurar backup em aparelho novo", () => {
     await importar(outro, JSON.stringify(await exportar(repos)));
     expect((await outro.casas.listar()).map((c) => c.id).sort()).toEqual([casa.id, local.id].sort());
     outro.fechar();
+  });
+});
+
+describe("migração 002 (conferências)", () => {
+  it("um banco criado só com a 001 é atualizado sem perder dados", async () => {
+    const f = new IDBFactory();
+    const v1 = await abrirBanco({ indexedDB: f, nomeBanco: "antigo", migracoes: [MIGRACOES[0]] });
+    expect(v1.objectStoreNames.contains("conferencias")).toBe(false);
+    const antigo = criarRepositoriosComBanco(v1);
+    const c = await antigo.casas.salvar({ id: crypto.randomUUID(), nome: "Casa antiga" });
+    v1.close();
+    const novo = await criarRepositorios({ indexedDB: f, nomeBanco: "antigo" });
+    expect((await novo.casas.obter(c.id))?.nome).toBe("Casa antiga");
+    const reg = await novo.conferencias.salvar({
+      id: crypto.randomUUID(), casaId: c.id, tipoIda: "mercado_semanal", iniciadaEm: "2026-11-05T10:00:00Z", duracaoSegundos: 95, produtosConferidos: 8,
+    });
+    expect(await novo.conferencias.obter(reg.id)).toEqual(reg);
+    novo.fechar();
+  });
+
+  it("backup anterior à 002 (sem 'conferencias') ainda é aceito", async () => {
+    const arquivo = JSON.parse(JSON.stringify(await exportar(repos)));
+    delete arquivo.colecoes.conferencias;
+    expect(lerBackup(JSON.stringify(arquivo)).colecoes.conferencias).toEqual([]);
+  });
+
+  it("registro de conferência valida os campos", async () => {
+    await expect(
+      repos.conferencias.salvar({ id: crypto.randomUUID(), casaId: casa.id, tipoIda: "mercado_semanal", iniciadaEm: "2026-11-05T10:00:00Z", duracaoSegundos: -1, produtosConferidos: 0 }),
+    ).rejects.toBeInstanceOf(DadoInvalidoError);
   });
 });

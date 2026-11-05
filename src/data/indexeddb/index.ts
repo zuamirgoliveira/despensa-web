@@ -10,6 +10,7 @@ import type {
   Mercado,
   Perfil,
   Produto,
+  RegistroConferencia,
 } from "@/domain/types";
 import { agendasIniciais } from "@/config/seed";
 import {
@@ -18,6 +19,7 @@ import {
   casaSchema,
   CASA_PADRAO_NOME,
   compraSchema,
+  conferenciaSchema,
   estoqueSchema,
   itemListaSchema,
   listaSchema,
@@ -128,6 +130,7 @@ export function criarRepositoriosComBanco(db: IDBDatabase): Repositorios {
     compras: new Compras(db, "compras", sch(compraSchema)),
     listas: new ColecaoIdb<Lista>(db, "listas", sch(listaSchema)),
     itensLista: new ItensLista(db, "itensLista", sch(itemListaSchema)),
+    conferencias: new ColecaoIdb<RegistroConferencia>(db, "conferencias", sch(conferenciaSchema)),
     async iniciar(): Promise<Casa> {
       let casa = (await casas.listar())[0];
       if (!casa) {

@@ -10,6 +10,7 @@ import type {
   Mercado,
   Perfil,
   Produto,
+  RegistroConferencia,
 } from "@/domain/types";
 
 export interface Colecao<T, K = string> {
@@ -44,6 +45,7 @@ export interface RepoCompras extends Colecao<Compra> {
   listarPorMercado(mercadoId: string): Promise<Compra[]>;
 }
 export type RepoListas = Colecao<Lista>;
+export type RepoConferencias = Colecao<RegistroConferencia>;
 export interface RepoItensLista extends Colecao<ItemLista> {
   listarPorLista(listaId: string): Promise<ItemLista[]>;
   apagarPorLista(listaId: string): Promise<void>;
@@ -60,6 +62,7 @@ export interface Repositorios {
   readonly compras: RepoCompras;
   readonly listas: RepoListas;
   readonly itensLista: RepoItensLista;
+  readonly conferencias: RepoConferencias;
   /** Cria a casa padrão e o perfil na primeira abertura; devolve a casa. */
   iniciar(): Promise<Casa>;
   /** Fecha a conexão (testes). */

@@ -5,6 +5,7 @@ import {
   apelidoMercadoSchema,
   casaSchema,
   compraSchema,
+  conferenciaSchema,
   estoqueSchema,
   instanteSchema,
   itemListaSchema,
@@ -31,6 +32,8 @@ export const backupSchema = z.object({
     compras: z.array(compraSchema),
     listas: z.array(listaSchema),
     itensLista: z.array(itemListaSchema),
+    /** Ausente em backups anteriores à C-23. */
+    conferencias: z.array(conferenciaSchema).default([]),
   }),
 });
 
@@ -45,7 +48,7 @@ export class BackupInvalidoError extends Error {
 }
 
 export async function exportar(repos: Repositorios, agora: Date = new Date()): Promise<Backup> {
-  const [casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista] =
+  const [casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias] =
     await Promise.all([
       repos.casas.listar(),
       repos.perfis.listar(),
@@ -57,11 +60,12 @@ export async function exportar(repos: Repositorios, agora: Date = new Date()): P
       repos.compras.listar(),
       repos.listas.listar(),
       repos.itensLista.listar(),
+      repos.conferencias.listar(),
     ]);
   return {
     versao: VERSAO_BACKUP,
     exportadoEm: agora.toISOString(),
-    colecoes: { casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista },
+    colecoes: { casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias },
   };
 }
 
@@ -100,6 +104,7 @@ export async function importar(repos: Repositorios, json: string): Promise<Resum
   for (const x of colecoes.compras) await repos.compras.salvar(x);
   for (const x of colecoes.listas) await repos.listas.salvar(x);
   for (const x of colecoes.itensLista) await repos.itensLista.salvar(x);
+  for (const x of colecoes.conferencias) await repos.conferencias.salvar(x);
   await removerCasaPadraoVazia(repos, new Set(colecoes.casas.map((c) => c.id)));
   return Object.fromEntries(Object.entries(colecoes).map(([k, v]) => [k, v.length])) as ResumoImportacao;
 }
