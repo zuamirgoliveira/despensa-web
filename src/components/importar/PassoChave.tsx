@@ -32,6 +32,8 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const scanner = useRef<Scanner | null>(null);
+  /** Cada abertura de câmera tem um número; fechar invalida o pedido ainda em andamento. */
+  const sessao = useRef(0);
   const arqFoto = useRef<HTMLInputElement>(null);
   const arqImagem = useRef<HTMLInputElement>(null);
 
@@ -63,9 +65,16 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chaveExterna]);
 
-  useEffect(() => () => scanner.current?.parar(), []);
+  useEffect(
+    () => () => {
+      sessao.current++;
+      scanner.current?.parar();
+    },
+    [],
+  );
 
   function pararCamera(): void {
+    sessao.current++;
     scanner.current?.parar();
     scanner.current = null;
     setCamera(false);
@@ -75,17 +84,21 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
     if (!navigator.mediaDevices?.getUserMedia) {
       return setImgMsg({ texto: 'Este navegador não abre a câmera aqui. Use "Tirar foto" ou digite a chave.', tipo: "erro" });
     }
+    const minha = ++sessao.current;
     setCamera(true);
     setImgMsg({ texto: "Aponte para o QR Code da nota.", tipo: "info" });
     await new Promise((r) => setTimeout(r, 0)); // espera o <video> existir
     try {
-      scanner.current = await iniciarScanner(video.current as HTMLVideoElement, (r) => {
+      const novo = await iniciarScanner(video.current as HTMLVideoElement, (r) => {
         scanner.current = null;
         setCamera(false);
         setImgMsg({ texto: "QR Code lido.", tipo: "ok" });
         usarChave(r.chave, r.conteudo);
       });
+      if (sessao.current !== minha) novo.parar(); // fechou (ou saiu da tela) antes de a câmera abrir
+      else scanner.current = novo;
     } catch {
+      if (sessao.current !== minha) return;
       pararCamera();
       setImgMsg({
         texto: 'Não consegui abrir a câmera. Verifique a permissão, ou use "Tirar foto" / "Enviar imagem".',

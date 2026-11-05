@@ -432,6 +432,7 @@ Diretório `/opt/docker/despensa-web` (dono `deploy`), `.env` com permissão 600
 
 - **Vitest** (`tests/`, espelha `src/`): toda regra de `src/domain` com testes tabelados, incluindo bordas (zero, vazio, mês curto, ano bissexto, limites de tolerância). Relógio sempre injetado. Repositórios testados com `fake-indexeddb`, incluindo migração e backup ida e volta.
 - **Playwright** (`e2e/`): roda contra `next start` para exercitar CSP e service worker. Câmera simulada com flags do Chrome (`--use-fake-ui-for-media-stream`, `--use-fake-device-for-media-stream`, `--use-file-for-fake-video-capture`). Falha o teste se aparecer violação de CSP no console. Cobre offline (navegar e recarregar todas as rotas).
+- E2E: `e2e/global-setup.ts` gera o vídeo falso da câmera (`test-results/camera-qr.y4m`, a partir de `tests/fixtures/fotos/qr-nota.png`, com `ffmpeg`); sem `ffmpeg` o teste da câmera é pulado. `tests/fixtures/foto-nota-real.jpeg` **não é versionada** (mostra final de cartão); o teste de OCR com ela é pulado quando o arquivo não existe (ex.: no CI). Imagens sintéticas (QR, ruído, chave com DV errado, sem chave) vêm de `scripts/gerar-fixtures-fotos.py`.
 - Fixtures em `tests/fixtures/`: notas reais em texto (sem CPF) e fotos. Ao encontrar nota que o parser não lê, adicione-a como fixture e corrija sem quebrar as anteriores.
 - Mapas: testar sempre com serviço simulado (sucesso, falha de endereço, timeout, offline, cache); nunca chamar serviço real em teste.
 

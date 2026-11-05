@@ -1,9 +1,13 @@
+import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+
+const Y4M = "test-results/camera-qr.y4m";
 
 const PORTA = 3100;
 
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/global-setup.ts",
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,
@@ -16,5 +20,21 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },
-  projects: [{ name: "chromium", use: { ...devices["Pixel 7"], viewport: { width: 390, height: 844 } } }],
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        ...devices["Pixel 7"],
+        viewport: { width: 390, height: 844 },
+        // Câmera simulada: aceita o pedido de permissão e usa o vídeo gerado no globalSetup.
+        launchOptions: {
+          args: [
+            "--use-fake-ui-for-media-stream",
+            "--use-fake-device-for-media-stream",
+            ...(existsSync(Y4M) ? [`--use-file-for-fake-video-capture=${Y4M}`] : []),
+          ],
+        },
+      },
+    },
+  ],
 });

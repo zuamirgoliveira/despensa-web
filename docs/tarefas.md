@@ -772,7 +772,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-10 QR e OCR
 - [x] C-11 Tela Importar
 - [x] C-12 Compras, Preços e Backup
-- [ ] C-13 e2e de paridade
+- [x] C-13 e2e de paridade
 - [ ] C-14 Docker
 - [ ] C-15 CI e deploy
 - [ ] C-16 Correções E0.5
