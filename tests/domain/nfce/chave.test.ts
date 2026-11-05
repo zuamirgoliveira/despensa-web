@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  leituraAproximada,
   calcDV,
   chaveDoOCR,
   chavePlausivel,
@@ -169,5 +170,28 @@ describe("chaveDoOCR", () => {
     const r = chaveDoOCR(`1234567890\n${IMP.replace("8682", "3682")}\n99999999`);
     // blocos consecutivos com >= 8 dígitos se juntam: precisa devolver a chave só como candidata ou vazio
     expect("exata" in r).toBe(false);
+  });
+});
+
+describe("leituraAproximada", () => {
+  it("devolve a linha de dígitos mais próxima de 44", () => {
+    const t = "Consulte pela chave\n2626 1141 4923 3900 0163 8506 5000 1238 5490 9136 4469\nNFC-e 123854 5 05112026 092209";
+    expect(leituraAproximada(t)).toBe("2626 1141 4923 3900 0163 8506 5000 1238 5490 9136 4469");
+  });
+  it("com duas linhas candidatas, escolhe a mais próxima de 44", () => {
+    const a = "1".repeat(40);
+    const b = "2".repeat(43);
+    expect(leituraAproximada(`${a}\n${b}`)).toBe(b);
+  });
+  it("ignora linhas curtas demais, longas demais ou sem dígitos", () => {
+    expect(leituraAproximada("")).toBeNull();
+    expect(leituraAproximada("texto sem números")).toBeNull();
+    expect(leituraAproximada("1".repeat(35))).toBeNull();
+    expect(leituraAproximada("1".repeat(53))).toBeNull();
+    expect(leituraAproximada("1".repeat(36))).toBe("1".repeat(36));
+    expect(leituraAproximada("1".repeat(52))).toBe("1".repeat(52));
+  });
+  it("preserva os grupos como o OCR leu (grupo com ≠ 4 dígitos mostra o erro) e descarta letras", () => {
+    expect(leituraAproximada("1626 1141 44983 3906 0161 b50 00 1238 5496 3136 4469")).toBe("1626 1141 44983 3906 0161 50 00 1238 5496 3136 4469");
   });
 });

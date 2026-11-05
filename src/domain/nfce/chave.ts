@@ -149,7 +149,28 @@ function variacoes2(s: string): Candidata[] {
 export type ResultadoOCR =
   | { exata: string }
   | { candidatas: Candidata[] }
-  | { vazio: true; ambiguo?: true };
+  /** `aproximada`: leitura crua (sem validar) da linha mais parecida com a chave; só para o usuário corrigir à mão. */
+  | { vazio: true; ambiguo?: true; aproximada?: string };
+
+const ATE_DIGITOS_APROXIMADA = 52;
+const MIN_DIGITOS_APROXIMADA = 36;
+
+/**
+ * Linha do texto do OCR que mais se parece com a chave (36 a 52 dígitos, a mais próxima de 44).
+ * Devolve os grupos **como o OCR os leu**, separados por espaço (um grupo com mais ou menos de 4
+ * dígitos mostra onde o leitor errou). NÃO é uma chave válida: serve só para o usuário conferir
+ * com a nota e corrigir dígito por dígito.
+ */
+export function leituraAproximada(texto: string): string | null {
+  let melhor: { grupos: string[]; n: number } | null = null;
+  for (const linha of String(texto).split("\n")) {
+    const grupos = linha.split(/\s+/).map(onlyDigits).filter((g) => g.length > 0);
+    const n = grupos.reduce((s, g) => s + g.length, 0);
+    if (n < MIN_DIGITOS_APROXIMADA || n > ATE_DIGITOS_APROXIMADA) continue;
+    if (melhor === null || Math.abs(n - 44) < Math.abs(melhor.n - 44)) melhor = { grupos, n };
+  }
+  return melhor ? melhor.grupos.join(" ") : null;
+}
 
 /**
  * Procura a chave no texto devolvido pelo OCR.

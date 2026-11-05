@@ -61,9 +61,14 @@ export const INTERVALO_SCANNER_MS = 350;
  */
 export async function iniciarScanner(video: HTMLVideoElement, aoLer: (r: ResultadoQR) => void): Promise<Scanner> {
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: "environment" } },
+    // Sem pedir resolução o Android costuma abrir em 640×480, pouco para o QR pequeno e denso do papel térmico.
+    video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
     audio: false,
   });
+  // Foco contínuo, onde o aparelho permite (ignorado se não houver suporte).
+  for (const t of stream.getVideoTracks()) {
+    t.applyConstraints({ advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet] }).catch(() => undefined);
+  }
   let ativo = true;
   let lendo = false;
   const estado: { timer?: ReturnType<typeof setInterval> } = {};

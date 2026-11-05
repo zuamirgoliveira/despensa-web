@@ -40,5 +40,7 @@
 ## Dicas
 
 - Uma nota fora da feira com itens que não estavam na lista conta como **compra de emergência**: o objetivo é que caiam mês a mês.
+- **QR primeiro:** é o caminho mais confiável. Segure o celular firme, com boa luz e o papel liso, e aproxime ou afaste devagar até o QR ficar nítido (leva alguns segundos para o foco ajustar). Se o QR não sair, fotografe a nota inteira de uma distância em que o QR apareça por completo.
+- Em notas de impressão pontilhada (letras feitas de pontinhos) a leitura do número costuma errar alguns dígitos. O app não adivinha: mostra a leitura aproximada, com os grupos suspeitos em vermelho, e você corrige comparando com o papel (cada grupo tem 4 dígitos).
 - A foto da nota funciona melhor de perto, com luz e a linha da chave à vista. Se o app mostrar até 3 opções, escolha a que bate com a nota; ele nunca preenche sozinho a partir de uma dúvida.
 - O app não guarda CPF e não acompanha sua localização.

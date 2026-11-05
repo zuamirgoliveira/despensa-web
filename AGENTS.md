@@ -369,7 +369,7 @@ Uma chave só é considerada válida se: 44 dígitos, DV correto, CNPJ válido, 
 
 ### 7.3 Reparo de leitura por OCR (`chaveDoOCR`)
 
-Escalonado; para na primeira etapa com resultado: (1) janela exata de 44 dígitos; (2) um dígito a mais ou a menos; (3) uma troca por confusão de OCR; (4) duas trocas, só se sobrarem no máximo 3 candidatas (prefere CNPJ conhecido). Confusões: 0→8,6 · 1→7 · 2→7 · 3→8,5 · 4→9 · 5→6,3 · 6→5,8,0 · 7→1,2 · 8→0,3,6,9 · 9→8,4,0. Retorno: `exata`, `candidatas` ou `vazio`/`ambíguo`. **Nunca** devolver como exata uma chave que não passou em todas as validações do 7.1. A interface nunca preenche sozinha a partir de candidatas: o usuário escolhe.
+Escalonado; para na primeira etapa com resultado: (1) janela exata de 44 dígitos; (2) um dígito a mais ou a menos; (3) uma troca por confusão de OCR; (4) duas trocas, só se sobrarem no máximo 3 candidatas (prefere CNPJ conhecido). Confusões: 0→8,6 · 1→7 · 2→7 · 3→8,5 · 4→9 · 5→6,3 · 6→5,8,0 · 7→1,2 · 8→0,3,6,9 · 9→8,4,0. Retorno: `exata`, `candidatas` ou `vazio`/`ambíguo`. **Nunca** devolver como exata uma chave que não passou em todas as validações do 7.1. A interface nunca preenche sozinha a partir de candidatas: o usuário escolhe. Sem candidata, `lerChaveDaFoto` pode devolver `{ vazio, aproximada }` (`leituraAproximada`: a linha com 36 a 52 dígitos mais próxima de 44, com os grupos como o OCR os leu): a tela mostra essa leitura **sem preencher o campo** e só a leva ao campo se o usuário tocar em "Usar para corrigir"; grupos com ≠ 4 dígitos são destacados. A chave só segue quando passa em todas as validações do 7.1.
 
 ### 7.4 Acesso à nota
 
@@ -388,7 +388,7 @@ Consulta pública de PE: `https://nfce.sefaz.pe.gov.br/nfce-web/consNfce`, prote
 
 ### 7.6 Leitura por câmera e imagem
 
-- QR: `BarcodeDetector` quando existir; senão `jsqr` em 3 escalas (1600/1000/640) com `inversionAttempts: 'attemptBoth'`. Câmera traseira, quadro a cada ~350 ms, **parar o stream** ao ler, fechar ou sair da tela.
+- QR: `BarcodeDetector` quando existir; senão `jsqr` em 3 escalas (1600/1000/640) com `inversionAttempts: 'attemptBoth'`. Câmera traseira pedindo 1920×1080 ideal e foco contínuo quando houver (o padrão do Android é 640×480, pouco para o QR do papel térmico), quadro a cada ~350 ms, dica de uso após 8 s sem leitura, **parar o stream** ao ler, fechar ou sair da tela.
 - OCR: Tesseract.js 5 em worker, carregado **por import dinâmico** apenas quando usado. Assets em `/vendor/tesseract/` (worker, core LSTM e SIMD, `eng.traineddata.gz`). Whitelist `0123456789 `, PSM 6, até 3 tentativas de pré-processamento (cinza/contraste 1800 px; Otsu 1800 px; cinza/contraste 2600 px). Sempre `worker.terminate()` no `finally`.
 - Imagem → canvas respeitando orientação EXIF, lado máximo 2200 px.
 - Arquivos: `lib/qr.ts` (`lerQR`, `iniciarScanner`), `lib/ocr.ts` (`lerChaveDaFoto`, com `DependenciasOCR` injetável para teste), `lib/preprocessamento.ts` (funções puras sobre pixels: cinza, contraste, Otsu, `TENTATIVAS_OCR`), `lib/imagem.ts`. `jsqr` e `tesseract.js` entram por import dinâmico (fora do bundle inicial). O worker, o core (`tesseract-core-lstm.wasm.js` e `-simd-`) e `eng.traineddata.gz` vêm de `node_modules` via `scripts/copy-vendor.mjs` (que falha o build com mensagem clara se faltar arquivo).

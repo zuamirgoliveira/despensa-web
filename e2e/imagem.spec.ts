@@ -76,6 +76,25 @@ test("foto real da nota: chave correta (exata ou candidata única)", async ({ pa
   semViolacaoDeCsp(erros);
 });
 
+test("nota de impressão pontilhada (foto real, sem QR): não adivinha; oferece a leitura aproximada para corrigir", async ({ page }) => {
+  test.setTimeout(180_000);
+  const { erros } = vigiarConsole(page);
+  await page.goto("/importar");
+  await enviar(page, "tests/fixtures/fotos/nota-pontilhada.png");
+  const aproximada = page.getByRole("group", { name: "Leitura aproximada" });
+  const candidatas = page.getByRole("group", { name: "Chaves candidatas" });
+  const certa = page.getByText(/Chave válida: nota 123854/);
+  await expect(aproximada.or(candidatas).or(certa)).toBeVisible({ timeout: 150_000 });
+  if (await aproximada.isVisible()) {
+    await expect(campo(page)).toHaveValue(""); // nunca preenche sozinho
+    await aproximada.getByRole("button", { name: "Usar para corrigir" }).click();
+    const digitos = (await campo(page).inputValue()).replace(/\D/g, "");
+    expect(digitos.length).toBeGreaterThanOrEqual(36);
+    await expect(page.getByText(/Dígito verificador não confere|\/44 dígitos|CNPJ|modelo/).first()).toBeVisible(); // ainda é inválida
+  }
+  semViolacaoDeCsp(erros);
+});
+
 for (const [nome, arquivo] of [
   ["ruído", "ruido.png"],
   ["chave com dígito verificador errado", "chave-dv-invalido.png"],

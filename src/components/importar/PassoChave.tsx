@@ -29,6 +29,8 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
   const [progresso, setProgresso] = useState<number | null>(null);
   const [previa, setPrevia] = useState<string | null>(null);
   const [candidatas, setCandidatas] = useState<Candidata[]>([]);
+  const [aproximada, setAproximada] = useState<string | null>(null);
+  const dica = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const scanner = useRef<Scanner | null>(null);
@@ -57,6 +59,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
     const url = conteudoQR && /^https?:\/\//i.test(conteudoQR) ? conteudoQR : null;
     setQrUrl(url);
     setCandidatas([]);
+    setAproximada(null);
     void validar(chave);
   }
 
@@ -74,6 +77,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
   );
 
   function pararCamera(): void {
+    if (dica.current) clearTimeout(dica.current);
     sessao.current++;
     scanner.current?.parar();
     scanner.current = null;
@@ -87,9 +91,20 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
     const minha = ++sessao.current;
     setCamera(true);
     setImgMsg({ texto: "Aponte para o QR Code da nota.", tipo: "info" });
+    // Se em alguns segundos nada for lido, orienta (o QR do papel térmico é pequeno e pede foco e luz).
+    if (dica.current) clearTimeout(dica.current);
+    dica.current = setTimeout(() => {
+      if (sessao.current === minha) {
+        setImgMsg({
+          texto: 'Ainda não consegui ler o QR. Deixe o papel liso, com boa luz, e aproxime ou afaste devagar até o QR ficar nítido. Se não der, use "Tirar foto" ou digite a chave.',
+          tipo: "info",
+        });
+      }
+    }, 8000);
     await new Promise((r) => setTimeout(r, 0)); // espera o <video> existir
     try {
       const novo = await iniciarScanner(video.current as HTMLVideoElement, (r) => {
+        if (dica.current) clearTimeout(dica.current);
         scanner.current = null;
         setCamera(false);
         setImgMsg({ texto: "QR Code lido.", tipo: "ok" });
@@ -111,6 +126,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
     if (!arquivo) return;
     pararCamera();
     setCandidatas([]);
+    setAproximada(null);
     try {
       const repos = await criarRepositorios();
       const cnpjs = (await repos.mercados.listar()).map((m) => m.cnpj);
@@ -142,8 +158,11 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
         });
         setCandidatas(o.candidatas);
       } else {
+        if (o.aproximada) setAproximada(o.aproximada);
         setImgMsg({
-          texto: o.ambiguo
+          texto: o.aproximada
+            ? "Não consegui ler a chave com certeza (a impressão pontilhada confunde o leitor). Veja a leitura aproximada abaixo, ou tire outra foto bem de perto da linha da chave."
+            : o.ambiguo
             ? "Li números demais com dúvida para adivinhar. Tire outra foto, bem de perto da linha da chave e com boa luz, ou digite."
             : "Não encontrei a chave na imagem. Tente de novo com a nota esticada e a linha da chave bem à vista, ou digite.",
           tipo: "erro",
@@ -216,6 +235,30 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
       {imgMsg ? <Alert tipo={imgMsg.tipo === "erro" ? "erro" : imgMsg.tipo === "ok" ? "info" : "aviso"}>{imgMsg.texto}</Alert> : null}
       {progresso !== null ? <Progress rotulo="Lendo a foto" valor={progresso} maximo={1} /> : null}
 
+      {aproximada ? (
+        <div className="flex flex-col gap-2" role="group" aria-label="Leitura aproximada">
+          <p className="text-sm text-suave">Leitura aproximada (pode ter dígitos errados), ainda não usada:</p>
+          <p className="numero flex flex-wrap gap-x-2 gap-y-1 rounded-lg border border-borda-forte bg-fundo p-2 font-mono text-sm">
+            {aproximada.split(" ").map((g, i) => (
+              <span key={i} className={g.length === 4 ? undefined : "font-bold text-erro underline"}>
+                {g}
+                {g.length === 4 ? null : <span className="sr-only"> (tem {g.length} dígitos, deveria ter 4)</span>}
+              </span>
+            ))}
+          </p>
+          <p className="text-xs text-suave">Grupos sublinhados em vermelho não têm 4 dígitos: o leitor errou ali. Cada grupo da nota tem exatamente 4.</p>
+          <Button
+            variante="secundario"
+            onClick={() => {
+              void validar(aproximada);
+              setAproximada(null);
+              setImgMsg({ texto: "Confira cada grupo com a nota impressa e corrija os dígitos diferentes. O app só segue com a chave válida.", tipo: "info" });
+            }}
+          >
+            Usar para corrigir
+          </Button>
+        </div>
+      ) : null}
       {candidatas.length ? (
         <div className="flex flex-col gap-2" role="group" aria-label="Chaves candidatas">
           {candidatas.map((c) => (

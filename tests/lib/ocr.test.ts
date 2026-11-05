@@ -64,6 +64,15 @@ describe("lerChaveDaFoto", () => {
     expect(await lerChaveDaFoto(canvas, {}, m.deps)).toEqual({ vazio: true });
   });
 
+  it("sem chave certa devolve a leitura aproximada (nunca como chave)", async () => {
+    // leitura real de uma nota de impressão pontilhada: 42 dígitos, com erros
+    const ruim = "CONSULTE\n1626 1141 44983 3906 0161 050 00 1238 5496 3136 4469\n123854 5 85112026";
+    const m = montar([ruim, "", ruim]);
+    const r = await lerChaveDaFoto(canvas, {}, m.deps);
+    expect(r).toEqual({ vazio: true, aproximada: "1626 1141 44983 3906 0161 050 00 1238 5496 3136 4469" });
+    expect("exata" in r).toBe(false);
+  });
+
   it("encerra o worker mesmo quando o reconhecimento falha", async () => {
     const m = montar([new Error("falhou")]);
     await expect(lerChaveDaFoto(canvas, {}, m.deps)).rejects.toThrow("falhou");

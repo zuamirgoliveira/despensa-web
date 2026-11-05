@@ -1,4 +1,4 @@
-import { chaveDoOCR, type ResultadoOCR } from "@/domain/nfce/chave";
+import { chaveDoOCR, leituraAproximada, type ResultadoOCR } from "@/domain/nfce/chave";
 import { prepararPixels, TENTATIVAS_OCR, type TentativaOCR } from "./preprocessamento";
 
 /** Parte mínima do worker do Tesseract usada aqui (permite simular nos testes). */
@@ -64,9 +64,12 @@ export async function lerChaveDaFoto(
       user_defined_dpi: "300",
     });
     let melhor: ResultadoOCR = { vazio: true };
+    let aproximada: string | null = null;
     for (const tentativa of TENTATIVAS_OCR) {
       const { data } = await worker.recognize(deps.preparar(canvas, tentativa));
       const r = chaveDoOCR(data.text, cnpjsConhecidos);
+      const aprox = leituraAproximada(data.text);
+      if (aprox && (aproximada === null || Math.abs(aprox.replace(/ /g, "").length - 44) < Math.abs(aproximada.replace(/ /g, "").length - 44))) aproximada = aprox;
       if ("exata" in r) return r;
       if ("candidatas" in r) {
         if (!("candidatas" in melhor)) melhor = r;
@@ -74,6 +77,7 @@ export async function lerChaveDaFoto(
         melhor = r;
       }
     }
+    if ("vazio" in melhor && aproximada) return { ...melhor, aproximada };
     return melhor;
   } finally {
     await worker.terminate();
