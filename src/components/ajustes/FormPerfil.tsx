@@ -46,6 +46,14 @@ export function FormPerfil({ perfil, aoSalvar }: { perfil: Perfil; aoSalvar: () 
           erro={erros.limiarAlertaPrecoPct}
         />
         <Input
+          rotulo="Janela de comparação de preços (dias)"
+          inputMode="numeric"
+          value={v.janelaPrecoDias}
+          onChange={muda("janelaPrecoDias")}
+          erro={erros.janelaPrecoDias}
+          ajuda="Só preços dessa janela entram em 'melhor mercado' e na cesta."
+        />
+        <Input
           rotulo="Economia mínima para dividir a lista (R$)"
           inputMode="decimal"
           value={v.economiaMinimaDivisao}

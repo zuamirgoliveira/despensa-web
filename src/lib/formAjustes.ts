@@ -10,6 +10,7 @@ export type ValoresPerfil = {
   folgaDias: string;
   limiarAlertaPrecoPct: string;
   economiaMinimaDivisao: string;
+  janelaPrecoDias: string;
   consumoKmPorLitro: string;
   precoCombustivel: string;
   desgastePorKm: string;
@@ -23,6 +24,7 @@ export function valoresDoPerfil(p: Perfil): ValoresPerfil {
     folgaDias: String(p.folgaDias),
     limiarAlertaPrecoPct: String(p.limiarAlertaPrecoPct).replace(".", ","),
     economiaMinimaDivisao: reais(p.economiaMinimaDivisaoCentavos),
+    janelaPrecoDias: String(p.janelaPrecoDias),
     consumoKmPorLitro: String(p.carro.consumoKmPorLitro).replace(".", ","),
     precoCombustivel: reais(p.carro.precoCombustivelCentavos),
     desgastePorKm: reais(p.carro.desgasteCentavosPorKm),
@@ -34,6 +36,7 @@ const MSG_PERFIL: Record<CampoPerfil, string> = {
   folgaDias: "Informe a folga em dias (0 a 30).",
   limiarAlertaPrecoPct: "Informe uma porcentagem maior ou igual a zero.",
   economiaMinimaDivisao: "Informe um valor em reais maior ou igual a zero.",
+  janelaPrecoDias: "Informe a janela em dias (1 a 365).",
   consumoKmPorLitro: "Informe os km por litro (maior que zero).",
   precoCombustivel: "Informe o preço do litro em reais.",
   desgastePorKm: "Informe o desgaste por km em reais.",
@@ -44,6 +47,7 @@ const CAMINHO_PERFIL: Record<string, CampoPerfil> = {
   folgaDias: "folgaDias",
   limiarAlertaPrecoPct: "limiarAlertaPrecoPct",
   economiaMinimaDivisaoCentavos: "economiaMinimaDivisao",
+  janelaPrecoDias: "janelaPrecoDias",
   consumoKmPorLitro: "consumoKmPorLitro",
   precoCombustivelCentavos: "precoCombustivel",
   desgasteCentavosPorKm: "desgastePorKm",
@@ -56,6 +60,7 @@ export function validarPerfil(original: Perfil, v: ValoresPerfil): ResultadoPerf
     folgaDias: numero(v.folgaDias),
     limiarAlertaPrecoPct: numero(v.limiarAlertaPrecoPct),
     economiaMinimaDivisaoCentavos: emCentavos(v.economiaMinimaDivisao),
+    janelaPrecoDias: numero(v.janelaPrecoDias),
     carro: {
       consumoKmPorLitro: numero(v.consumoKmPorLitro),
       precoCombustivelCentavos: emCentavos(v.precoCombustivel),

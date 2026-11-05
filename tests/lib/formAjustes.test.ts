@@ -9,7 +9,7 @@ const perfil = perfilSchema.parse({ id: crypto.randomUUID(), casaId });
 describe("formulário do perfil", () => {
   it("valores iniciais em reais e vírgula", () => {
     expect(valoresDoPerfil(perfil)).toEqual({
-      folgaDias: "2", limiarAlertaPrecoPct: "20", economiaMinimaDivisao: "5,00", consumoKmPorLitro: "10",
+      folgaDias: "2", limiarAlertaPrecoPct: "20", economiaMinimaDivisao: "5,00", janelaPrecoDias: "60", consumoKmPorLitro: "10",
       precoCombustivel: "6,00", desgastePorKm: "0,30", bikePorKm: "0,05",
     });
   });

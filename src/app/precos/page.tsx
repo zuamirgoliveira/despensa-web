@@ -1,10 +1,10 @@
 import { Pagina } from "@/components/Pagina";
-import { ListaPrecos } from "@/components/precos/ListaPrecos";
+import { PrecosAbas } from "@/components/precos/PrecosAbas";
 
 export default function Page() {
   return (
     <Pagina titulo="Preços">
-      <ListaPrecos />
+      <PrecosAbas />
     </Pagina>
   );
 }
