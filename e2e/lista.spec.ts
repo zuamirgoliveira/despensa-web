@@ -72,9 +72,12 @@ test("quantidade nunca fica negativa", async ({ page }) => {
   await importarNota(page);
   await page.goto("/lista?ida=hortifruti_semanal");
   const quase = item(page, "Coentro"); // unidade: passo 1
-  for (let i = 0; i < 4; i++) {
-    const menos = quase.getByRole("button", { name: "Diminuir Coentro" });
-    if (await menos.isEnabled()) await menos.click();
+  const quantidade = quase.locator("[aria-live=polite]");
+  for (let i = 0; i < 6; i++) {
+    const antes = (await quantidade.textContent()) ?? "";
+    if (/^0 /.test(antes)) break;
+    await quase.getByRole("button", { name: "Diminuir Coentro" }).click();
+    await expect(quantidade).not.toHaveText(antes); // espera a gravação refletir na tela
   }
   await expect(quase.getByRole("button", { name: "Diminuir Coentro" })).toBeDisabled();
   await expect(quase.locator("[aria-live=polite]")).toHaveText(/^0 /);
