@@ -793,7 +793,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-31 Preços normalizados
 - [x] C-32 Alertas de preço
 - [x] C-33 Comparação e cesta
-- [ ] C-34 Economia líquida
+- [x] C-34 Economia líquida
 - [ ] C-35 Gastos e inflação
 - [ ] C-36 Painel
 - [ ] C-37 e2e E2

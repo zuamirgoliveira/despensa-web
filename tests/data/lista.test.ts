@@ -141,3 +141,27 @@ describe("tipoMaisProximo", () => {
     expect(await tipoMaisProximo(repos, HOJE)).toBeUndefined();
   });
 });
+
+import { dividirLista } from "@/data/lista";
+
+describe("dividirLista", () => {
+  it("cria a segunda lista, move os itens indicados e não perde nenhum; regerar não duplica", async () => {
+    const [a, b, c] = [await novo("A"), await novo("B"), await novo("C")];
+    for (const p of [a, b, c]) await acabou(p);
+    const lista = await garantirLista(repos, "mercado_semanal", HOJE);
+    const mercadoA = crypto.randomUUID();
+    const mercadoB = crypto.randomUUID();
+    const { original, nova } = await dividirLista(repos, lista, mercadoA, mercadoB, [b.id, c.id]);
+    expect(original).toMatchObject({ id: lista.id, mercadoId: mercadoA });
+    expect(nova).toMatchObject({ tipoIda: "mercado_semanal", data: lista.data, mercadoId: mercadoB, status: "rascunho" });
+    expect((await repos.itensLista.listarPorLista(lista.id)).map((i) => i.produtoId)).toEqual([a.id]);
+    expect((await repos.itensLista.listarPorLista(nova.id)).map((i) => i.produtoId).sort()).toEqual([b.id, c.id].sort());
+    expect((await repos.itensLista.listar())).toHaveLength(3); // nada se perdeu
+
+    // regerar a original não traz de volta o que foi para a outra lista
+    const regerada = await garantirLista(repos, "mercado_semanal", HOJE);
+    expect(regerada.id).toBe(lista.id);
+    expect((await repos.itensLista.listarPorLista(lista.id)).map((i) => i.produtoId)).toEqual([a.id]);
+    expect(await repos.listas.listar()).toHaveLength(2);
+  });
+});
