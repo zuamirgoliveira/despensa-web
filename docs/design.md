@@ -104,6 +104,7 @@ Todos mostram foco visível (contorno de 2 px `primario`, deslocamento de 2 px),
 | Selo (Badge) | tom a 12%, texto do tom, borda a 30% |
 | Barra de progresso | trilho `borda`, preenchimento `primario` |
 | Aba ativa | texto `primario` + barra curta `destaque` sob o rótulo |
+| Menu Mais | folha inferior (*bottom sheet*): fundo escurecido, alça, grade de 2 colunas com ícone e rótulo (≥ 56 px), rolagem interna (`max-h` = tela − 8rem); com a folha aberta só "Mais" fica em destaque; fecha com Esc, toque no fundo ou ao trocar de tela |
 | Toast | `texto` invertido (fundo `texto`, letra `fundo`); erro em `erro` |
 
 ## 7. Revisão por tela (retrato, 390×844)
