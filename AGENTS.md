@@ -165,6 +165,7 @@ app/ (telas) → components/ → data/ (repositórios) → schemas/
 - Banco `despensa`, versionado, com **migrações numeradas** em `src/data/indexeddb/migrations/NNN-descricao.ts`. Nunca editar migração já publicada; criar nova.
 - Todo registro: `id` (UUID v4 via `crypto.randomUUID()`) e `casaId`. Exceção de chave natural: `Compra.chave` (44 dígitos) e `ApelidoMercado` (`cnpj` + `codigo`).
 - Entidades: `Casa`, `Perfil`, `AgendaIda`, `Mercado`, `Produto`, `ApelidoMercado`, `Estoque`, `Compra` (com `ItemCompra[]`), `Lista`, `ItemLista`.
+- Schemas em `src/schemas/` (`comum`, `constantes`, `entidades`); tipos em `src/domain/types.ts`. Valores de enum não têm acento (`laticinios`). `Compra` e `ApelidoMercado` não têm `id` (chave natural). Campos extras além do blueprint: `Produto.metaManual`, `Produto.contavel`, `ItemLista.removido`, `ItemLista.quantidadeEditada`, `Perfil.economiaMinimaDivisaoCentavos`, `Perfil.janelaPrecoDias`. `Perfil.bikeCentavosPorKm` aceita fração de centavo.
 - Todo dado lido de IndexedDB ou de arquivo de backup passa por Zod antes de ser usado.
 - **Backup:** JSON com `versao`, `exportadoEm` e todas as coleções. Importação é idempotente (sobrescreve por `id`/`chave`) e rejeita versão superior à suportada.
 - O armazenamento é por origem e por aparelho. Não há sincronização.
