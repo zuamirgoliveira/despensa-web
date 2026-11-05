@@ -115,6 +115,7 @@ despensa-web/
 │  │  ├─ lista/                    tela Lista inteligente (itens, estimativa, avulsos)
 │  │  ├─ compra/                   tela Modo compra (checklist offline, total corrente)
 │  │  ├─ resumo/                   tela Resumo da compra (comprado, faltou, fora da lista)
+│  │  ├─ mercados/                 tela Mercados (tipo, transporte, distância, custo da ida)
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
@@ -154,6 +155,8 @@ despensa-web/
 │  │  ├─ imagem.ts                 arquivo → canvas com EXIF
 │  │  ├─ mapas.ts                  cliente do serviço de mapas
 │  │  ├─ endereco.ts               normalização do endereço da nota (variantes de geocodificação)
+│  │  ├─ coordenadas.ts            arredondar (3 casas) e ler coordenadas coladas
+│  │  ├─ localizacao.ts            captura da posição UMA vez (getCurrentPosition)
 │  │  ├─ format.ts                 brl, dataBR, horaBR, kg
 │  │  ├─ datas.ts                  datas sem hora, hojeRecife (injetável)
 │  │  ├─ rotas.ts                  lista de rotas do app (pré-cache)
@@ -274,6 +277,9 @@ Casa itens da nota com `ItemLista` por `produtoId` (resolvido pelo apelido na im
 - Tela `/resumo?lista=<id>`: comprado, faltou, fora da lista (com selo de emergência), total gasto contra a estimativa e, quando houver (C-28), custo da ida e custo real (`itens + ida`); sem custo da ida mostra "estimativa pendente".
 
 ### 6.5 Custo da ida (`ida.ts`)
+
+- **`Mercado.distanciaKm` e `tempoMinIda` são de IDA** (casa → mercado). O custo e o tempo total usam ida e volta (×2): `custoIdaDoMercado(mercado, perfil)`. `custoIda({ meio, kmIdaVolta, perfil, custoFixoCentavos })` recebe km de ida e volta. O custo fixo (estacionamento) vale só para o carro. `estatisticasDeIdas(compras, mercados, ano, mes)` conta idas e minutos (informação; nunca vira dinheiro) e soma `custoIdaCentavos` das compras.
+- **Casa (`Perfil.localizacaoCasa`)**: "Estou em casa agora" chama `getCurrentPosition` uma única vez (sem alta precisão), com opção de arredondar a 3 casas (`arredondarLocalizacao`, padrão ligado; o valor arredondado é o que fica guardado) e alternativa de colar coordenadas (`-8.0631, -34.8711`, ponto decimal). `tests/seguranca-estatica.test.ts` falha se aparecer `watchPosition`, `innerHTML`, `eval`, `confirm/alert/prompt`, rota de API ou IndexedDB fora de `src/data/indexeddb`.
 
 - Carro: `km × (precoCombustível ÷ consumoKmPorLitro + desgastePorKm) + custoFixo`.
 - Bike elétrica: `km × custoPorKm`.

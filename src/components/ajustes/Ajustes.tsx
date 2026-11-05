@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { Card, useToast } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { useRepositorio } from "@/data/useRepositorio";
 import { TIPOS_IDA } from "@/schemas";
 import { Backup } from "./Backup";
+import { CasaLocalizacao } from "./CasaLocalizacao";
 import { FormAgenda } from "./FormAgenda";
 import { FormPerfil } from "./FormPerfil";
 
@@ -37,6 +39,14 @@ export function Ajustes() {
           />
         ))}
       </Card>
+      <Card className="flex flex-col gap-1">
+        <h2 className="text-lg font-semibold">Mercados</h2>
+        <p className="text-sm text-texto/70">Distância, meio de transporte e custo de ida de cada mercado.</p>
+        <Link href="/mercados" className="inline-flex min-h-11 items-center font-medium text-verde underline">
+          Ver mercados
+        </Link>
+      </Card>
+      {perfil ? <CasaLocalizacao key={`${perfil.id}-${perfil.localizacaoCasa?.lat}-${perfil.localizacaoCasa?.lng}-${perfil.arredondarLocalizacao}`} perfil={perfil} aoSalvar={salvou} /> : null}
       {perfil ? <FormPerfil key={perfil.id} perfil={perfil} aoSalvar={salvou} /> : null}
       <Backup />
     </div>
