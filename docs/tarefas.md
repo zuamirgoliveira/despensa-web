@@ -779,7 +779,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-17 Spike de mapas
 - [x] C-18 Estoque e cobertura
 - [x] C-19 Agenda
-- [ ] C-20 Geração da lista
+- [x] C-20 Geração da lista
 - [ ] C-21 Catálogo
 - [ ] C-22 Ajustes
 - [ ] C-23 Conferência

@@ -228,7 +228,15 @@ Seja `T` a ida alvo (tipo e data), `T2` a ocorrência seguinte do mesmo tipo, `f
 - Produto arquivado (`ativo = false`) nunca entra.
 - Estimativa de custo = soma de `quantidade × último preço unitário`; itens sem preço ficam fora da soma e são listados à parte.
 - Saída: `{ produtoId, quantidade, motivo: 'acabou'|'cobertura'|'puxado', urgente, precoEstimadoCentavos? }[]` + resumo.
-- Regerar a lista preserva edições manuais (removidos continuam removidos; quantidades editadas permanecem).
+- Regerar a lista preserva edições manuais (removidos continuam removidos; quantidades editadas permanecem): `mesclarRegeracao(sugeridos, existentes)` devolve `{ adicionar, atualizar, remover }`; itens avulsos, extras, editados e já pegos nunca são tocados; automáticos intocados que deixaram de ser sugeridos saem.
+
+Decisões de implementação (`gerarLista(entrada)` devolve `{ ida, itens, resumo } | undefined` quando o tipo não tem agenda):
+
+- **Quando um produto de feira é "puxado":** o estoque acaba antes da próxima feira **e** a próxima ida compatível acontece antes da feira. Ele entra na lista dessa ida compatível quando o estoque não chega até a ida semanal seguinte + folga (ou seja, na última ida semanal em que ainda dá tempo), com `motivo: 'puxado'`; `urgente` se a ida cai depois do fim estimado do estoque. Enquanto estiver nessa situação, ele **não** aparece na lista da feira.
+- **`acabou`:** vai para a ida própria se ela for em até 1 dia; senão para a mais cedo entre a própria e as compatíveis (empate: a própria). `urgente` quando a ida é daqui a mais de 1 dia.
+- **Quantidade:** horizonte = próxima ida do tipo **próprio** do produto depois da ida alvo (feira seguinte, no caso do puxado). Arredonda para cima ao passo da unidade; o teto `consumo × vidaUtilDias` é arredondado para **baixo** ao passo (nunca ultrapassa o limite); o mínimo (uma unidade mínima) vence o teto. Sem consumo, usa a meta.
+- Produto sem registro de estoque: assume `cheio` desde a última compra (ou desde hoje, se nunca comprou).
+- Comparações de cobertura usam tolerância de 1e-9 (evita `8,999999999999998 < 9`).
 
 ### 6.4 Reconciliação (`reconciliacao.ts`)
 
