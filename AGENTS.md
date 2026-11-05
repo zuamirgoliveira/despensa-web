@@ -112,6 +112,7 @@ despensa-web/
 │  │  ├─ precos/                   lista de preços e histórico
 │  │  ├─ catalogo/                 tela Catálogo (lista por categoria, formulário, mesclar)
 │  │  ├─ conferencia/              tela Conferir despensa (um produto por vez)
+│  │  ├─ lista/                    tela Lista inteligente (itens, estimativa, avulsos)
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
@@ -137,6 +138,7 @@ despensa-web/
 │  │  ├─ indexeddb/                implementação e migrações numeradas
 │  │  ├─ backup.ts                 exportar e importar com validação
 │  │  ├─ conferencia.ts            fila da conferência, registrar nível e sessão
+│  │  ├─ lista.ts                  garantir/regerar lista preservando edições, editar itens
 │  │  ├─ importarNota.ts           orquestra a importação (mercado, produtos, apelidos, compra, meta)
 │  │  ├─ catalogo.ts               edição com meta manual, liberar meta, mesclar produtos
 │  │  ├─ eventos.ts                emissor de mudanças (aoMudar, emitirMudanca)
@@ -174,7 +176,7 @@ app/ (telas) → components/ → data/ (repositórios) → schemas/
 - **Telas** são Client Components (`'use client'`): leem IndexedDB e usam APIs do navegador. Layouts podem ser Server Components.
 - **Domínio** recebe dados já carregados e devolve resultados. Não faz I/O, não lê relógio global (receber `hoje` por parâmetro).
 - **Repositórios** são o único ponto de acesso a persistência. Telas importam `criarRepositorios()`, nunca `indexedDB` direto.
-- **Eventos de mudança:** cada escrita no repositório emite evento; `useRepositorio(consulta)` reexecuta a consulta. Não há store global.
+- **Eventos de mudança:** cada escrita no repositório emite evento; `useRepositorio(consulta, colecoes, deps?)` reexecuta a consulta quando uma das coleções muda ou um valor de `deps` (ex.: um id guardado em estado) muda. Não há store global.
 
 ### 5.2 Persistência (IndexedDB)
 
@@ -237,6 +239,7 @@ Seja `T` a ida alvo (tipo e data), `T2` a ocorrência seguinte do mesmo tipo, `f
 - Produto arquivado (`ativo = false`) nunca entra.
 - Estimativa de custo = soma de `quantidade × último preço unitário`; itens sem preço ficam fora da soma e são listados à parte.
 - Saída: `{ produtoId, quantidade, motivo: 'acabou'|'cobertura'|'puxado', urgente, precoEstimadoCentavos? }[]` + resumo.
+- Tela `/lista?ida=<tipo>` (`ListaInteligente`): sem `ida`, usa a ida mais próxima da agenda. `garantirLista` reaproveita a lista aberta (rascunho ou em compra) da mesma ida; lista `fechada` nunca é reaproveitada. Remover item do catálogo marca `removido` (não volta ao regerar); remover avulso apaga. "Iniciar compra" leva a `/compra?lista=<id>` (**query, não segmento dinâmico**, por causa do offline).
 - Regerar a lista preserva edições manuais (removidos continuam removidos; quantidades editadas permanecem): `mesclarRegeracao(sugeridos, existentes)` devolve `{ adicionar, atualizar, remover }`; itens avulsos, extras, editados e já pegos nunca são tocados; automáticos intocados que deixaram de ser sugeridos saem.
 
 Decisões de implementação (`gerarLista(entrada)` devolve `{ ida, itens, resumo } | undefined` quando o tipo não tem agenda):

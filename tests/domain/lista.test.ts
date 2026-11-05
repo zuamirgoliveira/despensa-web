@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { arredondarParaCima, gerarLista, mesclarRegeracao, ultimoPrecoUnitario, type EntradaLista, type ItemListaSugerido } from "@/domain/lista";
+import { arredondarParaCima, estimarCusto, gerarLista, mesclarRegeracao, passoDaUnidade, ultimoPrecoUnitario, type EntradaLista, type ItemListaSugerido } from "@/domain/lista";
 import type { AgendaIda, Compra, Estoque, ItemLista, Produto } from "@/domain/types";
 
 const casaId = crypto.randomUUID();
@@ -377,3 +377,25 @@ describe("acabou: escolha da ida", () => {
 function AGENTS_SO_FEIRA(): AgendaIda[] {
   return AGENDAS.filter((a) => a.tipo === "feira_mensal");
 }
+
+describe("estimarCusto", () => {
+  const item = (extra: Partial<ItemLista>): ItemLista => ({
+    id: id(), casaId, listaId: id(), quantidadeSugerida: 1, status: "pendente", urgente: false, removido: false, quantidadeEditada: false, ...extra,
+  });
+  const p1 = id();
+  const compras = [compra("2026-10-01", [[p1, 1, 500]])];
+
+  it("soma quantidade × último preço, ignora removidos e lista os sem preço", () => {
+    const a = item({ produtoId: p1, quantidadeSugerida: 2.5 });
+    const semHistorico = item({ produtoId: id() });
+    const avulso = item({ nomeAvulso: "Pilha" });
+    const removido = item({ produtoId: p1, removido: true, quantidadeSugerida: 9 });
+    expect(estimarCusto([a, semHistorico, avulso, removido], compras)).toEqual({ totalCentavos: 1250, semPreco: [semHistorico.id, avulso.id] });
+  });
+
+  it("lista vazia", () => expect(estimarCusto([], compras)).toEqual({ totalCentavos: 0, semPreco: [] }));
+});
+
+describe("passoDaUnidade", () => {
+  it.each([["kg", 0.1], ["un", 1], ["pacote", 1], ["l", 0.5]] as const)("%s → %s", (u, p) => expect(passoDaUnidade(u)).toBe(p));
+});

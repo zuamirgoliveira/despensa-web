@@ -5,17 +5,25 @@ import { aoMudar, type NomeColecao } from "./eventos";
 
 export type EstadoConsulta<T> = { dados: T | undefined; carregando: boolean; erro: Error | undefined };
 
+type Dependencia = string | number | boolean | null | undefined;
+
 /**
- * Executa `consulta` e a reexecuta sempre que uma das `colecoes` mudar.
- * `consulta` pode mudar a cada render; a mais recente é a usada.
+ * Executa `consulta` e a reexecuta sempre que uma das `colecoes` mudar ou um valor de `deps` mudar
+ * (valores primitivos que a consulta usa, como um id). `consulta` pode mudar a cada render; a mais
+ * recente é a usada.
  */
-export function useRepositorio<T>(consulta: () => Promise<T>, colecoes: readonly NomeColecao[]): EstadoConsulta<T> {
+export function useRepositorio<T>(
+  consulta: () => Promise<T>,
+  colecoes: readonly NomeColecao[],
+  deps: readonly Dependencia[] = [],
+): EstadoConsulta<T> {
   const [estado, setEstado] = useState<EstadoConsulta<T>>({ dados: undefined, carregando: true, erro: undefined });
   const consultaRef = useRef(consulta);
   useEffect(() => {
     consultaRef.current = consulta;
   });
   const chave = colecoes.join(",");
+  const chaveDeps = JSON.stringify(deps);
 
   useEffect(() => {
     let ativo = true;
@@ -35,7 +43,7 @@ export function useRepositorio<T>(consulta: () => Promise<T>, colecoes: readonly
       ativo = false;
       cancelar();
     };
-  }, [chave]);
+  }, [chave, chaveDeps]);
 
   return estado;
 }

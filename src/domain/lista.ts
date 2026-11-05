@@ -37,6 +37,11 @@ export type EntradaLista = {
 /** Menor quantidade comprável por unidade do produto. */
 const PASSO: Record<Produto["unidade"], number> = { kg: 0.1, un: 1, pacote: 1, l: 0.5 };
 
+/** Menor passo de quantidade por unidade (botões +/− da lista). */
+export function passoDaUnidade(unidade: Produto["unidade"]): number {
+  return PASSO[unidade];
+}
+
 const arred = (n: number): number => Math.round(n * 1000) / 1000;
 
 /** `a < b` tolerando erro de ponto flutuante (8,999999999999998 não é menor que 9). */
@@ -245,3 +250,21 @@ export function mesclarRegeracao(sugeridos: readonly ItemListaSugerido[], existe
   return m;
 }
 
+
+export type EstimativaAtual = { totalCentavos: number; semPreco: string[] };
+
+/**
+ * Estimativa de custo da lista como está agora (com as quantidades editadas): quantidade × último preço
+ * do produto. Itens removidos ficam fora; itens sem preço (e avulsos) ficam fora da soma e são listados.
+ */
+export function estimarCusto(itens: readonly ItemLista[], compras: readonly Compra[]): EstimativaAtual {
+  let total = 0;
+  const semPreco: string[] = [];
+  for (const i of itens) {
+    if (i.removido) continue;
+    const preco = i.produtoId ? ultimoPrecoUnitario(i.produtoId, compras) : undefined;
+    if (preco === undefined) semPreco.push(i.id);
+    else total += Math.round(i.quantidadeSugerida * preco);
+  }
+  return { totalCentavos: total, semPreco };
+}

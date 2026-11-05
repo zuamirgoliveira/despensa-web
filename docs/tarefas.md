@@ -783,7 +783,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-21 Catálogo
 - [x] C-22 Ajustes
 - [x] C-23 Conferência
-- [ ] C-24 Lista
+- [x] C-24 Lista
 - [ ] C-25 Modo compra
 - [ ] C-26 Reconciliação
 - [ ] C-27 Mercados e casa
