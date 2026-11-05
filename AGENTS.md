@@ -125,7 +125,8 @@ despensa-web/
 │  │  ├─ repositorios.ts           interfaces dos repositórios
 │  │  ├─ indexeddb/                implementação e migrações numeradas
 │  │  ├─ backup.ts                 exportar e importar com validação
-│  │  └─ eventos.ts                emissor de mudanças + hook useRepositorio
+│  │  ├─ eventos.ts                emissor de mudanças (aoMudar, emitirMudanca)
+│  │  └─ useRepositorio.ts         hook que reexecuta a consulta quando a coleção muda
 │  ├─ lib/
 │  │  ├─ qr.ts                     leitura de QR (nativo + jsqr) e scanner de câmera
 │  │  ├─ ocr.ts                    leitura da chave por Tesseract
@@ -162,7 +163,7 @@ app/ (telas) → components/ → data/ (repositórios) → schemas/
 
 ### 5.2 Persistência (IndexedDB)
 
-- Banco `despensa`, versionado, com **migrações numeradas** em `src/data/indexeddb/migrations/NNN-descricao.ts`. Nunca editar migração já publicada; criar nova.
+- Banco `despensa`, versionado (`criarRepositorios()` em `src/data/indexeddb/index.ts`; `criarRepositorios({ indexedDB, nomeBanco })` abre instância própria, usada nos testes com `fake-indexeddb`), com **migrações numeradas** em `src/data/indexeddb/migrations/NNN-descricao.ts`. Nunca editar migração já publicada; criar nova.
 - Todo registro: `id` (UUID v4 via `crypto.randomUUID()`) e `casaId`. Exceção de chave natural: `Compra.chave` (44 dígitos) e `ApelidoMercado` (`cnpj` + `codigo`).
 - Entidades: `Casa`, `Perfil`, `AgendaIda`, `Mercado`, `Produto`, `ApelidoMercado`, `Estoque`, `Compra` (com `ItemCompra[]`), `Lista`, `ItemLista`.
 - Schemas em `src/schemas/` (`comum`, `constantes`, `entidades`); tipos em `src/domain/types.ts`. Valores de enum não têm acento (`laticinios`). `Compra` e `ApelidoMercado` não têm `id` (chave natural). Campos extras além do blueprint: `Produto.metaManual`, `Produto.contavel`, `ItemLista.removido`, `ItemLista.quantidadeEditada`, `Perfil.economiaMinimaDivisaoCentavos`, `Perfil.janelaPrecoDias`. `Perfil.bikeCentavosPorKm` aceita fração de centavo.

@@ -766,7 +766,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-04 Modelos e schemas
 - [x] C-05 Chave e QR
 - [x] C-06 Parser da nota
-- [ ] C-07 Repositórios e backup
+- [x] C-07 Repositórios e backup
 - [ ] C-08 Layout e componentes
 - [ ] C-09 PWA e offline
 - [ ] C-10 QR e OCR
