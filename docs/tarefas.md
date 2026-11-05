@@ -789,7 +789,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-27 Mercados e casa
 - [x] C-28 Estimativa da ida
 - [x] C-29 Início
-- [ ] C-30 e2e E1
+- [x] C-30 e2e E1
 - [ ] C-31 Preços normalizados
 - [ ] C-32 Alertas de preço
 - [ ] C-33 Comparação e cesta

@@ -52,7 +52,7 @@ Fixe versões exatas no `package-lock.json`. Instalação sempre com `npm ci`. N
 | `npm test`           | Vitest (`vitest run`)                                       |
 | `npm run test:watch` | Vitest em modo observação                                   |
 | `npm run e2e`        | Playwright contra `next start`                              |
-| `npm run seed:dev`   | popula IndexedDB com dados de desenvolvimento (somente dev) |
+| `npm run seed:dev`   | gera `dev-data/despensa-seed.json` (3 meses, 2 mercados); importe em Ajustes → Importar backup (somente dev) |
 
 Todo código novo exige `typecheck`, `lint`, `test` e `build` verdes.
 
@@ -100,7 +100,7 @@ despensa-web/
 ├─ scripts/
 │  ├─ copy-vendor.mjs              copia worker, core e idioma do Tesseract para public/vendor
 │  ├─ gen-precache.mjs             gera a lista de pré-cache do service worker
-│  ├─ seed-dev.ts                  dados de desenvolvimento
+│  ├─ seed-dev.mjs                 gera dev-data/despensa-seed.json (backup de dev; importar em Ajustes)
 │  └─ spike-mapas/                 scripts do estudo de mapas
 ├─ src/
 │  ├─ app/                         rotas e layouts (App Router)

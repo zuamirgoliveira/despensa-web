@@ -15,3 +15,6 @@ tests/fixtures/foto-nota-real.jpeg
 
 # Gerado pelo build (scripts/gen-precache.mjs)
 public/precache.json
+
+# Gerado por npm run seed:dev
+dev-data/

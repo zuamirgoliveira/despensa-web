@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "vendor": "node scripts/copy-vendor.mjs",
-    "predev": "node scripts/copy-vendor.mjs"
+    "predev": "node scripts/copy-vendor.mjs",
+    "seed:dev": "node scripts/seed-dev.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",
