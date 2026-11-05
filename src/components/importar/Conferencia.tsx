@@ -70,6 +70,16 @@ export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, 
                 value={nomes[i.codigo] ?? i.sugestaoNome}
                 onChange={(e) => aoMudarNome(i.codigo, e.target.value)}
               />
+              {i.parecidos.length ? (
+                <div className="flex flex-col gap-1" role="group" aria-label={`Produtos parecidos com ${i.sugestaoNome}`}>
+                  <p className="text-xs text-suave">Já existe algo parecido no catálogo. É o mesmo produto?</p>
+                  {i.parecidos.map((p) => (
+                    <Button key={p.nome} variante="secundario" className="justify-start text-left" onClick={() => aoMudarNome(i.codigo, p.nome)}>
+                      Usar “{p.nome}”{p.motivo === "tamanho" ? " (outro tamanho)" : ""}
+                    </Button>
+                  ))}
+                </div>
+              ) : null}
               {it ? (
                 <p className="text-xs text-suave">
                   {numeroBR(it.quantidade)} {it.unidade.toLowerCase()} × {brl(it.valorUnitarioCentavos)} = {brl(it.valorTotalCentavos)}

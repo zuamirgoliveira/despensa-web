@@ -51,6 +51,38 @@ test("campo da chave: editar no meio mantém o cursor (apagar e digitar no meio 
   await expect(campo).toHaveValue("2626 1108 8682 3100 0638 6500 2000 0689 0310 2078 720"); // o 7 do grupo 10 saiu e o resto reagrupou
 });
 
+test("conferência sugere o produto parecido (outro tamanho) e o usuário escolhe; nada une sozinho", async ({ page }) => {
+  const { erros } = vigiarConsole(page);
+  // catálogo prévio com "Alho Redinha 500g"; a nota traz "ALHO REDINHA PCT 180" (sem o mesmo tamanho)
+  // @ts-expect-error módulo .mjs de script, sem tipos
+  const { gerarSeed } = await import("../scripts/seed-dev.mjs");
+  const seed = gerarSeed(new Date());
+  seed.colecoes.produtos.push({ ...seed.colecoes.produtos[0], id: "00000000-0000-4000-8000-000000000a1c", nome: "Alho Redinha 500g" });
+  await page.goto("/ajustes");
+  await page.getByLabel("Arquivo de backup").setInputFiles({ name: "seed.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(seed)) });
+  await expect(page.getByText(/Importado:/)).toBeVisible();
+
+  await page.goto("/importar");
+  await lerNota(page, NOTA);
+  await expect(page.getByText("Li 16 itens.")).toBeVisible();
+  const alho = page.getByRole("group", { name: "Produtos parecidos com Alho Redinha" });
+  const campoAlho = page.getByRole("listitem").filter({ hasText: "ALHO REDINHA" }).getByLabel("Nome do produto");
+  await expect(alho).toBeVisible();
+  await expect(campoAlho).toHaveValue("Alho Redinha"); // não trocou sozinho
+  await alho.getByRole("button", { name: "Usar “Alho Redinha 500g” (outro tamanho)" }).click();
+  await expect(campoAlho).toHaveValue("Alho Redinha 500g");
+  await page.getByRole("button", { name: "Salvar compra" }).click();
+  // com a casa do seed já cadastrada a estimativa pode seguir sem perguntar
+  await page.getByRole("button", { name: "Decidir depois" }).click({ timeout: 3000 }).catch(() => undefined);
+  await expect(page).toHaveURL(/\/compras$/);
+
+  // o catálogo ficou com um único alho (o existente), não dois
+  await page.goto("/catalogo");
+  await expect(page.getByRole("listitem").filter({ hasText: "Alho Redinha" })).toHaveCount(1);
+  await expect(page.getByRole("listitem").filter({ hasText: "Alho Redinha 500g" })).toHaveCount(1);
+  semViolacaoDeCsp(erros);
+});
+
 test("chave: parcial, inválida e válida", async ({ page }) => {
   const { erros } = vigiarConsole(page);
   await page.goto("/importar");

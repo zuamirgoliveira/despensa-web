@@ -1,7 +1,8 @@
 // Importação de nota: orquestra domínio e repositórios. Nunca persiste CPF nem o texto bruto.
-import { chaveDeNome, metaAutomatica, novoProduto } from "@/domain/catalogo";
+import { metaAutomatica, novoProduto } from "@/domain/catalogo";
 import { sugerirTipoMercado } from "@/domain/mercados";
-import { suggestName, type NotaParseada } from "@/domain/nfce/parser";
+import type { NotaParseada } from "@/domain/nfce/parser";
+import { chaveDeProduto, normalizarDescricao, produtosParecidos } from "@/domain/normalizacao";
 import type { Compra, Mercado, Produto } from "@/domain/types";
 import type { Repositorios } from "./repositorios";
 
@@ -19,22 +20,26 @@ export type ItemConferencia = {
   sugestaoNome: string;
   /** Verdadeiro quando nem o apelido nem o nome existem no catálogo. */
   novo: boolean;
+  /** Produtos do catálogo que talvez sejam o mesmo (só quando `novo`): o usuário confirma com um toque. */
+  parecidos: { nome: string; motivo: "tamanho" | "parecido" }[];
 };
 
 export async function prepararConferencia(repos: Repositorios, nota: NotaParseada): Promise<ItemConferencia[]> {
   const produtos = await repos.produtos.listar();
   const porId = new Map(produtos.map((p) => [p.id, p]));
-  const nomes = new Set(produtos.map((p) => chaveDeNome(p.nome)));
+  const nomes = new Set(produtos.map((p) => chaveDeProduto(p.nome)));
   const itens: ItemConferencia[] = [];
   for (const item of nota.itens) {
     const apelido = await repos.apelidos.obter([nota.loja.cnpj, item.codigo]);
     const doApelido = apelido ? porId.get(apelido.produtoId) : undefined;
-    const sugestaoNome = doApelido?.nome ?? suggestName(item.descricao);
+    const sugestaoNome = doApelido?.nome ?? normalizarDescricao(item.descricao).nome;
+    const novo = !doApelido && !nomes.has(chaveDeProduto(sugestaoNome));
     itens.push({
       codigo: item.codigo,
       descricao: item.descricao,
       sugestaoNome,
-      novo: !doApelido && !nomes.has(chaveDeNome(sugestaoNome)),
+      novo,
+      parecidos: novo ? produtosParecidos(sugestaoNome, produtos).map((p) => ({ nome: p.produto.nome, motivo: p.motivo })) : [],
     });
   }
   return itens;
@@ -75,7 +80,7 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
   }
 
   const produtos = await repos.produtos.listar();
-  const porNome = new Map(produtos.map((p) => [chaveDeNome(p.nome), p]));
+  const porNome = new Map(produtos.map((p) => [chaveDeProduto(p.nome), p]));
   const produtosCriados: Produto[] = [];
 
   const itens: Compra["itens"] = [];
@@ -83,13 +88,13 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
   let casados = 0;
   for (const item of nota.itens) {
     if (await repos.apelidos.obter([mercado.cnpj, item.codigo])) casados++;
-    const nome = (nomes[item.codigo] ?? "").trim() || suggestName(item.descricao);
-    let produto = porNome.get(chaveDeNome(nome));
+    const nome = (nomes[item.codigo] ?? "").trim() || normalizarDescricao(item.descricao).nome;
+    let produto = porNome.get(chaveDeProduto(nome));
     if (!produto) {
       produto = await repos.produtos.salvar(
         novoProduto({ id: crypto.randomUUID(), casaId: casa.id, nome, item, mercadoTipo: mercado.tipo }),
       );
-      porNome.set(chaveDeNome(nome), produto);
+      porNome.set(chaveDeProduto(nome), produto);
       produtosCriados.push(produto);
     }
     await repos.apelidos.salvar({ casaId: casa.id, cnpj: mercado.cnpj, codigo: item.codigo, produtoId: produto.id });
