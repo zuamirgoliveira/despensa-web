@@ -3,6 +3,9 @@
 PWA de gestão da despensa e das compras da casa. Roda 100% no aparelho (IndexedDB), funciona offline e instala no Android. Em português do Brasil.
 
 - Produto e requisitos: [docs/blue-print.md](docs/blue-print.md)
+- Como usar: [docs/usuario.md](docs/usuario.md) · Backup: [docs/backup.md](docs/backup.md)
+- Arquitetura: [docs/arquitetura.md](docs/arquitetura.md) · Deploy: [docs/deploy.md](docs/deploy.md)
+- Segurança: [docs/seguranca.md](docs/seguranca.md) · Qualidade: [docs/qualidade.md](docs/qualidade.md)
 - Plano de execução: [docs/tarefas.md](docs/tarefas.md)
 - Referência técnica (stack, regras, segurança, deploy): [AGENTS.md](AGENTS.md)
 
@@ -31,7 +34,8 @@ O OCR precisa dos arquivos em `public/vendor/tesseract/`, gerados por `npm run b
 | `npm run lint`      | ESLint                                  |
 | `npm run typecheck` | `tsc --noEmit`                          |
 | `npm test`          | Vitest                                  |
-| `npm run e2e`       | Playwright contra `next start`          |
+| `npm run e2e`       | Playwright contra `next start` (porta por `E2E_PORT`; exige `npm run build`) |
+| `npm run seed:dev`  | gera dados de desenvolvimento para importar em Ajustes |
 
 ## Estrutura
 

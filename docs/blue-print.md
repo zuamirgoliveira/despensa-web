@@ -612,6 +612,7 @@ Mercado: Cia Santos Distribuidora e Importadora de Hortifruti, Olinda/PE. Cada i
 | D21 | Exceções documentadas à CSP e à Permissions-Policy padrão: câmera, localização, worker, WebAssembly e blob (seção 10.2)                                         | Recomendação, a validar no S7                            |
 | D22 | Service worker escrito à mão em `public/sw.js`, sem plugin de PWA                                                                                               | Recomendação (padrão: sem dependência sem justificativa) |
 | D23 | Dados atrás de uma **camada de repositório**, com `casa_id` desde o início, para trocar IndexedDB por Supabase e chegar ao multi-tenant sem refazer a interface | Recomendação                                             |
+| D25 | Serviço de mapas: **Nominatim + OSRM (FOSSGIS)**, sem chave (recomendação do spike, aguardando confirmação Z-10) | Spike C-17 |
 | D24 | Serviço de mapas chamado direto do navegador no início, sem rota de API própria (rota própria exigiria login, Perfil C)                                         | Recomendação                                             |
 
 ---
@@ -626,6 +627,7 @@ Mercado: Cia Santos Distribuidora e Importadora de Hortifruti, Olinda/PE. Cada i
 | Q4  | O que mais pesa na vontade de reduzir idas: tempo, esforço ou também o gasto com o carro?                         | O que o painel destaca                              |
 | Q5  | Valores padrão: consumo do carro, preço do combustível, desgaste por km, custo por km da bike                     | Custo da ida (todos editáveis)                      |
 | Q6  | Valor padrão da folga em dias na regra de cobertura                                                               | Sensibilidade da lista                              |
+| Q1/Q5/Q6 | **Resolvido com padrões editáveis em Ajustes** (feira dia 5, mercado sábado, hortifruti quarta, folga 2 dias, carro 10 km/L, R$ 6,00/L, R$ 0,30/km, bike R$ 0,05/km); a Zuma valida no uso | n/a |
 | Q7  | ~~Onde hospedar~~ **Resolvido:** VPS da Raia Manta, em `/opt/docker/despensa-web`, com Traefik e Cloudflare (D20) | n/a                                                 |
 | Q9  | Qual domínio ou subdomínio vai apontar para o app                                                                 | Traefik, certificado e Cloudflare                   |
 | Q10 | Limite de memória do container (começar em 256 MB, já que o OCR roda no aparelho)                                 | Compose                                             |
