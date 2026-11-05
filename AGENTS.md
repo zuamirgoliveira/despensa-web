@@ -113,6 +113,7 @@ despensa-web/
 │  │  ├─ catalogo/                 tela Catálogo (lista por categoria, formulário, mesclar)
 │  │  ├─ conferencia/              tela Conferir despensa (um produto por vez)
 │  │  ├─ lista/                    tela Lista inteligente (itens, estimativa, avulsos)
+│  │  ├─ compra/                   tela Modo compra (checklist offline, total corrente)
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
@@ -124,6 +125,7 @@ despensa-web/
 │  │  ├─ conferencia.ts            quais produtos conferir antes de uma ida, agrupados por local
 │  │  ├─ agenda.ts                 ocorrências das idas
 │  │  ├─ lista.ts                  geração da lista por cobertura
+│  │  ├─ compra.ts                 total corrente, progresso, ordem e orçamento do modo compra
 │  │  ├─ reconciliacao.ts          nota × lista
 │  │  ├─ categorias.ts             categoria por palavra-chave
 │  │  ├─ ida.ts                    custo da ida
@@ -139,6 +141,7 @@ despensa-web/
 │  │  ├─ backup.ts                 exportar e importar com validação
 │  │  ├─ conferencia.ts            fila da conferência, registrar nível e sessão
 │  │  ├─ lista.ts                  garantir/regerar lista preservando edições, editar itens
+│  │  ├─ compra.ts                 modo compra: pego, não encontrei, preço, extra, orçamento
 │  │  ├─ importarNota.ts           orquestra a importação (mercado, produtos, apelidos, compra, meta)
 │  │  ├─ catalogo.ts               edição com meta manual, liberar meta, mesclar produtos
 │  │  ├─ eventos.ts                emissor de mudanças (aoMudar, emitirMudanca)
@@ -249,6 +252,12 @@ Decisões de implementação (`gerarLista(entrada)` devolve `{ ida, itens, resum
 - **Quantidade:** horizonte = próxima ida do tipo **próprio** do produto depois da ida alvo (feira seguinte, no caso do puxado). Arredonda para cima ao passo da unidade; o teto `consumo × vidaUtilDias` é arredondado para **baixo** ao passo (nunca ultrapassa o limite); o mínimo (uma unidade mínima) vence o teto. Sem consumo, usa a meta.
 - Produto sem registro de estoque: assume `cheio` desde a última compra (ou desde hoje, se nunca comprou).
 - Comparações de cobertura usam tolerância de 1e-9 (evita `8,999999999999998 < 9`).
+
+### 6.3.1 Modo compra (`compra.ts`, tela `/compra?lista=<id>`)
+
+- Abrir a tela coloca a lista em `em_compra`. Cada toque persiste na hora (offline). Status do item: `pendente` → `pego` (grava `quantidadePega`; tocar de novo desfaz), `nao_encontrado` (volta como pendente na próxima ida, C-26), `adiado`, `extra` (comprado fora da lista, já entra como pego).
+- `ItemLista.precoCentavos` é o **preço unitário** informado (opcional, nunca bloqueia). Total corrente = Σ `quantidadePega (ou sugerida) × preço` dos itens `pego`/`extra` com preço. Orçamento opcional por lista (`Lista.orcamentoCentavos`): aviso a partir de 90%, alerta ao passar de 100%.
+- Pegos vão para o fim do grupo (`ordenarParaCompra`). A tela mantém a tela acesa pela Screen Wake Lock API quando existe (`lib/wakeLock.ts`, silencioso sem suporte). "Terminar compra" leva a `/importar?lista=<id>` (a reconciliação é a C-26).
 
 ### 6.4 Reconciliação (`reconciliacao.ts`)
 

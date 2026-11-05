@@ -171,6 +171,7 @@ export const itemListaSchema = z
     quantidadeSugerida: z.number().nonnegative(),
     quantidadePega: z.number().nonnegative().optional(),
     status: z.enum(STATUS_ITEM_LISTA).default("pendente"),
+    /** Preço unitário informado no mercado (por kg, unidade, litro ou pacote). */
     precoCentavos: centavosNaoNegSchema.optional(),
     motivo: z.enum(["acabou", "cobertura", "puxado", "manual"]).optional(),
     urgente: z.boolean().default(false),

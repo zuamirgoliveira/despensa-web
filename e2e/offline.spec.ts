@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { semViolacaoDeCsp, vigiarConsole } from "./util";
 
-const ROTAS = ["/", "/importar", "/compras", "/catalogo", "/precos", "/ajustes", "/conferencia", "/lista"];
+const ROTAS = ["/", "/importar", "/compras", "/catalogo", "/precos", "/ajustes", "/conferencia", "/lista", "/compra"];
 
 test("manifest válido com ícones e share_target", async ({ request }) => {
   const m = await (await request.get("/manifest.webmanifest")).json();
