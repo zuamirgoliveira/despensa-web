@@ -107,6 +107,8 @@ despensa-web/
 │  ├─ components/
 │  │  ├─ ui/                       primitivos: Button, Card, Input, Textarea, Select, Badge, Alert, Toast, Progress, Details, EmptyState, Dialog…
 │  │  ├─ importar/                 passos da tela Importar (chave, SEFAZ, colar, conferência)
+│  │  ├─ compras/                  lista de compras, detalhe, apagar e Backup (exportar/importar)
+│  │  ├─ precos/                   lista de preços e histórico
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
@@ -236,6 +238,8 @@ Casa itens da nota com `ItemLista` por `produtoId` (via `ApelidoMercado`). Três
 - `custoRealCompra = totalItens + custoIda`.
 
 ### 6.6 Preços e comparação (`precos.ts`, `comparacao.ts`, `economia.ts`)
+
+- Versão atual (C-12) de `precos.ts`: `historicoPorProduto` agrupa por produto + unidade da nota, com último, anterior, variação (mostrada só se ≥ 0,5%), menor e maior preço unitário. O backup fica na tela Compras até a C-22 decidir movê-lo para Ajustes.
 
 - Comparar sempre por **preço normalizado**: `KG` → centavos/kg; `UNID` → centavos/unidade; embalagem com tamanho (ex.: `PCT 180`) → centavos por 100 g ou por unidade de medida.
 - Alerta de preço: último preço acima da média do usuário em mais que `limiarAlertaPrecoPct` (padrão 20) **e** pelo menos 3 compras no histórico.

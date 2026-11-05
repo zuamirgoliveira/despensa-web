@@ -1,10 +1,10 @@
-import { EmptyState } from "@/components/ui";
 import { Pagina } from "@/components/Pagina";
+import { ListaPrecos } from "@/components/precos/ListaPrecos";
 
 export default function Page() {
   return (
     <Pagina titulo="Preços">
-      <EmptyState titulo="Em breve" />
+      <ListaPrecos />
     </Pagina>
   );
 }

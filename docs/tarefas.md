@@ -771,7 +771,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-09 PWA e offline
 - [x] C-10 QR e OCR
 - [x] C-11 Tela Importar
-- [ ] C-12 Compras, Preços e Backup
+- [x] C-12 Compras, Preços e Backup
 - [ ] C-13 e2e de paridade
 - [ ] C-14 Docker
 - [ ] C-15 CI e deploy
