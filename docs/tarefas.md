@@ -787,7 +787,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-25 Modo compra
 - [x] C-26 Reconciliação
 - [x] C-27 Mercados e casa
-- [ ] C-28 Estimativa da ida
+- [x] C-28 Estimativa da ida
 - [ ] C-29 Início
 - [ ] C-30 e2e E1
 - [ ] C-31 Preços normalizados

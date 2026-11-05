@@ -142,6 +142,7 @@ despensa-web/
 │  │  ├─ indexeddb/                implementação e migrações numeradas
 │  │  ├─ backup.ts                 exportar e importar com validação
 │  │  ├─ conferencia.ts            fila da conferência, registrar nível e sessão
+│  │  ├─ estimativaIda.ts          estimar distância/tempo da ida, confirmar e gravar custo nas compras
 │  │  ├─ lista.ts                  garantir/regerar lista preservando edições, editar itens
 │  │  ├─ compra.ts                 modo compra: pego, não encontrei, preço, extra, orçamento
 │  │  ├─ reconciliacao.ts          fechar a compra: estoque cheio, reconciliar, fechar lista, resumo
@@ -153,7 +154,8 @@ despensa-web/
 │  │  ├─ qr.ts                     leitura de QR (nativo + jsqr) e scanner de câmera
 │  │  ├─ ocr.ts                    leitura da chave por Tesseract
 │  │  ├─ imagem.ts                 arquivo → canvas com EXIF
-│  │  ├─ mapas.ts                  cliente do serviço de mapas
+│  │  ├─ mapas.ts                  cliente do serviço de mapas (Nominatim + OSRM FOSSGIS), timeouts e Zod
+│  │  ├─ estimativaIda.ts          geocodificar com variantes e rota da casa (bike com fator 1,12)
 │  │  ├─ endereco.ts               normalização do endereço da nota (variantes de geocodificação)
 │  │  ├─ coordenadas.ts            arredondar (3 casas) e ler coordenadas coladas
 │  │  ├─ localizacao.ts            captura da posição UMA vez (getCurrentPosition)
@@ -279,6 +281,7 @@ Casa itens da nota com `ItemLista` por `produtoId` (resolvido pelo apelido na im
 ### 6.5 Custo da ida (`ida.ts`)
 
 - **`Mercado.distanciaKm` e `tempoMinIda` são de IDA** (casa → mercado). O custo e o tempo total usam ida e volta (×2): `custoIdaDoMercado(mercado, perfil)`. `custoIda({ meio, kmIdaVolta, perfil, custoFixoCentavos })` recebe km de ida e volta. O custo fixo (estacionamento) vale só para o carro. `estatisticasDeIdas(compras, mercados, ano, mes)` conta idas e minutos (informação; nunca vira dinheiro) e soma `custoIdaCentavos` das compras.
+- **Estimativa ao importar (C-28)**: `estimarMercado(repos, mapas, mercadoId, meio, { online })` geocodifica o endereço da nota pelas variantes de `lib/endereco.ts` (1 consulta por segundo, para na primeira que achar; só bairro = **aproximado**), guarda as coordenadas no `Mercado` (cache: nunca geocodifica duas vezes) e calcula a rota desde a casa (bike: perfil `routed-bike`; se o serviço não tiver, carro × 1,12 e 15 km/h). `confirmarEstimativa` grava meio, distância e tempo no mercado e `custoIdaCentavos` nas compras dele que ainda não têm (RN-10; aparece em Compras e no Resumo). Mercado já com distância: a nota seguinte entra direto, sem perguntar. Sem casa, sem internet (`navigator.onLine`), endereço não achado ou serviço com erro: **nunca bloqueia**: o cartão "Quanto custou a ida?" oferece informar km e minutos à mão ou "Decidir depois" (refazer em Mercados → "Estimar pelo endereço"). Ao Nominatim vai só o texto do endereço do mercado; às rotas, só coordenadas (a casa já fica arredondada se `arredondarLocalizacao`). **Testes e2e usam o serviço simulado (`page.route`); nunca o real.**
 - **Casa (`Perfil.localizacaoCasa`)**: "Estou em casa agora" chama `getCurrentPosition` uma única vez (sem alta precisão), com opção de arredondar a 3 casas (`arredondarLocalizacao`, padrão ligado; o valor arredondado é o que fica guardado) e alternativa de colar coordenadas (`-8.0631, -34.8711`, ponto decimal). `tests/seguranca-estatica.test.ts` falha se aparecer `watchPosition`, `innerHTML`, `eval`, `confirm/alert/prompt`, rota de API ou IndexedDB fora de `src/data/indexeddb`.
 
 - Carro: `km × (precoCombustível ÷ consumoKmPorLitro + desgastePorKm) + custoFixo`.
@@ -394,7 +397,7 @@ Content-Security-Policy:
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob:;
   font-src 'self';
-  connect-src 'self' <domínio do serviço de mapas>;
+  connect-src 'self' https://nominatim.openstreetmap.org https://routing.openstreetmap.de;
   worker-src 'self' blob:;
   frame-src 'none'; frame-ancestors 'none'; object-src 'none';
   base-uri 'self'; form-action 'self'
@@ -409,7 +412,7 @@ Content-Security-Policy:
 | `'unsafe-inline'` em `script-src`    | scripts de hidratação inline do Next      |
 | `'wasm-unsafe-eval'`                 | WebAssembly do Tesseract                  |
 | `worker-src blob:` e `img-src blob:` | worker do OCR e prévia de imagem          |
-| `connect-src` com domínio de mapas   | geocodificação e rota direto do navegador |
+| `connect-src` com `nominatim.openstreetmap.org` e `routing.openstreetmap.de` | geocodificação do endereço do mercado e rota, direto do navegador (sem chave; ver `docs/spike-mapas.md`) |
 
 Qualquer nova origem ou diretiva exige entrada nesta tabela e atualização do teste de headers.
 
@@ -435,7 +438,7 @@ Dados ficam no aparelho. O endereço e a posição de casa **não** são enviado
 | Variável               | Onde                              | Uso                                                |
 | ---------------------- | --------------------------------- | -------------------------------------------------- |
 | `NEXT_PUBLIC_SITE_URL` | build (ARG), secret do GitHub     | URL pública do site                                |
-| `NEXT_PUBLIC_MAPS_KEY` | build (ARG), secret do GitHub     | chave pública do serviço de mapas, se exigida      |
+| `NEXT_PUBLIC_MAPS_KEY` | build (ARG), secret do GitHub     | **sem uso** com Nominatim + OSRM (não exigem chave); reservada se o serviço for trocado |
 | `NODE_ENV`             | runtime (`.env` na VPS)           | `production`                                       |
 | `DOMINIO`              | `.env` na VPS (lido pelo compose) | host usado nas regras do Traefik; não é versionado |
 
@@ -484,6 +487,7 @@ Diretório `/opt/docker/despensa-web` (dono `deploy`), `.env` com permissão 600
 - **Playwright** (`e2e/`): roda contra `next start` para exercitar CSP e service worker. Câmera simulada com flags do Chrome (`--use-fake-ui-for-media-stream`, `--use-fake-device-for-media-stream`, `--use-file-for-fake-video-capture`). Falha o teste se aparecer violação de CSP no console. Cobre offline (navegar e recarregar todas as rotas).
 - E2E: `e2e/global-setup.ts` gera o vídeo falso da câmera (`test-results/camera-qr.y4m`, a partir de `tests/fixtures/fotos/qr-nota.png`, com `ffmpeg`); sem `ffmpeg` o teste da câmera é pulado. `tests/fixtures/foto-nota-real.jpeg` **não é versionada** (mostra final de cartão); o teste de OCR com ela é pulado quando o arquivo não existe (ex.: no CI). Imagens sintéticas (QR, ruído, chave com DV errado, sem chave) vêm de `scripts/gerar-fixtures-fotos.py`.
 - Fixtures em `tests/fixtures/`: notas reais em texto (sem CPF) e fotos. Ao encontrar nota que o parser não lê, adicione-a como fixture e corrija sem quebrar as anteriores.
+- E2E: `playwright.config.ts` nunca reaproveita servidor já em pé (`reuseExistingServer: false`, porta por `E2E_PORT`): um `next start` esquecido de uma rodada interrompida serve build antigo e gera falhas falsas. Se a porta estiver ocupada, use `E2E_PORT=3105 npm run e2e`.
 - Mapas: testar sempre com serviço simulado (sucesso, falha de endereço, timeout, offline, cache); nunca chamar serviço real em teste.
 
 ---

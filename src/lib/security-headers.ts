@@ -2,8 +2,8 @@
 
 export type Header = { key: string; value: string };
 
-/** Origem do serviço de mapas permitida em `connect-src` (definida na C-28). */
-export const MAPS_ORIGINS: readonly string[] = [];
+/** Origens do serviço de mapas permitidas em `connect-src` (C-28; ver docs/spike-mapas.md). */
+export const MAPS_ORIGINS: readonly string[] = ["https://nominatim.openstreetmap.org", "https://routing.openstreetmap.de"];
 
 export function buildCsp(mapsOrigins: readonly string[] = MAPS_ORIGINS): string {
   const connect = ["'self'", ...mapsOrigins].join(" ");

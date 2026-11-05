@@ -8,7 +8,9 @@ import { prepararConferencia, salvarNotaImportada, type ItemConferencia } from "
 import { finalizarCompra, listasEmCompra } from "@/data/reconciliacao";
 import type { Lista } from "@/domain/types";
 import { parseNota, type ResultadoParser } from "@/domain/nfce/parser";
+import { aplicarCustoNasCompras } from "@/data/estimativaIda";
 import { Conferencia } from "./Conferencia";
+import { EstimativaIda } from "./EstimativaIda";
 import { PassoChave, type ChaveValida } from "./PassoChave";
 import { PassoColar } from "./PassoColar";
 import { PassoSefaz } from "./PassoSefaz";
@@ -28,6 +30,7 @@ export function ImportarNota() {
   const [salvando, setSalvando] = useState(false);
   const [listasAbertas, setListasAbertas] = useState<Lista[]>([]);
   const [listaId, setListaId] = useState("");
+  const [estimar, setEstimar] = useState<{ mercadoId: string; destino: string } | null>(null);
   const [jaImportadaNota, setJaImportadaNota] = useState(false);
 
   async function ler(conteudo: string, informada: ChaveValida | null): Promise<void> {
@@ -85,7 +88,7 @@ export function ImportarNota() {
     setSalvando(true);
     try {
       const repos = await criarRepositorios();
-      const { compra } = await salvarNotaImportada(repos, {
+      const { compra, mercado } = await salvarNotaImportada(repos, {
         nota: leitura.resultado.nota,
         chave: k,
         nomes,
@@ -93,13 +96,23 @@ export function ImportarNota() {
       });
       const fechamento = await finalizarCompra(repos, compra, listaId || undefined);
       mostrar("Compra salva.");
-      router.push(fechamento.lista ? `/resumo?lista=${fechamento.lista.id}` : "/compras");
+      const destino = fechamento.lista ? `/resumo?lista=${fechamento.lista.id}` : "/compras";
+      const atual = (await repos.mercados.obter(mercado.id)) ?? mercado;
+      if (atual.distanciaKm !== undefined) {
+        // mercado já conhecido: o custo da ida entra na compra sem perguntar nada
+        await aplicarCustoNasCompras(repos, atual);
+        router.push(destino);
+      } else {
+        setEstimar({ mercadoId: mercado.id, destino }); // pergunta uma vez; nunca bloqueia
+      }
     } catch (e) {
       mostrar(e instanceof Error ? e.message : "Não consegui salvar a compra.", "erro");
     } finally {
       setSalvando(false);
     }
   }
+
+  if (estimar) return <EstimativaIda mercadoId={estimar.mercadoId} aoConcluir={() => router.push(estimar.destino)} />;
 
   return (
     <div className="flex flex-col gap-4">

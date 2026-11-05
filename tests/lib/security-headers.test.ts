@@ -19,7 +19,7 @@ describe("security-headers", () => {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self'",
-      "connect-src 'self'",
+      "connect-src 'self' https://nominatim.openstreetmap.org https://routing.openstreetmap.de",
       "worker-src 'self' blob:",
       "frame-src 'none'",
       "frame-ancestors 'none'",
@@ -33,5 +33,6 @@ describe("security-headers", () => {
 
   it("acrescenta origens de mapas em connect-src", () => {
     expect(buildCsp(["https://maps.exemplo.com"])).toContain("connect-src 'self' https://maps.exemplo.com;");
+    expect(buildCsp([])).toContain("connect-src 'self';");
   });
 });

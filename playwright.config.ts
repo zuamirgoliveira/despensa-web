@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const Y4M = "test-results/camera-qr.y4m";
 
-const PORTA = 3100;
+const PORTA = Number(process.env.E2E_PORT ?? 3100);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -17,7 +17,8 @@ export default defineConfig({
   webServer: {
     command: `npx next start -p ${PORTA}`,
     url: `http://localhost:${PORTA}`,
-    reuseExistingServer: !process.env.CI,
+    // Nunca reaproveita um servidor já em pé: ele poderia estar servindo um build antigo.
+    reuseExistingServer: false,
     timeout: 60_000,
   },
   projects: [

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button, Card, Details, Dialog, EmptyState, useToast } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { useRepositorio } from "@/data/useRepositorio";
+import { custoRealCompra } from "@/domain/ida";
 import type { Compra } from "@/domain/types";
 import { brl, dataBR, horaBR, numeroBR } from "@/lib/format";
 
@@ -69,6 +70,11 @@ export function ListaCompras() {
                     </span>
                   }
                 >
+                  {c.custoIdaCentavos !== undefined ? (
+                    <p className="mb-2 text-sm" aria-label={`Custo real da compra de ${dataBR(c.emissao)}`}>
+                      Custo da ida {brl(c.custoIdaCentavos)} · custo real {brl(custoRealCompra(c.valorTotalCentavos, c.custoIdaCentavos))}
+                    </p>
+                  ) : null}
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-texto/70">

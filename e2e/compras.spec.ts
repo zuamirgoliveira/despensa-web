@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, pularEstimativa } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 
@@ -9,6 +9,7 @@ async function importarNota(page: Page) {
   await page.getByLabel("Texto copiado da página da SEFAZ").fill(NOTA);
   await page.getByRole("button", { name: "Ler nota" }).click();
   await page.getByRole("button", { name: /Salvar compra|Substituir compra/ }).click();
+  await pularEstimativa(page);
   await expect(page).toHaveURL(/\/compras$/);
 }
 
@@ -55,6 +56,7 @@ test("variação de preço entre duas compras (▲ e ▼)", async ({ page }) => 
   await page.getByLabel("Chave de acesso (44 dígitos)").fill("26261108868231000638650020000689041020778728");
   await page.getByRole("button", { name: "Ler nota" }).click();
   await page.getByRole("button", { name: "Salvar compra" }).click();
+  await pularEstimativa(page);
   await expect(page).toHaveURL(/\/compras$/);
   await page.goto("/precos");
   const melao = page.getByRole("listitem").filter({ hasText: "Melao Japones" });

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, pularEstimativa } from "./util";
 
 const CHAVE = "26261108868231000638650020000689031020778720";
 const CHAVE_ESPACADA = "2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8720";
@@ -53,6 +53,7 @@ test("texto da nota: 16 itens, total, salvar, duplicada e apelido lembrado", asy
   await expect(page.getByLabel("Nome do produto").first()).toHaveValue("Melao Japones");
   await page.getByLabel("Nome do produto").first().fill("Melão");
   await page.getByRole("button", { name: "Salvar compra" }).click();
+  await pularEstimativa(page);
   await expect(page).toHaveURL(/\/compras$/);
 
   // reimportar: aviso de duplicada, apelido lembrado (nenhum "novo"), nome escolhido preservado

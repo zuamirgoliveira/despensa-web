@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { Alert, Button, Card, Input, Select } from "@/components/ui";
 import { criarRepositorios } from "@/data";
+import { estimarMercado } from "@/data/estimativaIda";
 import { custoIdaDoMercado } from "@/domain/ida";
 import type { Mercado, Perfil } from "@/domain/types";
 import { centavosParaCampo, reaisParaCentavos } from "@/lib/dinheiro";
 import { brl } from "@/lib/format";
+import { criarMapas } from "@/lib/mapas";
 import { TIPOS_MERCADO, TRANSPORTES } from "@/schemas";
 
 const TIPO_ROTULO: Record<Mercado["tipo"], string> = {
@@ -34,6 +36,32 @@ export function FormMercado({ mercado, perfil, aoSalvar }: { mercado: Mercado; p
     fixo: centavosParaCampo(mercado.custoFixoIdaCentavos),
   });
   const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [estimando, setEstimando] = useState(false);
+
+  async function estimar(): Promise<void> {
+    setEstimando(true);
+    setErro(null);
+    setAviso(null);
+    try {
+      const r = await estimarMercado(await criarRepositorios(), criarMapas(), mercado.id, v.transporte, { online: navigator.onLine });
+      if (r.status === "ok") {
+        setV((a) => ({ ...a, km: String(r.distanciaKm).replace(".", ","), min: String(r.tempoMin) }));
+        setAviso(`Estimativa preenchida${r.aproximado ? " (aproximada: só achei o bairro)" : ""}. Confira e toque em Salvar mercado.`);
+      } else {
+        setErro(
+          {
+            sem_casa: "Cadastre a localização da casa em Ajustes para estimar.",
+            offline: "Sem internet agora. Informe a distância à mão ou tente depois.",
+            endereco_nao_encontrado: "Não achei o endereço no mapa. Informe a distância à mão.",
+            falha: "O serviço de mapas não respondeu. Informe a distância à mão ou tente depois.",
+          }[r.status],
+        );
+      }
+    } finally {
+      setEstimando(false);
+    }
+  }
 
   const km = numero(v.km);
   const min = numero(v.min);
@@ -95,6 +123,10 @@ export function FormMercado({ mercado, perfil, aoSalvar }: { mercado: Mercado; p
         {previa === undefined ? "Custo da ida: informe a distância." : `Custo da ida e volta: ${brl(previa)}`}
       </p>
       {erro ? <Alert tipo="erro">{erro}</Alert> : null}
+      {aviso ? <Alert tipo="info">{aviso}</Alert> : null}
+      <Button variante="secundario" disabled={estimando} onClick={() => void estimar()}>
+        {estimando ? "Estimando..." : "Estimar pelo endereço"}
+      </Button>
       <Button variante="secundario" onClick={() => void salvar()}>
         Salvar mercado
       </Button>

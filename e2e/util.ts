@@ -13,3 +13,8 @@ export function vigiarConsole(page: Page): { erros: string[] } {
 export function semViolacaoDeCsp(erros: string[]): void {
   expect(erros.filter((e) => /Content Security Policy/i.test(e))).toEqual([]);
 }
+
+/** Depois de salvar uma nota de mercado novo a tela pergunta a distância da ida; os testes seguem sem responder. */
+export async function pularEstimativa(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Decidir depois" }).click();
+}
