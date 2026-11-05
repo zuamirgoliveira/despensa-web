@@ -761,7 +761,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 ### claude-code
 
 - [x] C-01 Scaffold
-- [ ] C-02 AGENTS.md e README
+- [x] C-02 AGENTS.md e README
 - [ ] C-03 Headers e CSP
 - [ ] C-04 Modelos e schemas
 - [ ] C-05 Chave e QR
