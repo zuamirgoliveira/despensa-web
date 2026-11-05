@@ -757,6 +757,21 @@ Origem: pedido de repensar layout, UX e paleta (Pernambuco, minimalista), com te
 
 ---
 
+# FASE 7: Backup e persistência dos dados (marco M5)
+
+Origem: dúvida sobre perda de dados no aparelho. Especificação em [backup.md](backup.md). Decisões: posição de casa incluída por padrão; senha no arquivo adiada; lembrete aos 30 dias ou 5 notas; ao restaurar com dados no aparelho, sempre perguntar (mesclar ou substituir, com confirmação dupla); restauração atômica.
+
+| ID | Tarefa | Depende de |
+| -- | ------ | ---------- |
+| B-01 | Especificação do backup v2 (`docs/backup.md`) | n/a |
+| B-02 | Formato v2: cabeçalho `meta` (contagens, período, integridade SHA-256), opção de omitir a posição de casa, inspeção sem gravar, leitura da v1 | B-01 |
+| B-03 | Restauração atômica (uma transação) com modos mesclar e substituir, validação prévia, tratamento do estoque único por produto | B-02 |
+| B-04 | Armazenamento persistente, `Perfil.ultimoBackupEm` e regra do lembrete (30 dias ou 5 notas) | B-02 |
+| B-05 | Telas: guardar cópia (compartilhar/baixar), restaurar/verificar com conferência, escolha de modo e confirmação dupla, lembrete no Início | B-03, B-04 |
+| B-06 | Documentação (AGENTS.md, guia de uso, changelog, pós-MVP) e regressão completa | B-05 |
+
+---
+
 ## 2. Checklist de acompanhamento
 
 ### Zuma
