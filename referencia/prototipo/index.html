@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6f4a">
+<title>Despensa</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topo">
+  <h1>Despensa</h1>
+  <nav class="abas" role="tablist">
+    <button role="tab" data-aba="importar" aria-selected="true">Importar nota</button>
+    <button role="tab" data-aba="compras" aria-selected="false">Compras</button>
+    <button role="tab" data-aba="precos" aria-selected="false">Preços</button>
+  </nav>
+</header>
+
+<main>
+  <!-- IMPORTAR -->
+  <section id="aba-importar" class="aba">
+    <div id="passo-chave" class="cartao">
+      <h2>1. Chave da nota</h2>
+      <p class="dica">Escolha como informar: digitar os 44 dígitos, escanear o QR Code, ou usar uma foto da nota.</p>
+      <input id="chave" inputmode="numeric" autocomplete="off" placeholder="Digite ou cole a chave (44 dígitos)" aria-label="Chave de acesso">
+      <div class="opcoes">
+        <button id="btn-qr" class="sec" type="button">Escanear QR</button>
+        <button id="btn-foto" class="sec" type="button">Tirar foto</button>
+        <button id="btn-imagem" class="sec" type="button">Enviar imagem</button>
+      </div>
+      <input id="arq-foto" type="file" accept="image/*" capture="environment" hidden>
+      <input id="arq-imagem" type="file" accept="image/*" hidden>
+      <div id="scanner" hidden>
+        <video id="video" playsinline muted></video>
+        <button id="btn-fechar-qr" class="sec" type="button">Fechar câmera</button>
+      </div>
+      <div id="previa" hidden><img id="previa-img" alt="Foto da nota"></div>
+      <progress id="progresso" max="1" value="0" hidden></progress>
+      <p id="img-status" class="status" aria-live="polite"></p>
+      <div id="candidatas" hidden></div>
+      <p id="chave-status" class="status" aria-live="polite"></p>
+      <div id="qr-extra" hidden>
+        <button id="btn-abrir-qr" class="sec" type="button">Abrir o link do QR (teste sem captcha)</button>
+      </div>
+    </div>
+
+    <div id="passo-sefaz" class="cartao desativado">
+      <h2>2. Consultar na SEFAZ</h2>
+      <p class="dica">O app copia a chave e abre o site. Cole a chave no campo, marque o captcha e toque em Consultar.</p>
+      <button id="btn-sefaz" type="button" disabled>Copiar chave e abrir SEFAZ</button>
+      <p id="sefaz-status" class="status" aria-live="polite"></p>
+    </div>
+
+    <div id="passo-colar" class="cartao">
+      <h2>3. Colar o resultado</h2>
+      <p class="dica">Na página da nota, selecione tudo (ou use Compartilhar → Despensa), copie e cole aqui.</p>
+      <textarea id="texto" rows="6" placeholder="Cole aqui o texto da nota..." aria-label="Texto da nota"></textarea>
+      <div class="linha">
+        <button id="btn-colar" class="sec" type="button">Colar da área de transferência</button>
+        <button id="btn-ler" type="button">Ler nota</button>
+      </div>
+      <p id="ler-status" class="status" aria-live="polite"></p>
+    </div>
+
+    <div id="conferencia" class="cartao" hidden></div>
+  </section>
+
+  <!-- COMPRAS -->
+  <section id="aba-compras" class="aba" hidden>
+    <div id="lista-compras"></div>
+    <div class="cartao">
+      <h2>Backup</h2>
+      <p class="dica">Os dados ficam só neste aparelho. Exporte de vez em quando.</p>
+      <div class="linha">
+        <button id="btn-exportar" class="sec" type="button">Exportar backup</button>
+        <label class="botao sec">Importar backup<input id="arq-backup" type="file" accept="application/json" hidden></label>
+      </div>
+      <p id="backup-status" class="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- PREÇOS -->
+  <section id="aba-precos" class="aba" hidden>
+    <div id="lista-precos"></div>
+  </section>
+</main>
+
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

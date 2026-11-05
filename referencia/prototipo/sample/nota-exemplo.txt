@@ -1,0 +1,117 @@
+CIA SANTOS DISTRIBUIDORA E IMPORTADORA DE HORTIFRUTI LTDA
+CNPJ: 08.868.231/0006-38
+AVENIDA GOVERNADOR CARLOS DE LIMA CAVALC ,  1245 ,  CASA CAIADA ,  OLINDA ,  PE
+Filtrar itens...
+MELAO JAPONES KG(Código: 0000000000052)
+Qtde.: 1,26  UN: KG  Vl. Unit.: 7,88
+
+Vl. Total
+9,93
+
+BANANA PRATA KG(Código: 0000000000308)
+Qtde.: 1,1  UN: KG  Vl. Unit.: 4,38
+
+Vl. Total
+4,82
+
+GRAVIOLA KG(Código: 0000000000033)
+Qtde.: 0,796  UN: KG  Vl. Unit.: 9,98
+
+Vl. Total
+7,94
+
+COENTRO UN(Código: 0000000000003)
+Qtde.: 1  UN: UNID  Vl. Unit.: 2,88
+
+Vl. Total
+2,88
+
+QUIABO KG(Código: 0000000000056)
+Qtde.: 0,24  UN: KG  Vl. Unit.: 12,48
+
+Vl. Total
+3,00
+
+ACELGA KG(Código: 0000000000014)
+Qtde.: 0,374  UN: KG  Vl. Unit.: 8,98
+
+Vl. Total
+3,36
+
+MANGA ESPADA KG(Código: 0000000000040)
+Qtde.: 1,37  UN: KG  Vl. Unit.: 5,48
+
+Vl. Total
+7,51
+
+CENOURA KG(Código: 0000000000004)
+Qtde.: 0,335  UN: KG  Vl. Unit.: 3,48
+
+Vl. Total
+1,17
+
+PEPINO JAPONES KG(Código: 0000000000254)
+Qtde.: 0,34  UN: KG  Vl. Unit.: 6,88
+
+Vl. Total
+2,34
+
+PIMENTAO VERDE KG(Código: 0000000000008)
+Qtde.: 0,17  UN: KG  Vl. Unit.: 9,78
+
+Vl. Total
+1,66
+
+CEBOLA BRANCA KG(Código: 0000000000002)
+Qtde.: 0,775  UN: KG  Vl. Unit.: 7,88
+
+Vl. Total
+6,11
+
+BATATA INGLESA KG(Código: 0000000000210)
+Qtde.: 0,835  UN: KG  Vl. Unit.: 7,48
+
+Vl. Total
+6,25
+
+REPOLHO VERDE KG(Código: 0000000000058)
+Qtde.: 0,483  UN: KG  Vl. Unit.: 4,78
+
+Vl. Total
+2,31
+
+ALHO REDINHA PCT 180(Código: 0000000035024)
+Qtde.: 1  UN: UNID  Vl. Unit.: 6,48
+
+Vl. Total
+6,48
+
+TOMATE KG(Código: 0000000000001)
+Qtde.: 0,57  UN: KG  Vl. Unit.: 8,98
+
+Vl. Total
+5,12
+
+GOIABA KG(Código: 0000000000032)
+Qtde.: 0,85  UN: KG  Vl. Unit.: 7,48
+
+Vl. Total
+6,36
+
+Qtd. total de itens:16
+Valor a pagar R$:77,24
+Forma de pagamento:Valor pago R$:
+Cartão de Crédito77,24
+EMISSÃO NORMAL
+
+Número: 68903 Série: 2 Data de Emissão: 04/11/2026 10:33:31 - Via Consumidor
+
+Protocolo de Autorização: 226261025408429 04/11/2026 10:35:53
+
+Ambiente de Produção - Versão XML: 4.00 - Versão XSLT: 1.0
+Consulte pela Chave de Acesso em http://nfce.sefaz.pe.gov.br/nfce-web/consultarNFCe
+
+Chave de acesso:
+2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8720
+Consumidor não identificado
+04/11/26 10:33 L20 F000282 C002 S077872

@@ -1,0 +1,79 @@
+:root {
+  --verde: #1f6f4a;
+  --verde-claro: #e6f2ec;
+  --texto: #1d2420;
+  --suave: #5b6760;
+  --borda: #d6ddd9;
+  --fundo: #f6f8f7;
+  --alerta: #8a5a00;
+  --alerta-bg: #fff4d6;
+  --erro: #9b1c1c;
+  --erro-bg: #fde8e8;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--texto); background: var(--fundo);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.topo { background: var(--verde); color: #fff; padding: 12px 16px 0; position: sticky; top: 0; z-index: 5; }
+.topo h1 { margin: 0 0 8px; font-size: 1.15rem; }
+.abas { display: flex; gap: 4px; }
+.abas button {
+  flex: 1; padding: 10px 6px; border: 0; background: transparent; color: #cfe6da;
+  font: inherit; font-weight: 600; border-bottom: 3px solid transparent; cursor: pointer;
+}
+.abas button[aria-selected="true"] { color: #fff; border-bottom-color: #fff; }
+main { max-width: 720px; margin: 0 auto; padding: 12px; }
+.cartao { background: #fff; border: 1px solid var(--borda); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.cartao.desativado { opacity: .55; }
+h2 { margin: 0 0 6px; font-size: 1.05rem; }
+h3 { margin: 12px 0 6px; font-size: .95rem; }
+.dica { margin: 0 0 10px; color: var(--suave); font-size: .92rem; }
+.linha { display: flex; gap: 8px; flex-wrap: wrap; }
+.linha > input { flex: 1; min-width: 180px; }
+input, textarea, select {
+  font: inherit; padding: 10px; border: 1px solid var(--borda); border-radius: 8px; width: 100%; background: #fff;
+}
+textarea { resize: vertical; margin-bottom: 8px; font-size: .9rem; }
+button, .botao {
+  font: inherit; font-weight: 600; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--verde);
+  background: var(--verde); color: #fff; cursor: pointer; display: inline-block; text-align: center;
+}
+button.sec, .botao.sec { background: #fff; color: var(--verde); }
+button.perigo { background: #fff; color: var(--erro); border-color: var(--erro); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.status { margin: 8px 0 0; font-size: .92rem; min-height: 1.2em; }
+.status.ok { color: var(--verde); }
+.status.erro { color: var(--erro); }
+.aviso { background: var(--alerta-bg); color: var(--alerta); border-radius: 8px; padding: 8px 10px; margin: 6px 0; font-size: .9rem; }
+.erro-box { background: var(--erro-bg); color: var(--erro); border-radius: 8px; padding: 8px 10px; margin: 6px 0; font-size: .9rem; }
+#video { width: 100%; max-height: 50vh; background: #000; border-radius: 8px; margin: 8px 0; }
+.resumo { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; margin: 6px 0 10px; font-size: .95rem; }
+.resumo b { text-align: right; }
+.item { border-top: 1px solid var(--borda); padding: 10px 0; }
+.item .desc { font-size: .8rem; color: var(--suave); }
+.item .nums { display: flex; justify-content: space-between; font-size: .9rem; margin: 2px 0 6px; }
+.item input { padding: 8px; }
+.tag-novo { font-size: .7rem; background: var(--verde-claro); color: var(--verde); border-radius: 6px; padding: 1px 6px; margin-left: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--borda); }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.sobe { color: var(--erro); } .desce { color: var(--verde); }
+details { border-bottom: 1px solid var(--borda); padding: 8px 0; }
+summary { cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
+summary .preco { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.vazio { text-align: center; color: var(--suave); padding: 24px 8px; }
+#toast {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #222; color: #fff;
+  padding: 10px 16px; border-radius: 10px; font-size: .92rem; max-width: 90vw; z-index: 10;
+}
+
+.opcoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.opcoes button { padding: 10px 4px; font-size: .92rem; }
+#previa { margin-top: 8px; }
+#previa img { max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid var(--borda); display: block; }
+progress { width: 100%; height: 8px; margin-top: 8px; accent-color: var(--verde); }
+#candidatas { display: grid; gap: 6px; margin-top: 8px; }
+#candidatas button { text-align: left; font-variant-numeric: tabular-nums; font-size: .9rem; }
