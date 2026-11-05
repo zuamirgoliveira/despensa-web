@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Michroma } from "next/font/google";
 import { BarraAbas } from "@/components/BarraAbas";
 import { Cabecalho } from "@/components/Cabecalho";
+import { ProtegerArmazenamento } from "@/components/ProtegerArmazenamento";
 import { RegistrarSW } from "@/components/RegistrarSW";
 import { TemaPersistente } from "@/components/TemaPersistente";
 import { ToastProvider } from "@/components/ui";
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <BarraAbas />
           <RegistrarSW />
           <TemaPersistente />
+          <ProtegerArmazenamento />
         </ToastProvider>
       </body>
     </html>
