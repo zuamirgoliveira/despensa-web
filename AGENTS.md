@@ -44,7 +44,8 @@ Fixe versões exatas no `package-lock.json`. Instalação sempre com `npm ci`. N
 | Comando              | Função                                                      |
 | -------------------- | ----------------------------------------------------------- |
 | `npm run dev`        | servidor de desenvolvimento                                 |
-| `npm run build`      | copia `vendor` do OCR e gera o build standalone             |
+| `npm run build`      | copia `vendor` do OCR, gera o build standalone e o pré-cache |
+| `npm run vendor`     | só copia o `vendor` do OCR (roda sozinho antes do `dev`)    |
 | `npm start`          | serve o build (usar para validar CSP e service worker)      |
 | `npm run lint`       | ESLint                                                      |
 | `npm run typecheck`  | `tsc --noEmit`                                              |
@@ -297,6 +298,7 @@ Consulta pública de PE: `https://nfce.sefaz.pe.gov.br/nfce-web/consNfce`, prote
 - QR: `BarcodeDetector` quando existir; senão `jsqr` em 3 escalas (1600/1000/640) com `inversionAttempts: 'attemptBoth'`. Câmera traseira, quadro a cada ~350 ms, **parar o stream** ao ler, fechar ou sair da tela.
 - OCR: Tesseract.js 5 em worker, carregado **por import dinâmico** apenas quando usado. Assets em `/vendor/tesseract/` (worker, core LSTM e SIMD, `eng.traineddata.gz`). Whitelist `0123456789 `, PSM 6, até 3 tentativas de pré-processamento (cinza/contraste 1800 px; Otsu 1800 px; cinza/contraste 2600 px). Sempre `worker.terminate()` no `finally`.
 - Imagem → canvas respeitando orientação EXIF, lado máximo 2200 px.
+- Arquivos: `lib/qr.ts` (`lerQR`, `iniciarScanner`), `lib/ocr.ts` (`lerChaveDaFoto`, com `DependenciasOCR` injetável para teste), `lib/preprocessamento.ts` (funções puras sobre pixels: cinza, contraste, Otsu, `TENTATIVAS_OCR`), `lib/imagem.ts`. `jsqr` e `tesseract.js` entram por import dinâmico (fora do bundle inicial). O worker, o core (`tesseract-core-lstm.wasm.js` e `-simd-`) e `eng.traineddata.gz` vêm de `node_modules` via `scripts/copy-vendor.mjs` (que falha o build com mensagem clara se faltar arquivo).
 
 ---
 

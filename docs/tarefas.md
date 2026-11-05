@@ -769,7 +769,7 @@ casa: { endereco_ou_bairro: ? }     # só para referência; a localização real
 - [x] C-07 Repositórios e backup
 - [x] C-08 Layout e componentes
 - [x] C-09 PWA e offline
-- [ ] C-10 QR e OCR
+- [x] C-10 QR e OCR
 - [ ] C-11 Tela Importar
 - [ ] C-12 Compras, Preços e Backup
 - [ ] C-13 e2e de paridade
