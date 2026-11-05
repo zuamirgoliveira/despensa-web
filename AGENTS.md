@@ -107,7 +107,8 @@ despensa-web/
 │  ├─ components/
 │  │  ├─ ui/                       primitivos: Button, Card, Input, Textarea, Select, Badge, Alert, Toast, Progress, Details, EmptyState, Dialog…
 │  │  ├─ importar/                 passos da tela Importar (chave, SEFAZ, colar, conferência)
-│  │  ├─ compras/                  lista de compras, detalhe, apagar e Backup (exportar/importar)
+│  │  ├─ compras/                  lista de compras, detalhe e apagar
+│  │  ├─ ajustes/                  Ajustes: agenda, regras, custos e Backup (exportar/importar)
 │  │  ├─ precos/                   lista de preços e histórico
 │  │  ├─ catalogo/                 tela Catálogo (lista por categoria, formulário, mesclar)
 │  │  └─ …                         componentes de tela por módulo
@@ -179,7 +180,8 @@ app/ (telas) → components/ → data/ (repositórios) → schemas/
 - Entidades: `Casa`, `Perfil`, `AgendaIda`, `Mercado`, `Produto`, `ApelidoMercado`, `Estoque`, `Compra` (com `ItemCompra[]`), `Lista`, `ItemLista`.
 - Schemas em `src/schemas/` (`comum`, `constantes`, `entidades`); tipos em `src/domain/types.ts`. Valores de enum não têm acento (`laticinios`). `Compra` e `ApelidoMercado` não têm `id` (chave natural). Campos extras além do blueprint: `Produto.metaManual`, `Produto.contavel`, `ItemLista.removido`, `ItemLista.quantidadeEditada`, `Perfil.economiaMinimaDivisaoCentavos`, `Perfil.janelaPrecoDias`. `Perfil.bikeCentavosPorKm` aceita fração de centavo.
 - Todo dado lido de IndexedDB ou de arquivo de backup passa por Zod antes de ser usado.
-- **Backup:** JSON com `versao`, `exportadoEm` e todas as coleções. Importação é idempotente (sobrescreve por `id`/`chave`) e rejeita versão superior à suportada.
+- **Backup:** JSON com `versao`, `exportadoEm` e todas as coleções. Importação é idempotente (sobrescreve por `id`/`chave`) e rejeita versão superior à suportada. Ao restaurar em aparelho novo, a casa padrão vazia (criada na primeira abertura, com perfil e agenda do seed) é removida para não haver duas casas; uma casa local com dados nunca é apagada.
+- **Seed (`src/config/seed.ts`):** ao criar a casa na primeira abertura, `iniciar()` grava o perfil com os padrões e a agenda inicial (feira dia 5, mercado semanal sábado, hortifruti semanal quarta). Só nesse momento: reabrir não recria o que o usuário apagou. Transcrever `docs/parametros-iniciais.md` (Z-07) para o seed quando existir.
 - O armazenamento é por origem e por aparelho. Não há sincronização.
 
 ### 5.3 Convenções de dados
@@ -253,7 +255,7 @@ Casa itens da nota com `ItemLista` por `produtoId` (via `ApelidoMercado`). Três
 
 ### 6.6 Preços e comparação (`precos.ts`, `comparacao.ts`, `economia.ts`)
 
-- Versão atual (C-12) de `precos.ts`: `historicoPorProduto` agrupa por produto + unidade da nota, com último, anterior, variação (mostrada só se ≥ 0,5%), menor e maior preço unitário. O backup fica na tela Compras até a C-22 decidir movê-lo para Ajustes.
+- Versão atual (C-12) de `precos.ts`: `historicoPorProduto` agrupa por produto + unidade da nota, com último, anterior, variação (mostrada só se ≥ 0,5%), menor e maior preço unitário. O Backup fica em Ajustes.
 
 - Comparar sempre por **preço normalizado**: `KG` → centavos/kg; `UNID` → centavos/unidade; embalagem com tamanho (ex.: `PCT 180`) → centavos por 100 g ou por unidade de medida.
 - Alerta de preço: último preço acima da média do usuário em mais que `limiarAlertaPrecoPct` (padrão 20) **e** pelo menos 3 compras no histórico.
@@ -272,7 +274,7 @@ Casa itens da nota com `ItemLista` por `produtoId` (via `ApelidoMercado`). Três
 - Sugestão (nunca automática), `sugestaoDeTipoDeIda`: produto durável (`vidaUtilDias` > 14), ativo e que não é de feira mensal, comprado em 3 ou mais **semanas civis (segunda a domingo) seguidas** → sugerir `feira_mensal`; a interface mostra a sugestão com botão para aplicar.
 - Meta automática (`metaAutomatica`): média da quantidade por compra (itens do mesmo produto na mesma nota somam), recalculada a cada importação enquanto `metaManual` for falso. Editar a meta à mão (`salvarProdutoEditado`) trava; `liberarMetaAutomatica` destrava. Mesclar (`mesclarProdutos`) move apelidos, itens de compra, itens de lista e estoque (o do destino prevalece) e apaga a origem.
 
-### 6.8 Valores padrão (editáveis em Ajustes)
+### 6.8 Valores padrão (editáveis em Ajustes: `/ajustes`, formulários validados por `lib/formAjustes.ts`)
 
 Folga 2 dias; alerta de preço 20%; carro 10 km/L, combustível R$ 6,00, desgaste R$ 0,30/km; bike elétrica R$ 0,05/km; economia mínima para dividir lista R$ 5,00.
 

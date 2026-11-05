@@ -222,10 +222,10 @@ describe("backup", () => {
 
     const outro = await criarRepositorios({ indexedDB: new IDBFactory(), nomeBanco: "outro" });
     const resumo = await importar(outro, json);
-    expect(resumo).toMatchObject({ produtos: 1, mercados: 1, apelidos: 1, compras: 1, estoques: 1, agendas: 1, listas: 1, itensLista: 1 });
+    expect(resumo).toMatchObject({ produtos: 1, mercados: 1, apelidos: 1, compras: 1, estoques: 1, agendas: 4, listas: 1, itensLista: 1 });
     const volta = await exportar(outro, new Date("2026-11-05T12:00:00Z"));
     const ordenar = (b: typeof arquivo) => JSON.parse(JSON.stringify(b, (_k, v: unknown) => (Array.isArray(v) ? [...v].sort((a, c) => JSON.stringify(a).localeCompare(JSON.stringify(c))) : v)));
-    // a casa e o perfil criados na abertura do outro aparelho convivem com os importados
+    // a casa padrão vazia criada na abertura do outro aparelho é removida ao restaurar
     expect(ordenar(volta).colecoes.produtos).toEqual(ordenar(arquivo).colecoes.produtos);
     expect(ordenar(volta).colecoes.compras).toEqual(ordenar(arquivo).colecoes.compras);
     expect(volta.colecoes.casas.map((c) => c.id)).toContain(casa.id);
@@ -273,5 +273,50 @@ describe("backup", () => {
     const json = JSON.stringify(await exportar(repos));
     expect(json).not.toMatch(/\d{3}\.\d{3}\.\d{3}-\d{2}/);
     expect(json).not.toMatch(/cpf/i);
+  });
+});
+
+describe("seed da primeira abertura", () => {
+  it("cria a agenda inicial (feira dia 5, mercado sábado, hortifruti quarta), uma única vez", async () => {
+    const agendas = await repos.agendas.listar();
+    expect(agendas.map((a) => [a.tipo, a.diaDoMes ?? a.diaDaSemana]).sort()).toEqual([
+      ["feira_mensal", 5], ["hortifruti_semanal", 3], ["mercado_semanal", 6],
+    ]);
+    await repos.iniciar();
+    expect(await repos.agendas.listar()).toHaveLength(3);
+  });
+
+  it("reabrir não recria o que o usuário apagou", async () => {
+    const [primeira] = await repos.agendas.listar();
+    await repos.agendas.apagar(primeira.id);
+    repos.fechar();
+    repos = await criarRepositorios({ indexedDB: fabrica });
+    expect(await repos.agendas.listar()).toHaveLength(2);
+  });
+});
+
+describe("restaurar backup em aparelho novo", () => {
+  it("não deixa duas casas nem agendas duplicadas", async () => {
+    await repos.produtos.salvar(produto("Tomate"));
+    const json = JSON.stringify(await exportar(repos));
+    const novo = await criarRepositorios({ indexedDB: new IDBFactory(), nomeBanco: "aparelho-novo" });
+    const casaVazia = (await novo.casas.listar())[0];
+    expect(casaVazia.id).not.toBe(casa.id);
+    await importar(novo, json);
+    const casas = await novo.casas.listar();
+    expect(casas.map((c) => c.id)).toEqual([casa.id]);
+    expect(await novo.agendas.listar()).toHaveLength(3);
+    expect(await novo.perfis.listar()).toHaveLength(1);
+    expect((await novo.iniciar()).id).toBe(casa.id);
+    novo.fechar();
+  });
+
+  it("não apaga a casa local quando ela já tem dados", async () => {
+    const outro = await criarRepositorios({ indexedDB: new IDBFactory(), nomeBanco: "com-dados" });
+    const local = (await outro.casas.listar())[0];
+    await outro.produtos.salvar({ ...produto("Local"), casaId: local.id });
+    await importar(outro, JSON.stringify(await exportar(repos)));
+    expect((await outro.casas.listar()).map((c) => c.id).sort()).toEqual([casa.id, local.id].sort());
+    outro.fechar();
   });
 });

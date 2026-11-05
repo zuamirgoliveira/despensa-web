@@ -79,6 +79,7 @@ test("apagar compra pede confirmação própria e respeita Cancelar", async ({ p
 
 test("backup: exportar, apagar tudo e importar de volta restaura os dados", async ({ page }, info) => {
   await importarNota(page);
+  await page.goto("/ajustes");
   const baixa = page.waitForEvent("download");
   await page.getByRole("button", { name: "Exportar backup" }).click();
   const download = await baixa;
@@ -90,13 +91,17 @@ test("backup: exportar, apagar tudo e importar de volta restaura os dados", asyn
   expect(conteudo.colecoes.compras).toHaveLength(1);
   expect(JSON.stringify(conteudo)).not.toMatch(/cpf/i);
 
+  await page.goto("/compras");
   await page.getByRole("button", { name: "Apagar compra" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Apagar" }).click();
   await expect(page.getByText("Nenhuma compra ainda")).toBeVisible();
 
+  await page.goto("/ajustes");
   await page.getByLabel("Arquivo de backup").setInputFiles(caminho);
   await expect(page.getByText(/Importado: 1 compras/)).toBeVisible();
+  await page.goto("/compras");
   await expect(page.getByText("R$ 77,24").first()).toBeVisible();
+  await page.goto("/ajustes");
 
   // arquivo inválido e versão futura
   await page.getByLabel("Arquivo de backup").setInputFiles({ name: "x.json", mimeType: "application/json", buffer: Buffer.from("não é json") });

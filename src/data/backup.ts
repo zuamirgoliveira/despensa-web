@@ -100,5 +100,23 @@ export async function importar(repos: Repositorios, json: string): Promise<Resum
   for (const x of colecoes.compras) await repos.compras.salvar(x);
   for (const x of colecoes.listas) await repos.listas.salvar(x);
   for (const x of colecoes.itensLista) await repos.itensLista.salvar(x);
+  await removerCasaPadraoVazia(repos, new Set(colecoes.casas.map((c) => c.id)));
   return Object.fromEntries(Object.entries(colecoes).map(([k, v]) => [k, v.length])) as ResumoImportacao;
+}
+
+/**
+ * Ao restaurar em um aparelho novo, a casa padrão criada na primeira abertura (com perfil e agenda
+ * iniciais) ainda está vazia. Remove-a para não ficar com duas casas (`iniciar` usa a primeira).
+ */
+async function removerCasaPadraoVazia(repos: Repositorios, idsImportados: ReadonlySet<string>): Promise<void> {
+  if (idsImportados.size === 0) return;
+  const [compras, produtos, mercados] = await Promise.all([repos.compras.listar(), repos.produtos.listar(), repos.mercados.listar()]);
+  for (const casa of await repos.casas.listar()) {
+    if (idsImportados.has(casa.id)) continue;
+    const temDados = [...compras, ...produtos, ...mercados].some((x) => x.casaId === casa.id);
+    if (temDados) continue;
+    for (const p of await repos.perfis.listar()) if (p.casaId === casa.id) await repos.perfis.apagar(p.id);
+    for (const a of await repos.agendas.listar()) if (a.casaId === casa.id) await repos.agendas.apagar(a.id);
+    await repos.casas.apagar(casa.id);
+  }
 }

@@ -11,6 +11,7 @@ import type {
   Perfil,
   Produto,
 } from "@/domain/types";
+import { agendasIniciais } from "@/config/seed";
 import {
   agendaIdaSchema,
   apelidoMercadoSchema,
@@ -115,10 +116,11 @@ const sch = <T>(s: z.ZodType<T>): z.ZodType<T> => s;
 export function criarRepositoriosComBanco(db: IDBDatabase): Repositorios {
   const casas = new ColecaoIdb<Casa>(db, "casas", sch(casaSchema));
   const perfis = new Perfis(db, "perfis", sch(perfilSchema));
+  const agendas = new ColecaoIdb<AgendaIda>(db, "agendas", sch(agendaIdaSchema));
   return {
     casas,
     perfis,
-    agendas: new ColecaoIdb<AgendaIda>(db, "agendas", sch(agendaIdaSchema)),
+    agendas,
     mercados: new Mercados(db, "mercados", sch(mercadoSchema)),
     produtos: new ColecaoIdb<Produto>(db, "produtos", sch(produtoSchema)),
     apelidos: new Apelidos(db, "apelidos", sch(apelidoMercadoSchema)),
@@ -128,7 +130,11 @@ export function criarRepositoriosComBanco(db: IDBDatabase): Repositorios {
     itensLista: new ItensLista(db, "itensLista", sch(itemListaSchema)),
     async iniciar(): Promise<Casa> {
       let casa = (await casas.listar())[0];
-      if (!casa) casa = await casas.salvar({ id: crypto.randomUUID(), nome: CASA_PADRAO_NOME });
+      if (!casa) {
+        // Primeira abertura: casa, perfil com padrões e agenda inicial (só aqui; apagar depois não recria).
+        casa = await casas.salvar({ id: crypto.randomUUID(), nome: CASA_PADRAO_NOME });
+        for (const a of agendasIniciais(casa.id, () => crypto.randomUUID())) await agendas.salvar(a);
+      }
       if (!(await perfis.obterDaCasa(casa.id))) {
         await perfis.salvar(perfilSchema.parse({ id: crypto.randomUUID(), casaId: casa.id }));
       }
