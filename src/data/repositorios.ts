@@ -51,6 +51,27 @@ export interface RepoItensLista extends Colecao<ItemLista> {
   apagarPorLista(listaId: string): Promise<void>;
 }
 
+/** Todas as coleções de uma cópia de segurança. */
+export type DadosRestauracao = {
+  casas: Casa[];
+  perfis: Perfil[];
+  agendas: AgendaIda[];
+  mercados: Mercado[];
+  produtos: Produto[];
+  apelidos: ApelidoMercado[];
+  estoques: Estoque[];
+  compras: Compra[];
+  listas: Lista[];
+  itensLista: ItemLista[];
+  conferencias: RegistroConferencia[];
+};
+
+/**
+ * `mesclar`: registros com o mesmo identificador ficam como na cópia; o que só existe no aparelho é mantido.
+ * `substituir`: apaga tudo do aparelho e deixa igual à cópia.
+ */
+export type ModoRestauracao = "mesclar" | "substituir";
+
 export interface Repositorios {
   readonly casas: RepoCasas;
   readonly perfis: RepoPerfis;
@@ -63,6 +84,12 @@ export interface Repositorios {
   readonly listas: RepoListas;
   readonly itensLista: RepoItensLista;
   readonly conferencias: RepoConferencias;
+  /**
+   * Restaura uma cópia de segurança em **uma única transação**: entra tudo ou nada. Todo registro é
+   * validado antes de abrir a transação; chave duplicada na cópia é recusada. Em `mesclar`, o estoque
+   * da cópia substitui o estoque local do mesmo produto (o índice por produto é único).
+   */
+  restaurar(dados: DadosRestauracao, modo: ModoRestauracao): Promise<void>;
   /** Cria a casa padrão e o perfil na primeira abertura; devolve a casa. */
   iniciar(): Promise<Casa>;
   /** Fecha a conexão (testes). */

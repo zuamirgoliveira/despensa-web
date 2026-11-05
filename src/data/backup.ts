@@ -14,7 +14,7 @@ import {
   perfilSchema,
   produtoSchema,
 } from "@/schemas";
-import type { Repositorios } from "./repositorios";
+import type { ModoRestauracao, Repositorios } from "./repositorios";
 
 /** Versão do formato do arquivo. A 1 não tinha `meta`; a 2 acrescenta contagens, período e integridade. */
 export const VERSAO_BACKUP = 2;
@@ -186,37 +186,89 @@ export function lerBackup(json: string): Backup {
   return r.data;
 }
 
-/** Importação idempotente: registros com o mesmo id/chave são sobrescritos. */
-export async function importar(repos: Repositorios, json: string): Promise<ResumoImportacao> {
-  const { colecoes } = lerBackup(json);
-  for (const x of colecoes.casas) await repos.casas.salvar(x);
-  for (const x of colecoes.perfis) await repos.perfis.salvar(x);
-  for (const x of colecoes.agendas) await repos.agendas.salvar(x);
-  for (const x of colecoes.mercados) await repos.mercados.salvar(x);
-  for (const x of colecoes.produtos) await repos.produtos.salvar(x);
-  for (const x of colecoes.apelidos) await repos.apelidos.salvar(x);
-  for (const x of colecoes.estoques) await repos.estoques.salvar(x);
-  for (const x of colecoes.compras) await repos.compras.salvar(x);
-  for (const x of colecoes.listas) await repos.listas.salvar(x);
-  for (const x of colecoes.itensLista) await repos.itensLista.salvar(x);
-  for (const x of colecoes.conferencias) await repos.conferencias.salvar(x);
-  await removerCasaPadraoVazia(repos, new Set(colecoes.casas.map((c) => c.id)));
-  return Object.fromEntries(Object.entries(colecoes).map(([k, v]) => [k, v.length])) as ResumoImportacao;
-}
+export type { ModoRestauracao } from "./repositorios";
 
 /**
- * Ao restaurar em um aparelho novo, a casa padrão criada na primeira abertura (com perfil e agenda
- * iniciais) ainda está vazia. Remove-a para não ficar com duas casas (`iniciar` usa a primeira).
+ * Restaura uma cópia **de forma atômica** (`Repositorios.restaurar`): entra tudo ou nada.
+ * Recusa arquivo cuja soma de verificação não confere. Em `mesclar`, a posição de casa deste aparelho
+ * é mantida se a cópia não a traz; nos dois modos `Perfil.ultimoBackupEm` passa a ser a data da cópia.
  */
-async function removerCasaPadraoVazia(repos: Repositorios, idsImportados: ReadonlySet<string>): Promise<void> {
-  if (idsImportados.size === 0) return;
-  const [compras, produtos, mercados] = await Promise.all([repos.compras.listar(), repos.produtos.listar(), repos.mercados.listar()]);
-  for (const casa of await repos.casas.listar()) {
-    if (idsImportados.has(casa.id)) continue;
-    const temDados = [...compras, ...produtos, ...mercados].some((x) => x.casaId === casa.id);
-    if (temDados) continue;
-    for (const p of await repos.perfis.listar()) if (p.casaId === casa.id) await repos.perfis.apagar(p.id);
-    for (const a of await repos.agendas.listar()) if (a.casaId === casa.id) await repos.agendas.apagar(a.id);
-    await repos.casas.apagar(casa.id);
+export async function restaurarBackup(repos: Repositorios, json: string, modo: ModoRestauracao): Promise<ResumoImportacao> {
+  const inspecao = await inspecionarBackup(json);
+  if (inspecao.integridade === "falhou") {
+    throw new BackupInvalidoError("O arquivo está incompleto ou foi alterado depois de gerado. Faça uma nova cópia de segurança.");
   }
+  const locais = modo === "mesclar" ? await repos.perfis.listar() : [];
+  const perfis = inspecao.backup.colecoes.perfis.map((p) => {
+    const local = locais.find((l) => l.id === p.id);
+    const maisNovo = local?.ultimoBackupEm && local.ultimoBackupEm > inspecao.exportadoEm ? local.ultimoBackupEm : inspecao.exportadoEm;
+    return { ...p, localizacaoCasa: p.localizacaoCasa ?? local?.localizacaoCasa, ultimoBackupEm: maisNovo };
+  });
+  await repos.restaurar({ ...inspecao.backup.colecoes, perfis }, modo);
+  await repos.iniciar(); // cópia sem casa: recria a casa padrão
+  return inspecao.contagens;
+}
+
+/** Importação idempotente: registros com o mesmo id/chave ficam como na cópia; o resto do aparelho é mantido. */
+export function importar(repos: Repositorios, json: string): Promise<ResumoImportacao> {
+  return restaurarBackup(repos, json, "mesclar");
+}
+
+export type ContagemComparada = {
+  /** Existem só neste aparelho (a mesclagem os mantém; "substituir" os apaga). */
+  soAqui: number;
+  /** Na cópia e também aqui (ficam como na cópia). */
+  nosDois: number;
+  /** Na cópia e não aqui. */
+  soNaCopia: number;
+};
+
+export type ComparacaoAparelho = {
+  /** Sem compras, produtos nem mercados: só a casa padrão recém-criada. */
+  vazio: boolean;
+  contagens: ResumoImportacao;
+  compras: ContagemComparada;
+  produtos: ContagemComparada;
+  mercados: ContagemComparada;
+  /** A cópia é anterior à última compra importada neste aparelho: restaurar pode perder compras recentes. */
+  copiaMaisAntiga: boolean;
+  /** Este aparelho tem dados e nenhuma casa da cópia é a dele: mesclar deixaria duas casas. */
+  outraCasa: boolean;
+};
+
+function comparar(locais: readonly string[], copia: readonly string[]): ContagemComparada {
+  const aqui = new Set(locais);
+  const naCopia = new Set(copia);
+  const nosDois = [...naCopia].filter((c) => aqui.has(c)).length;
+  return { soAqui: aqui.size - nosDois, nosDois, soNaCopia: naCopia.size - nosDois };
+}
+
+/** O que existe hoje neste aparelho em relação à cópia (para o usuário decidir entre mesclar e substituir). */
+export async function compararComAparelho(repos: Repositorios, inspecao: InspecaoBackup): Promise<ComparacaoAparelho> {
+  const [casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias] = await Promise.all([
+    repos.casas.listar(),
+    repos.perfis.listar(),
+    repos.agendas.listar(),
+    repos.mercados.listar(),
+    repos.produtos.listar(),
+    repos.apelidos.listar(),
+    repos.estoques.listar(),
+    repos.compras.listar(),
+    repos.listas.listar(),
+    repos.itensLista.listar(),
+    repos.conferencias.listar(),
+  ]);
+  const c = inspecao.backup.colecoes;
+  const contagens = contar({ casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias }) as ResumoImportacao;
+  const vazio = compras.length === 0 && produtos.length === 0 && mercados.length === 0;
+  const ultimaImportacao = compras.map((x) => x.importadoEm).sort().pop();
+  return {
+    vazio,
+    contagens,
+    compras: comparar(compras.map((x) => x.chave), c.compras.map((x) => x.chave)),
+    produtos: comparar(produtos.map((x) => x.id), c.produtos.map((x) => x.id)),
+    mercados: comparar(mercados.map((x) => x.id), c.mercados.map((x) => x.id)),
+    copiaMaisAntiga: ultimaImportacao !== undefined && inspecao.exportadoEm < ultimaImportacao,
+    outraCasa: !vazio && !casas.some((x) => c.casas.some((y) => y.id === x.id)),
+  };
 }

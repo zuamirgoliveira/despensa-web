@@ -236,8 +236,8 @@ describe("backup", () => {
   it("importação é idempotente", async () => {
     await popular();
     const json = JSON.stringify(await exportar(repos));
+    await importar(repos, json); // a 1ª importação só acrescenta Perfil.ultimoBackupEm
     const antes = await exportar(repos, new Date(0));
-    await importar(repos, json);
     await importar(repos, json);
     const depois = await exportar(repos, new Date(0));
     expect(depois).toEqual(antes);
@@ -247,6 +247,7 @@ describe("backup", () => {
     await popular();
     const arq = await exportar(repos);
     arq.colecoes.produtos[0].meta = 9;
+    arq.meta = undefined; // arquivo editado à mão: sem cabeçalho não há soma a conferir (com cabeçalho, seria recusado)
     await importar(repos, JSON.stringify(arq));
     expect((await repos.produtos.listar())[0].meta).toBe(9);
     expect(await repos.produtos.listar()).toHaveLength(1);

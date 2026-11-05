@@ -18,7 +18,7 @@ export const pedido = <T>(r: IDBRequest<T>): Promise<T> =>
     r.onerror = () => reject(r.error);
   });
 
-const concluida = (tx: IDBTransaction): Promise<void> =>
+export const concluida = (tx: IDBTransaction): Promise<void> =>
   new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);

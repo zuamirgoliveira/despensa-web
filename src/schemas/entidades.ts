@@ -54,6 +54,8 @@ export const perfilSchema = z.object({
     .default({ consumoKmPorLitro: 10, precoCombustivelCentavos: 600, desgasteCentavosPorKm: 30 }),
   /** Custo da bike elétrica por km, em centavos (pode ser fracionário: 5 = R$ 0,05). */
   bikeCentavosPorKm: z.number().nonnegative().default(5),
+  /** Quando foi feita (compartilhada ou baixada) a última cópia de segurança. Base do lembrete do Início. */
+  ultimoBackupEm: instanteSchema.optional(),
 });
 
 export const agendaIdaSchema = z
