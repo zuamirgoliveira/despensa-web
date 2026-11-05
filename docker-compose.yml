@@ -1,0 +1,36 @@
+# Execução na VPS (Padrão B): a imagem é carregada por `docker load`, não vem de registry.
+# Variáveis lidas do .env desta pasta: DOMINIO (host do Traefik) e NODE_ENV.
+services:
+  despensa-web:
+    image: despensa-web:latest
+    container_name: despensa-web
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - web
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+        reservations:
+          memory: 64M
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.despensa-web.rule=Host(`${DOMINIO}`)
+      - traefik.http.routers.despensa-web.entrypoints=websecure
+      - traefik.http.routers.despensa-web.tls=true
+      - traefik.http.routers.despensa-web.tls.certresolver=le
+      - traefik.http.services.despensa-web.loadbalancer.server.port=3000
+      - traefik.http.routers.despensa-web-http.rule=Host(`${DOMINIO}`)
+      - traefik.http.routers.despensa-web-http.entrypoints=web
+      - traefik.http.routers.despensa-web-http.middlewares=despensa-web-redirect
+      - traefik.http.middlewares.despensa-web-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.despensa-web-redirect.redirectscheme.permanent=true
+
+networks:
+  web:
+    external: true

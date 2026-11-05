@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+e2e
+tests
+docs
+referencia
+.env*
+playwright-report
+test-results
+coverage
+*.tsbuildinfo
+public/vendor
+public/precache.json
+README.md
