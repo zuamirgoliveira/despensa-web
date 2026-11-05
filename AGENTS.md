@@ -116,6 +116,7 @@ despensa-web/
 │  │  ├─ compra/                   tela Modo compra (checklist offline, total corrente)
 │  │  ├─ resumo/                   tela Resumo da compra (comprado, faltou, fora da lista)
 │  │  ├─ mercados/                 tela Mercados (tipo, transporte, distância, custo da ida)
+│  │  ├─ inicio/                   tela Início ("Hoje"): próxima ida, lembretes
 │  │  └─ …                         componentes de tela por módulo
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
@@ -124,6 +125,7 @@ despensa-web/
 │  │  ├─ catalogo.ts               produto novo a partir de item de nota, chave de nome
 │  │  ├─ mercados.ts               tipo sugerido pelo nome do emitente
 │  │  ├─ estoque.ts                níveis, consumo, cobertura
+│  │  ├─ inicio.ts                 próxima ida, produtos que vencem e lembretes da tela Início
 │  │  ├─ conferencia.ts            quais produtos conferir antes de uma ida, agrupados por local
 │  │  ├─ agenda.ts                 ocorrências das idas
 │  │  ├─ lista.ts                  geração da lista por cobertura
@@ -259,6 +261,10 @@ Decisões de implementação (`gerarLista(entrada)` devolve `{ ida, itens, resum
 - **Quantidade:** horizonte = próxima ida do tipo **próprio** do produto depois da ida alvo (feira seguinte, no caso do puxado). Arredonda para cima ao passo da unidade; o teto `consumo × vidaUtilDias` é arredondado para **baixo** ao passo (nunca ultrapassa o limite); o mínimo (uma unidade mínima) vence o teto. Sem consumo, usa a meta.
 - Produto sem registro de estoque: assume `cheio` desde a última compra (ou desde hoje, se nunca comprou).
 - Comparações de cobertura usam tolerância de 1e-9 (evita `8,999999999999998 < 9`).
+
+### 6.3.0 Início (`inicio.ts`, tela `/`)
+
+Mostra a **próxima ida de qualquer tipo** (empate de data: feira primeiro), em quantos dias (`hoje`, `amanhã`, `em N dias`), quantos produtos a lista dessa ida teria agora, atalhos **Conferir despensa** / **Ver lista** / **Importar nota** e dois lembretes: **nota pendente** (lista `em_compra` criada há mais de 1 dia, data de `criadaEm` no fuso de Recife) e **estimativa de ida pendente** (mercado com compra sem `custoIdaCentavos`). Sem nenhuma nota: boas-vindas com atalho para importar a primeira. Navegação: a barra tem Início, Importar, Lista e Compras; o restante (Conferir despensa, Catálogo, Preços, Mercados, Ajustes) fica no menu **Mais** (`lib/rotas.ts` define barra e Mais; teclado: Esc ou toque fora fecha).
 
 ### 6.3.1 Modo compra (`compra.ts`, tela `/compra?lista=<id>`)
 

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole, pularEstimativa } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, pularEstimativa, irParaTela } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 
@@ -29,7 +29,7 @@ test("compra aparece em Compras (detalhe) e em Preços", async ({ page }) => {
   await expect(page.getByRole("cell", { name: "Melao Japones" })).toBeVisible();
   await expect(page.getByRole("cell", { name: "R$ 7,88", exact: true }).first()).toBeVisible();
 
-  await page.getByRole("link", { name: "Preços" }).click();
+  await irParaTela(page, "Preços");
   await expect(page.getByText("Melao Japones")).toBeVisible();
   await expect(page.getByText("R$ 7,88/kg", { exact: true }).first()).toBeVisible();
   const melao = page.getByRole("listitem").filter({ hasText: "Melao Japones" });

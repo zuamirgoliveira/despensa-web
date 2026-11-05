@@ -18,3 +18,12 @@ export function semViolacaoDeCsp(erros: string[]): void {
 export async function pularEstimativa(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Decidir depois" }).click();
 }
+
+/** Vai para uma tela pela navegação: na barra, ou pelo menu "Mais" quando não cabe nela. */
+export async function irParaTela(page: Page, nome: string): Promise<void> {
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  const naBarra = nav.getByRole("link", { name: nome, exact: true });
+  if (await naBarra.isVisible()) return naBarra.click();
+  await nav.getByRole("button", { name: "Mais" }).click();
+  await nav.getByRole("link", { name: nome, exact: true }).click();
+}

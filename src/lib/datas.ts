@@ -61,3 +61,8 @@ export function semanaCivil(data: string): number {
 export function segundosDesde(inicio: Date): number {
   return Math.round((Date.now() - inicio.getTime()) / 1000);
 }
+
+/** Data (AAAA-MM-DD) de um instante ISO no fuso de Recife. */
+export function dataRecife(instante: string): string {
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: FUSO, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(instante));
+}

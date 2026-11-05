@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, irParaTela } from "./util";
 
 const ROTAS = ["/", "/importar", "/compras", "/catalogo", "/precos", "/ajustes", "/conferencia", "/lista", "/compra", "/resumo", "/mercados"];
 
@@ -42,7 +42,7 @@ test("service worker: todas as rotas funcionam offline, inclusive ao recarregar"
   await page.getByRole("link", { name: "Compras" }).click();
   await expect(page).toHaveURL(/\/compras$/);
   await expect(page.getByRole("heading", { name: "Compras" })).toBeVisible();
-  await page.getByRole("link", { name: "Preços" }).click();
+  await irParaTela(page, "Preços");
   await expect(page.getByRole("heading", { name: "Preços" })).toBeVisible();
 
   semViolacaoDeCsp(erros);

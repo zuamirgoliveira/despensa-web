@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole, pularEstimativa } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, pularEstimativa, irParaTela } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 
@@ -23,7 +23,7 @@ test("catálogo vazio orienta a importar uma nota", async ({ page }) => {
 test("a nota popula o catálogo; busca, edição de meta, arquivar e mesclar", async ({ page }) => {
   const { erros } = vigiarConsole(page);
   await importarNota(page);
-  await page.getByRole("link", { name: "Catálogo" }).click();
+  await irParaTela(page, "Catálogo");
 
   await expect(page.getByRole("heading", { name: "Hortifruti" })).toBeVisible();
   await expect(page.getByRole("listitem").filter({ hasText: /· Hortifruti semanal/ })).toHaveCount(16);
@@ -77,7 +77,7 @@ test("a nota popula o catálogo; busca, edição de meta, arquivar e mesclar", a
   await expect(page.getByRole("listitem").filter({ hasText: /· Hortifruti semanal/ })).toHaveCount(15);
 
   // o histórico de preços da compra agora mostra os dois itens sob Banana Prata
-  await page.getByRole("link", { name: "Preços" }).click();
+  await irParaTela(page, "Preços");
   const banana = page.getByRole("listitem").filter({ hasText: "Banana Prata" }).first();
   await banana.getByText("Banana Prata").first().click();
   await expect(banana.getByText(/04\/11\/2026/)).toHaveCount(2);
