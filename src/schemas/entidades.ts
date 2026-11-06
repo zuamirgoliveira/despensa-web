@@ -201,7 +201,8 @@ export const itemListaSchema = z
 export const conferenciaSchema = z.object({
   id: idSchema,
   casaId: idSchema,
-  tipoIda: z.enum(TIPOS_IDA),
+  /** Só nas conferências feitas por ida (antes de 06/11/2026); a revisão da despensa não tem ida. */
+  tipoIda: z.enum(TIPOS_IDA).optional(),
   iniciadaEm: instanteSchema,
   duracaoSegundos: z.number().int().nonnegative(),
   produtosConferidos: z.number().int().nonnegative(),

@@ -38,27 +38,23 @@ describe("registrarNivel", () => {
 });
 
 describe("carregarFila", () => {
-  it("agrupa por local e traz só o que precisa conferir", async () => {
+  it("agrupa por local e traz só o que precisa revisar", async () => {
     const geladeira = await novo("Zebra", { localCasa: "Geladeira" });
     const armario = await novo("Arroz", { localCasa: "Armário" });
     const semLocal = await novo("Sal");
-    await novo("Fora", { tipoIda: "hortifruti_semanal" });
-    for (const p of [geladeira, armario, semLocal]) await registrarNivel(repos, p, "acabou", new Date("2026-11-08T10:00:00Z"));
-    const fila = await carregarFila(repos, "mercado_semanal", "2026-11-08");
-    expect(fila?.map((i) => [i.produto.nome, i.local])).toEqual([
-      ["Arroz", "Armário"], ["Zebra", "Geladeira"], ["Sal", "Sem local"],
+    const feito = await novo("Feito");
+    await registrarNivel(repos, feito, "acabou", new Date("2026-11-08T10:00:00Z")); // acabou, confirmado hoje: fora
+    expect([geladeira, armario, semLocal].length).toBe(3);
+    const fila = await carregarFila(repos, "2026-11-08");
+    expect(fila.map((i) => [i.produto.nome, i.local, i.motivo])).toEqual([
+      ["Arroz", "Armário", "sem_registro"], ["Zebra", "Geladeira", "sem_registro"], ["Sal", "Sem local", "sem_registro"],
     ]);
-  });
-
-  it("tipo sem agenda devolve undefined", async () => {
-    for (const a of await repos.agendas.listar()) await repos.agendas.apagar(a.id);
-    expect(await carregarFila(repos, "mercado_semanal", "2026-11-08")).toBeUndefined();
   });
 });
 
 describe("registrarConferencia", () => {
   it("guarda tempo e quantidade", async () => {
-    const r = await registrarConferencia(repos, { tipoIda: "mercado_semanal", iniciadaEm: "2026-11-08T10:00:00.000Z", duracaoSegundos: 95, produtosConferidos: 7 });
+    const r = await registrarConferencia(repos, { iniciadaEm: "2026-11-08T10:00:00.000Z", duracaoSegundos: 95, produtosConferidos: 7 });
     expect(await repos.conferencias.obter(r.id)).toEqual(r);
   });
 });
@@ -73,8 +69,8 @@ describe("rupturas", () => {
     expect((await registrarNivel(repos, sem, "acabou", new Date())).ruptura).toBe(true); // sem registro anterior
   });
   it("a sessão guarda as rupturas (padrão 0)", async () => {
-    const a = await registrarConferencia(repos, { tipoIda: "mercado_semanal", iniciadaEm: "2026-11-08T10:00:00.000Z", duracaoSegundos: 10, produtosConferidos: 2 });
-    const b = await registrarConferencia(repos, { tipoIda: "mercado_semanal", iniciadaEm: "2026-11-08T10:00:00.000Z", duracaoSegundos: 10, produtosConferidos: 2, rupturas: 3 });
+    const a = await registrarConferencia(repos, { iniciadaEm: "2026-11-08T10:00:00.000Z", duracaoSegundos: 10, produtosConferidos: 2 });
+    const b = await registrarConferencia(repos, { iniciadaEm: "2026-11-08T10:00:00.000Z", duracaoSegundos: 10, produtosConferidos: 2, rupturas: 3 });
     expect([a.rupturas, b.rupturas]).toEqual([0, 3]);
   });
 });

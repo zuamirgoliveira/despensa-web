@@ -10,6 +10,7 @@
 - **D-09:** tela **Despensa** (substitui o Catálogo, que redireciona): quantidade atual e padrão em cada linha, +/−, atalhos, filtros, busca, agrupar, adicionar item e "Repor sempre"; a barra agora é Início, Despensa, Lista e Importar.
 - **D-10/D-11:** histórico de preço dentro do item; a lista de compras vira a lista única da casa (zerado ou abaixo do padrão, só recorrentes), sem escolher ida.
 - **D-12:** o Início abre com o estado da despensa; a próxima compra da agenda vira informação secundária e considera a compra já feita.
+- **D-13:** a Conferência vira revisão opcional sem ida (itens sem quantidade, acabando ou desatualizados); sai do código a geração da lista por ida e a agenda deixa de gerar lista (segue como lembrete no Início). Painel, custo da ida e comparação de mercados continuam no menu, sem destaque.
 
 ## 0.4.0 (cópia de segurança e persistência)
 

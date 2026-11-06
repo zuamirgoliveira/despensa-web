@@ -4,13 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Card, Input, LinkBotao, Progress } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import { carregarFila, registrarConferencia, registrarNivel } from "@/data/conferencia";
-import { proximaIdaDoTipo } from "@/domain/agenda";
 import type { ProdutoParaConferir } from "@/domain/conferencia";
-import type { Nivel, TipoIda } from "@/domain/types";
-import { TIPOS_IDA } from "@/schemas";
+import type { Nivel } from "@/domain/types";
 import { hojeRecife, segundosDesde } from "@/lib/datas";
-import { dataBR } from "@/lib/format";
-import { TIPO_IDA_ROTULO } from "@/lib/rotulos";
 
 const NIVEIS: { nivel: Nivel; rotulo: string; classe: string }[] = [
   { nivel: "cheio", rotulo: "Cheio", classe: "" },
@@ -20,17 +16,12 @@ const NIVEIS: { nivel: Nivel; rotulo: string; classe: string }[] = [
 ];
 const ROTULO_NIVEL: Record<Nivel, string> = { cheio: "Cheio", metade: "Metade", acabando: "Acabando", acabou: "Acabou" };
 const MOTIVO: Record<ProdutoParaConferir["motivo"], string> = {
-  na_lista: "Pode entrar na lista desta ida",
   provavelmente_acabando: "Provavelmente acabando",
   desatualizado: "Faz tempo que você não confere",
-  sem_registro: "Ainda sem nível registrado",
+  sem_registro: "Ainda sem quantidade registrada",
 };
 
-type Idas = { tipo: TipoIda; data: string }[];
-
 export function Conferencia() {
-  const [idas, setIdas] = useState<Idas | null>(null);
-  const [tipo, setTipo] = useState<TipoIda | null>(null);
   const [fila, setFila] = useState<ProdutoParaConferir[] | null>(null);
   const [indice, setIndice] = useState(0);
   const [conferidos, setConferidos] = useState(0);
@@ -40,12 +31,10 @@ export function Conferencia() {
   const [erro, setErro] = useState<string | null>(null);
   const inicio = useRef<Date | null>(null);
 
-  async function iniciar(t: TipoIda): Promise<void> {
+  async function iniciar(): Promise<void> {
     setErro(null);
-    const lista = await carregarFila(await criarRepositorios(), t, hojeRecife());
-    if (!lista) return setErro("Este tipo de ida não tem agenda. Configure em Ajustes.");
+    const lista = await carregarFila(await criarRepositorios(), hojeRecife());
     inicio.current = new Date();
-    setTipo(t);
     setFila(lista);
     setIndice(0);
     setConferidos(0);
@@ -57,9 +46,8 @@ export function Conferencia() {
   async function terminar(total: number, rupturasTotal: number = rupturas): Promise<void> {
     const comeco = inicio.current ?? new Date();
     const segundos = segundosDesde(comeco);
-    if (tipo && total > 0) {
+    if (total > 0) {
       await registrarConferencia(await criarRepositorios(), {
-        tipoIda: tipo,
         iniciadaEm: comeco.toISOString(),
         duracaoSegundos: segundos,
         produtosConferidos: total,
@@ -89,45 +77,11 @@ export function Conferencia() {
     else setIndice((i) => i + 1);
   }
 
-  // próximas idas (para escolher) e tipo vindo da URL (?ida=)
   useEffect(() => {
-    let ativo = true;
-    (async () => {
-      const r = await criarRepositorios();
-      await r.iniciar();
-      const agendas = await r.agendas.listar();
-      const hoje = hojeRecife();
-      const lista = TIPOS_IDA.flatMap((t) => {
-        const i = proximaIdaDoTipo(agendas, t, hoje);
-        return i ? [{ tipo: t, data: i.data }] : [];
-      });
-      if (!ativo) return;
-      setIdas(lista);
-      const pedido = new URLSearchParams(location.search).get("ida");
-      if (pedido && (TIPOS_IDA as readonly string[]).includes(pedido)) void iniciar(pedido as TipoIda);
-    })();
-    return () => {
-      ativo = false;
-    };
+    queueMicrotask(() => void iniciar());
   }, []);
 
-  if (!idas) return <p aria-live="polite">Carregando...</p>;
-
-  if (!tipo || !fila) {
-    return (
-      <div className="flex flex-col gap-3">
-        <p>Para qual ida você quer conferir a despensa?</p>
-        {idas.map((i) => (
-          <Button key={i.tipo} variante="secundario" className="h-auto justify-between py-3" onClick={() => void iniciar(i.tipo)}>
-            <span>{TIPO_IDA_ROTULO[i.tipo]}</span>
-            <span className="text-sm font-normal text-suave">{dataBR(i.data)}</span>
-          </Button>
-        ))}
-        {idas.length === 0 ? <Alert>Nenhuma agenda de ida configurada. Defina as datas em Ajustes.</Alert> : null}
-        {erro ? <Alert tipo="erro">{erro}</Alert> : null}
-      </div>
-    );
-  }
+  if (!fila) return <p aria-live="polite">Carregando...</p>;
 
   if (fim) {
     const min = Math.floor(fim.segundos / 60);
@@ -137,10 +91,10 @@ export function Conferencia() {
         <h2 className="text-sm">{fila.length === 0 ? "Nada para conferir" : "Conferência concluída"}</h2>
         <p>
           {fila.length === 0
-            ? "Nenhum produto precisa de conferência para esta ida."
+            ? "Nenhum item sem quantidade ou desatualizado. A despensa está em dia."
             : `${conferidos} de ${fila.length} produtos conferidos em ${min > 0 ? `${min} min ` : ""}${seg} s.`}
         </p>
-        <LinkBotao href={`/lista?ida=${tipo}`}>Gerar lista</LinkBotao>
+        <LinkBotao href="/despensa">Voltar à despensa</LinkBotao>
       </Card>
     );
   }

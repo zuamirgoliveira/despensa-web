@@ -1,11 +1,9 @@
-// Conferência rápida da despensa: quais produtos perguntar antes de uma ida (RF-404).
+// Revisão da despensa: quais itens perguntar para atualizar a quantidade (antes: conferência por ida, RF-404).
 import { diasEntre, soData } from "@/lib/datas";
-import { idaSeguinte, proximaIdaDoTipo } from "./agenda";
-import { LIMITE_PROVAVELMENTE_ACABANDO_DIAS, quantidadeReferencia } from "./estoque";
-import { gerarLista, situacaoDoProduto, type EntradaLista } from "./lista";
-import type { Nivel, Produto } from "./types";
+import { coberturaDias, consumoDiario, estoqueAgora, LIMITE_PROVAVELMENTE_ACABANDO_DIAS, quantidadeReferencia } from "./estoque";
+import type { Compra, Estoque, Nivel, Produto } from "./types";
 
-export type MotivoConferencia = "na_lista" | "provavelmente_acabando" | "desatualizado" | "sem_registro";
+export type MotivoConferencia = "provavelmente_acabando" | "desatualizado" | "sem_registro";
 
 export type ProdutoParaConferir = {
   produto: Produto;
@@ -28,35 +26,35 @@ export function nivelEstimado(estoqueHoje: number, quantidadeRef: number): Nivel
   return "acabou";
 }
 
-/**
- * Produtos que vencem na próxima ida do tipo: os que a lista incluiria, os que provavelmente já estão
- * acabando e os de nível desatualizado (sem confirmação há mais dias que o ciclo da ida) ou sem registro.
- * `undefined` quando o tipo não tem agenda.
- */
-export function selecionarParaConferir(e: EntradaLista): ProdutoParaConferir[] | undefined {
-  const ida = proximaIdaDoTipo(e.agendas, e.tipo, e.hoje);
-  if (!ida) return undefined;
-  const seguinte = idaSeguinte(e.agendas, e.tipo, ida.data);
-  const ciclo = seguinte ? diasEntre(ida.data, seguinte.data) : 7;
-  const naLista = new Set(gerarLista(e)?.itens.map((i) => i.produtoId));
-  const saida: ProdutoParaConferir[] = [];
+/** Dias sem confirmar a quantidade a partir dos quais um item entra na revisão. */
+export const DIAS_PARA_REVISAR = 14;
 
+/**
+ * Revisão da despensa (opcional, sem ida): itens ativos **sem quantidade registrada**, que **provavelmente já estão
+ * acabando** (cobertura estimada de hoje < 2 dias) ou **desatualizados** (sem confirmação há mais de `DIAS_PARA_REVISAR`).
+ */
+export function selecionarParaRevisar(e: {
+  hoje: string;
+  produtos: readonly Produto[];
+  estoques: readonly Estoque[];
+  compras: readonly Compra[];
+}): ProdutoParaConferir[] {
+  const saida: ProdutoParaConferir[] = [];
   for (const p of e.produtos) {
     if (!p.ativo) continue;
-    const s = situacaoDoProduto(p, e);
     const registro = e.estoques.find((x) => x.produtoId === p.id);
-    const estimado = nivelEstimado(s.estoqueHoje, quantidadeReferencia(p, e.compras));
     let motivo: MotivoConferencia | undefined;
-    if (naLista.has(p.id)) motivo = "na_lista";
-    else if (s.tipoProprio === e.tipo) {
-      const acabando = s.nivel !== "acabando" && s.nivel !== "acabou" && s.coberturaHoje < LIMITE_PROVAVELMENTE_ACABANDO_DIAS;
-      if (!registro) motivo = "sem_registro";
-      else if (acabando) motivo = "provavelmente_acabando";
-      else if (diasEntre(soData(registro.confirmadoEm), e.hoje) > ciclo) motivo = "desatualizado";
+    let estimado: Nivel | undefined;
+    if (!registro) motivo = "sem_registro";
+    else {
+      const ref = quantidadeReferencia(p, e.compras);
+      const consumo = consumoDiario(p, e.compras);
+      const agora = estoqueAgora(registro.nivel, ref, consumo, registro.confirmadoEm, e.hoje);
+      estimado = nivelEstimado(agora, ref);
+      if (registro.nivel !== "acabando" && registro.nivel !== "acabou" && coberturaDias(agora, consumo) < LIMITE_PROVAVELMENTE_ACABANDO_DIAS) motivo = "provavelmente_acabando";
+      else if (diasEntre(soData(registro.confirmadoEm), e.hoje) > DIAS_PARA_REVISAR) motivo = "desatualizado";
     }
-    if (motivo) {
-      saida.push({ produto: p, motivo, nivelAtual: registro?.nivel, nivelEstimado: estimado, local: p.localCasa?.trim() || SEM_LOCAL });
-    }
+    if (motivo) saida.push({ produto: p, motivo, nivelAtual: registro?.nivel, nivelEstimado: estimado, local: p.localCasa?.trim() || SEM_LOCAL });
   }
   return saida;
 }

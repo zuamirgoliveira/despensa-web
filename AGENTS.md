@@ -135,9 +135,9 @@ despensa-web/
 │  │  ├─ recorrencia.ts            promover a recorrente (padrão sugerido), sugestões "repor sempre" e "deixar de repor"
 │  │  ├─ estoque.ts                níveis, consumo, cobertura
 │  │  ├─ inicio.ts                 próxima ida, produtos que vencem e lembretes da tela Início
-│  │  ├─ conferencia.ts            quais produtos conferir antes de uma ida, agrupados por local
+│  │  ├─ conferencia.ts            quais itens revisar (sem quantidade, acabando, desatualizados), agrupados por local
 │  │  ├─ agenda.ts                 ocorrências das idas
-│  │  ├─ lista.ts                  geração da lista por cobertura
+│  │  ├─ lista.ts                  passo da unidade, arredondamento, regeração preservando edições, estimativa de custo
 │  │  ├─ compra.ts                 total corrente, progresso, ordem e orçamento do modo compra
 │  │  ├─ reconciliacao.ts          nota × lista
 │  │  ├─ categorias.ts             categoria por palavra-chave
@@ -257,7 +257,7 @@ Todas as fórmulas vivem em `src/domain/` e têm teste tabelado.
 - `quantidadeReferencia(produto, compras)`: a meta; sem meta, a última quantidade comprada. `comprasDoProduto` soma os itens do mesmo produto na mesma nota. `aplicarCompra(estoques, compra, confirmadoEm, gerarId)` devolve só os registros de estoque que mudam ou nascem (`cheio`, `quantidadeExata` zerada).
 - Datas: `diasEntre`, `adicionarDias`, `soData`, `hojeRecife` em `src/lib/datas.ts` (dias civis, validam datas inexistentes).
 
-- Conferência (`conferencia.ts`, tela `/conferencia?ida=<tipo>`): pergunta os produtos que a lista da ida incluiria, os de tipo próprio **sem registro de estoque**, **provavelmente acabando** ou **desatualizados** (sem confirmação há mais dias que o ciclo da ida); agrupa por `localCasa` ("Sem local" por último). `nivelEstimado` (≥ 75% cheio, ≥ 35% metade, > 5% acabando, senão acabou) alimenta o atalho "Mesmo que o estimado". Cada resposta grava o `Estoque` na hora; ao concluir (ou "Concluir antes") grava um `RegistroConferencia` com a duração; sair no meio não registra tempo.
+- **Revisão da despensa** (`conferencia.ts`, tela `/conferencia`, no menu Mais; opcional, **sem ida**): pergunta um item por vez os ativos **sem quantidade registrada**, **provavelmente acabando** (cobertura estimada de hoje < 2 dias, nível ainda não `acabando`/`acabou`) ou **desatualizados** (sem confirmação há mais de 14 dias, `DIAS_PARA_REVISAR`); agrupa por `localCasa` ("Sem local" por último). `nivelEstimado` (≥ 75% cheio, ≥ 35% metade, > 5% acabando, senão acabou) alimenta o atalho "Mesmo que o estimado". Cada resposta grava o `Estoque` na hora (número = nível × padrão, ou a quantidade exata); ao concluir grava um `RegistroConferencia` (sem `tipoIda`) com a duração. O ajuste do dia a dia é direto na Despensa.
 
 ### 6.2 Agenda (`agenda.ts`)
 
@@ -266,7 +266,7 @@ Todas as fórmulas vivem em `src/domain/` e têm teste tabelado.
 - `tiposCompativeis(produto)`: feira mensal e mercearia podem ser puxados para `mercado_semanal`; hortifruti fica em `hortifruti_semanal`; os tipos semanais só voltam a si mesmos.
 - API: `proximaOcorrencia(agenda, aPartirDe, incluirHoje = true)`, `ocorrenciasEntre`, `proximaIdaDoTipo(agendas, tipo, hoje)` e `idaSeguinte(agendas, tipo, data)` (estritamente posterior), ambas devolvendo `Ida { tipo, data, agendaId }`.
 
-### 6.3 Geração da lista (`lista.ts`)
+### 6.3 Geração da lista por ida (HISTÓRICO: removida na D-13; a regra vigente é a 6.3.-1)
 
 Seja `T` a ida alvo (tipo e data), `T2` a ocorrência seguinte do mesmo tipo, `folga` = `Perfil.folgaDias` (padrão 2).
 

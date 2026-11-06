@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { registrarNivel } from "@/data/conferencia";
 import { criarRepositorios } from "@/data/indexeddb";
 import { salvarNotaImportada } from "@/data/importarNota";
-import { garantirLista } from "@/data/lista";
+import { garantirListaDaCasa } from "@/data/lista";
 import { finalizarCompra, listasEmCompra, resumoDaLista } from "@/data/reconciliacao";
 import { iniciarCompra } from "@/data/compra";
 import type { Repositorios } from "@/data/repositorios";
@@ -54,10 +54,13 @@ describe("com lista", () => {
   async function montarLista() {
     const compraInicial = await importar(); // cria o catálogo
     const lista0 = [await produtoPorNome("Melao Japones"), await produtoPorNome("Banana Prata"), await produtoPorNome("Cenoura")];
-    for (const p of lista0) await registrarNivel(repos, p, "acabou", new Date("2026-11-08T10:00:00Z"));
+    for (const p of lista0) {
+      await repos.produtos.salvar({ ...p, recorrente: true }); // só recorrentes entram na lista da casa
+      await registrarNivel(repos, p, "acabou", new Date("2026-11-08T10:00:00Z"));
+    }
     // limpa as demais para a lista ter só os 3: arquiva o resto
     for (const p of await repos.produtos.listar()) if (!lista0.some((x) => x.id === p.id)) await repos.produtos.salvar({ ...p, ativo: false });
-    const lista = await garantirLista(repos, "hortifruti_semanal", "2026-11-08", new Date("2026-11-08T10:00:00Z"));
+    const { lista } = await garantirListaDaCasa(repos, "2026-11-08", new Date("2026-11-08T10:00:00Z"));
     await iniciarCompra(repos, lista.id);
     return { lista, compraInicial };
   }
@@ -102,18 +105,17 @@ describe("com lista", () => {
     expect(await resumoDaLista(repos, crypto.randomUUID())).toBeUndefined();
   });
 
-  it("itens que ficaram de fora voltam na próxima lista do mesmo tipo", async () => {
+  it("o que ficou de fora segue faltando e volta sozinho na próxima lista, sem duplicar", async () => {
     const { lista } = await montarLista();
     const compra = await importar({ ...nota, emissao: "2026-11-11T10:00:00", itens: nota.itens.filter((i) => /MELAO/.test(i.descricao)) }, "26261108868231000638650020000689041020778728");
-    await finalizarCompra(repos, compra, lista.id);
+    await finalizarCompra(repos, compra, lista.id, new Date("2026-11-12T12:00:00Z"));
     const cenoura = await produtoPorNome("Cenoura");
-    await registrarNivel(repos, cenoura, "cheio", new Date("2026-11-12T10:00:00Z")); // a cobertura não a incluiria... a pendência sim
-    const proxima = await garantirLista(repos, "hortifruti_semanal", "2026-11-12", new Date("2026-11-12T10:00:00Z"));
+    const { lista: proxima } = await garantirListaDaCasa(repos, "2026-11-12", new Date("2026-11-12T10:00:00Z"));
     expect(proxima.id).not.toBe(lista.id);
     const itens = await repos.itensLista.listarPorLista(proxima.id);
-    expect(itens.map((i) => i.produtoId)).toContain(cenoura.id);
-    // com a Cenoura como 'cheio' hoje, só a pendência da lista anterior a traz de volta (sem duplicar)
+    // Cenoura continua zerada (recorrente): volta pela regra padrão − atual; Banana também; Melão foi comprado e não volta
     expect(itens.filter((i) => i.produtoId === cenoura.id)).toHaveLength(1);
+    expect(itens.map((i) => i.produtoId)).not.toContain((await produtoPorNome("Melao Japones")).id);
   });
 
   it("lista fechada por outra compra não é fechada de novo", async () => {
