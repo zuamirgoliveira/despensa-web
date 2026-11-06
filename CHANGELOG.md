@@ -2,6 +2,8 @@
 
 ## Não lançado (reposicionamento: a despensa em primeiro lugar)
 
+- **Compartilhar lista:** o botão "Regerar lista" (redundante, a lista já se recalcula ao abrir) dá lugar a "Compartilhar lista", que abre o menu de compartilhar do Android com o texto do que falta comprar; sem o menu, copia o texto.
+
 - **Modo compra compacto:** item pego vira uma linha (✓ verde, nome riscado); "Não encontrei" e "Adiar" viram **"Não peguei"** (linha amarela, no fim da lista); card pendente com Peguei, Não peguei e preço na mesma linha; seções concluídas descem; cabeçalho mais baixo; cartão "Tudo resolvido". Corrige o preço digitado se perder ao tocar em Peguei.
 - **Card da Despensa:** saem os 4 atalhos de nível; "Ajustar" e "Editar" viram janelas (montadas só ao abrir, o que alivia listas grandes); "Repor sempre" vira um interruptor no card; volta o "Voltar ao cálculo automático" do padrão; frequência, tipo de ida, vida útil e "contável" saem do formulário; a revisão da despensa sempre aceita quantidade exata.
 

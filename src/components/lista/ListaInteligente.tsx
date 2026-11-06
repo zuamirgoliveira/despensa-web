@@ -12,7 +12,9 @@ import { custoIdaDoMercado } from "@/domain/ida";
 import { alertasPorProduto } from "@/domain/precos";
 import { agruparPorCategoria, agruparPorMercado, temMercadosDiferentes, type ItemVisao } from "@/lib/agruparLista";
 import { hojeRecife } from "@/lib/datas";
-import { brl } from "@/lib/format";
+import { compartilharTexto } from "@/lib/arquivos";
+import { brl, dataBR } from "@/lib/format";
+import { textoDaLista } from "@/lib/textoDaLista";
 import { ItemDaLista } from "./ItemDaLista";
 
 export function ListaInteligente() {
@@ -88,6 +90,20 @@ export function ListaInteligente() {
     if (custoIda === undefined || !avisoIdaPoucoVantajosa({ itens: visiveis.length, totalEstimadoCentavos: estimativa.totalCentavos, custoIdaCentavos: custoIda })) return undefined;
     return `Esta ida tem ${visiveis.length} ${visiveis.length === 1 ? "item" : "itens"}, ${brl(estimativa.totalCentavos)}, e custa ${brl(custoIda)} para ir e voltar. Vale esperar e juntar com outra compra?`;
   })();
+
+  const textoParaCompartilhar = textoDaLista(grupos, dataBR(hojeRecife()));
+
+  async function compartilhar(): Promise<void> {
+    if (!textoParaCompartilhar) return;
+    const r = await compartilharTexto(textoParaCompartilhar, "Lista de compras");
+    if (r !== "indisponivel") return; // compartilhado ou cancelado: o menu do sistema já deu o retorno
+    try {
+      await navigator.clipboard.writeText(textoParaCompartilhar);
+      mostrar("Este aparelho não tem o menu de compartilhar. Copiei a lista: cole onde quiser.");
+    } catch {
+      mostrar("Não consegui compartilhar nem copiar a lista.", "erro");
+    }
+  }
 
   async function adicionar(): Promise<void> {
     const q = Number(quantidade.replace(",", "."));
@@ -185,14 +201,8 @@ export function ListaInteligente() {
       ) : null}
 
       <div className="grid grid-cols-2 gap-2">
-        <Button
-          variante="secundario"
-          onClick={async () => {
-            await gerar();
-            mostrar("Lista atualizada. Suas edições foram mantidas.");
-          }}
-        >
-          Regerar lista
+        <Button variante="secundario" disabled={!textoParaCompartilhar} onClick={() => void compartilhar()}>
+          Compartilhar lista
         </Button>
         <LinkBotao href={`/compra?lista=${lista.id}`}>Iniciar compra</LinkBotao>
       </div>

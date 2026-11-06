@@ -22,7 +22,7 @@ test("sem dados, a lista fica vazia e leva à despensa", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Ir para a despensa" })).toHaveAttribute("href", "/despensa");
 });
 
-test("lista gerada do catálogo: itens, estimativa, edição, remoção, avulso e regerar preservam as edições", async ({ page }) => {
+test("lista gerada do catálogo: itens, estimativa, edição, remoção e avulso preservam as edições ao reabrir", async ({ page }) => {
   const { erros } = vigiarConsole(page);
   await importarNota(page);
   await page.goto("/lista");
@@ -45,8 +45,7 @@ test("lista gerada do catálogo: itens, estimativa, edição, remoção, avulso 
   await item(page, "Banana Prata").getByRole("button", { name: "Remover Banana Prata" }).click();
   await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(15);
   await expect(page.getByText("Removidos (1)")).toBeVisible();
-  await page.getByRole("button", { name: "Regerar lista" }).click();
-  await expect(page.getByText("Lista atualizada. Suas edições foram mantidas.")).toBeVisible();
+  await page.reload(); // a lista é recalculada ao abrir a tela
   await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(15);
   await expect(item(page, "Melao Japones").locator("[aria-live=polite]")).toHaveText(editada ?? ""); // edição mantida
 
@@ -79,4 +78,40 @@ test("quantidade nunca fica negativa", async ({ page }) => {
   }
   await expect(quase.getByRole("button", { name: "Diminuir Coentro" })).toBeDisabled();
   await expect(quase.locator("[aria-live=polite]")).toHaveText(/^0 /);
+});
+
+test("Compartilhar lista abre o menu do sistema com o texto da lista", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __compartilhado: unknown[] }).__compartilhado = [];
+    navigator.share = async (dados) => {
+      (window as unknown as { __compartilhado: unknown[] }).__compartilhado.push(dados);
+    };
+  });
+  await importarNota(page);
+  await page.goto("/lista");
+  await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(16);
+  await expect(page.getByRole("button", { name: "Regerar lista" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Compartilhar lista" }).click();
+  const dados = await page.evaluate(() => (window as unknown as { __compartilhado: { title: string; text: string }[] }).__compartilhado[0]);
+  expect(dados.title).toBe("Lista de compras");
+  expect(dados.text).toMatch(/^Lista de compras \(\d{2}\/\d{2}\/\d{4}\)\n\nHortifruti\n• /);
+  expect(dados.text).toContain("• Melao Japones:");
+  expect(dados.text.split("\n").filter((l) => l.startsWith("• "))).toHaveLength(16);
+});
+
+test("sem o menu de compartilhar, a lista é copiada", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
+  });
+  await importarNota(page);
+  await page.goto("/lista");
+  await page.getByRole("button", { name: "Compartilhar lista" }).click();
+  await expect(page.getByText(/Copiei a lista/)).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("• Melao Japones:");
+});
+
+test("sem itens, Compartilhar lista fica desabilitado", async ({ page }) => {
+  await page.goto("/lista");
+  await expect(page.getByRole("button", { name: "Compartilhar lista" })).toBeDisabled();
 });
