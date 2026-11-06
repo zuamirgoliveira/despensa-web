@@ -51,9 +51,13 @@ test("modo compra offline: marcar, preço, extra, não encontrei, orçamento e r
   await expect(page.getByLabel("Total corrente")).not.toContainText("R$ 0,00");
   await expect(linha(page, "Melao Japones")).toContainText("R$ 8,00");
 
-  // preço informado antes de pegar (no próprio card pendente) aparece na linha
-  await linha(page, "Goiaba").getByLabel(/Preço unitário de Goiaba/).fill("5,00");
+  // o card pendente não tem campo de preço; informa-se depois de pegar
+  await expect(linha(page, "Goiaba").getByLabel(/Preço unitário de Goiaba/)).toHaveCount(0);
   await linha(page, "Goiaba").getByRole("button", { name: "Peguei Goiaba", exact: true }).click();
+  await linha(page, "Goiaba").getByRole("button", { name: "Editar Goiaba" }).click();
+  const precoGoiaba = linha(page, "Goiaba").getByLabel(/Preço unitário de Goiaba/);
+  await precoGoiaba.fill("5,00");
+  await precoGoiaba.blur();
   await expect(linha(page, "Goiaba")).toContainText("R$ 5,00");
 
   // extra já entra como pego, com preço, e soma no total

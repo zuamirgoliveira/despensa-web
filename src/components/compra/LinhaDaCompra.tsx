@@ -57,7 +57,7 @@ export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuan
       placeholder="R$ 0,00"
       onChange={(e) => setPreco(e.target.value)}
       onBlur={() => aoPreco(reaisParaCentavos(preco))}
-      className={cn(CLASSE_CONTROLE, "min-h-14 min-w-0 text-center")}
+      className={cn(CLASSE_CONTROLE, "min-h-11 min-w-0 text-center")}
     />
   );
 
@@ -131,7 +131,7 @@ export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuan
     );
   }
 
-  // Pendente: nome + quantidade; uma linha com os três controles do mesmo tamanho.
+  // Pendente: nome + quantidade; uma linha com Peguei e Não peguei (o preço é opcional, ao tocar no item pego).
   return (
     <li className="flex flex-col gap-3 rounded-lg border border-borda bg-superficie p-3">
       <div className="flex items-start justify-between gap-2">
@@ -142,14 +142,13 @@ export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuan
         </div>
         {stepper}
       </div>
-      <div className="grid grid-cols-3 gap-2">
-        <Button tamanho="grande" aria-label={`Peguei ${nome}`} onClick={aoPegar}>
+      <div className="grid grid-cols-2 gap-2">
+        <Button aria-label={`Peguei ${nome}`} onClick={aoPegar}>
           Peguei
         </Button>
-        <Button tamanho="grande" variante="secundario" aria-label={`Não peguei ${nome}`} onClick={() => aoEstado("nao_encontrado")}>
+        <Button variante="secundario" aria-label={`Não peguei ${nome}`} onClick={() => aoEstado("nao_encontrado")}>
           Não peguei
         </Button>
-        {campoPreco}
       </div>
     </li>
   );
