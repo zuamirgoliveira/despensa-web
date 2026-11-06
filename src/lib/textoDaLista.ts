@@ -7,7 +7,7 @@ const UNIDADE_CURTA = { kg: "kg", un: "un", pacote: "pct", l: "L" } as const;
 const faltaComprar = (status: string): boolean => status !== "pego" && status !== "extra";
 
 /**
- * Monta o texto da lista: título com a data, seções e uma linha `• Nome: quantidade unidade (~valor)` por item; o valor só aparece com preço conhecido e há uma linha de estimativa no fim.
+ * Monta o texto da lista: título com a data, seções e uma linha `• quantidade unidade Nome (~valor)` por item; o valor só aparece com preço conhecido e há uma linha de estimativa no fim.
  * Ficam de fora os itens removidos (a tela já os separa), os já pegos e os extras. `undefined` se não sobra nada.
  */
 export function textoDaLista(
@@ -24,6 +24,7 @@ export function textoDaLista(
       .map((v) => {
         const nome = v.produto?.nome ?? v.item.nomeAvulso ?? "";
         const unidade = v.produto ? ` ${UNIDADE_CURTA[v.produto.unidade]}` : "";
+        const quantidade = `${numeroBR(v.item.quantidadeSugerida)}${unidade}`;
         const preco = v.item.produtoId ? precoUnitario?.(v.item.produtoId) : undefined;
         let estimativa = "";
         if (preco !== undefined) {
@@ -32,7 +33,7 @@ export function textoDaLista(
           comEstimativa = true;
           estimativa = ` (~${brl(valor)})`;
         }
-        return `• ${nome}: ${numeroBR(v.item.quantidadeSugerida)}${unidade}${estimativa}`;
+        return `• ${quantidade} ${nome}${estimativa}`;
       });
     if (linhas.length) blocos.push([g.titulo, ...linhas].join("\n"));
   }

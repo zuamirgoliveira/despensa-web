@@ -22,7 +22,7 @@ describe("textoDaLista", () => {
       ),
       "06/11/2026",
     );
-    expect(t).toBe("Lista de compras (06/11/2026)\n\nHortifruti\n• Alho: 1,5 kg\n• Coentro: 2 un\n\nAvulsos\n• Pilha AA: 2");
+    expect(t).toBe("Lista de compras (06/11/2026)\n\nHortifruti\n• 1,5 kg Alho\n• 2 un Coentro\n\nAvulsos\n• 2 Pilha AA");
   });
 
   it("deixa de fora removidos, pegos e extras; seção sem itens some", () => {
@@ -33,7 +33,7 @@ describe("textoDaLista", () => {
       ),
       "01/01/2027",
     );
-    expect(t).toBe("Lista de compras (01/01/2027)\n\nB\n• W: 2 pct");
+    expect(t).toBe("Lista de compras (01/01/2027)\n\nB\n• 2 pct W");
   });
 
   it("com preço conhecido: valor estimado por item e total; sem preço, só a quantidade", () => {
@@ -43,7 +43,7 @@ describe("textoDaLista", () => {
       "06/11/2026",
       (id) => (id === "Alho" ? 1000 : undefined),
     );
-    expect(t).toBe(`Lista de compras (06/11/2026)\n\nA\n• Alho: 1,5 kg (~${brl(1500)})\n• Pilha: 2\n\nEstimativa: ~${brl(1500)}`);
+    expect(t).toBe(`Lista de compras (06/11/2026)\n\nA\n• 1,5 kg Alho (~${brl(1500)})\n• 2 Pilha\n\nEstimativa: ~${brl(1500)}`);
   });
 
   it("sem nada para comprar: undefined", () => {
