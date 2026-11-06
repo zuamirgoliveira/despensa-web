@@ -3,6 +3,7 @@
 ## Não lançado (reposicionamento: a despensa em primeiro lugar)
 
 - **D-01/D-02:** estoque passa a ter quantidade numérica (`Estoque.quantidade`) e produto ganha `recorrente`; migração 003 converte os estoques atuais (nível × padrão) e marca os produtos existentes como recorrentes; backup v3 lê v1 e v2. A compra agora soma ao estoque.
+- **D-03/D-04:** regras puras da despensa (situação, o que falta, rótulo de nível) e a nova lista da casa (`padrão − atual`, só recorrentes). Ainda não ligadas às telas.
 
 ## 0.4.0 (cópia de segurança e persistência)
 

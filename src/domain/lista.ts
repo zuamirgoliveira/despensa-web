@@ -5,7 +5,7 @@ import { consumoDiario, coberturaDias, estoqueAgora, estoqueNaData, quantidadeRe
 import type { AgendaIda, Compra, Estoque, ItemLista, Produto, TipoIda } from "./types";
 import { LIMITE_PERECIVEL_DIAS } from "@/schemas/constantes";
 
-export type MotivoItem = "acabou" | "cobertura" | "puxado";
+export type MotivoItem = "acabou" | "cobertura" | "puxado" | "abaixo";
 
 export type ItemListaSugerido = {
   produtoId: string;

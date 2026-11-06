@@ -288,6 +288,12 @@ Decisões de implementação (`gerarLista(entrada)` devolve `{ ida, itens, resum
 - Produto sem registro de estoque: assume `cheio` desde a última compra (ou desde hoje, se nunca comprou).
 - Comparações de cobertura usam tolerância de 1e-9 (evita `8,999999999999998 < 9`).
 
+### 6.3.-1 Despensa e lista da casa (`despensa.ts`; em implantação, ver `docs/proposta-despensa.md`)
+
+- `situacaoDoItem(produto, estoque)`: `sem_registro` (ninguém informou a quantidade), `zerado` (≤ 0), `abaixo` (< padrão), `ok`, `acima` (> padrão é permitido: compra a mais, promoção). Padrão = `Produto.meta` > 0; sem padrão, qualquer quantidade > 0 é `ok`. `quantidadeQueFalta` = `max(0, padrão − atual)`. `nivelDeQuantidade` (≥ 75% cheio, ≥ 35% metade, > 5% acabando, senão acabou) é só rótulo.
+- `gerarListaDaCasa({ produtos, estoques, compras })`: lista única, sem ida nem agenda. Entram produtos **ativos, recorrentes e com registro** que estão zerados (quantidade = padrão, senão última comprada, senão 1 passo) ou abaixo do padrão (quantidade = faltante, arredondada para cima ao passo da unidade). **Não recorrente nunca entra**; se zerou vira aviso (`naoRecorrentesZerados`). Motivos `acabou` e `abaixo`. Estimativa de custo = quantidade × último preço.
+- **Transição:** a tela `/lista`, `garantirLista` e `lista.ts` (`gerarLista`, por ida) seguem em uso até a tarefa D-11 trocar a tela e removê-los.
+
 ### 6.3.0 Início (`inicio.ts`, tela `/`)
 
 Mostra a **próxima ida de qualquer tipo** (empate de data: feira primeiro), em quantos dias (`hoje`, `amanhã`, `em N dias`), quantos produtos a lista dessa ida teria agora, atalhos **Conferir despensa** / **Ver lista** / **Importar nota** e dois lembretes: **nota pendente** (lista `em_compra` criada há mais de 1 dia, data de `criadaEm` no fuso de Recife) e **estimativa de ida pendente** (mercado com compra sem `custoIdaCentavos`). Sem nenhuma nota: boas-vindas com atalho para importar a primeira. Com compras, um cartão **lembra da cópia de segurança** (`domain/backup.ts`: nunca houve cópia, 30 dias ou 5 notas desde a última, o que vier primeiro). Navegação: a barra tem Início, Importar, Lista e Compras; o restante (Conferir despensa, Catálogo, Preços, Mercados, Ajustes) fica no menu **Mais** (`lib/rotas.ts` define barra e Mais; teclado: Esc ou toque fora fecha).

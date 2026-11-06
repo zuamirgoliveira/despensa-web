@@ -12,6 +12,7 @@ const MOTIVO: Record<MotivoItem | "manual", string> = {
   acabou: "Acabou",
   cobertura: "Vai faltar antes da próxima ida",
   puxado: "Puxado da feira mensal",
+  abaixo: "Abaixo do padrão",
   manual: "Adicionado por você",
 };
 
