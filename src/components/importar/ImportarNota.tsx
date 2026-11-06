@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert, useToast } from "@/components/ui";
 import { criarRepositorios } from "@/data";
-import { prepararConferencia, salvarNotaImportada, type ItemConferencia } from "@/data/importarNota";
+import { prepararConferencia, salvarNotaImportada, situacaoDosProdutos, type ItemConferencia, type SituacaoNaDespensa } from "@/data/importarNota";
 import { finalizarCompra, listasEmCompra } from "@/data/reconciliacao";
 import type { Lista } from "@/domain/types";
 import { parseNota, type ResultadoParser } from "@/domain/nfce/parser";
@@ -17,6 +17,12 @@ import { PassoSefaz } from "./PassoSefaz";
 
 type Leitura = { resultado: ResultadoParser; itens: ItemConferencia[]; avisos: string[]; erros: string[] };
 
+function alternar(conjunto: ReadonlySet<string>, codigo: string): ReadonlySet<string> {
+  const novo = new Set(conjunto);
+  if (!novo.delete(codigo)) novo.add(codigo);
+  return novo;
+}
+
 export function ImportarNota() {
   const router = useRouter();
   const { mostrar } = useToast();
@@ -27,6 +33,9 @@ export function ImportarNota() {
   const [msgLeitura, setMsgLeitura] = useState<{ texto: string; tipo: "ok" | "erro" } | null>(null);
   const [leitura, setLeitura] = useState<Leitura | null>(null);
   const [nomes, setNomes] = useState<Record<string, string>>({});
+  const [despensa, setDespensa] = useState<Record<string, SituacaoNaDespensa>>({});
+  const [ignorados, setIgnorados] = useState<ReadonlySet<string>>(new Set());
+  const [reporSempre, setReporSempre] = useState<ReadonlySet<string>>(new Set());
   const [salvando, setSalvando] = useState(false);
   const [listasAbertas, setListasAbertas] = useState<Lista[]>([]);
   const [listaId, setListaId] = useState("");
@@ -54,6 +63,9 @@ export function ImportarNota() {
     const chaveDaNota = informada?.chave ?? nota.chave;
     setJaImportadaNota(chaveDaNota ? Boolean(await repos.compras.obter(chaveDaNota)) : false);
     setNomes(Object.fromEntries(itens.map((i) => [i.codigo, i.sugestaoNome])));
+    setDespensa(await situacaoDosProdutos(repos));
+    setIgnorados(new Set());
+    setReporSempre(new Set());
     setLeitura({ resultado, itens, avisos, erros });
     const temErro = resultado.erros.length + erros.length > 0;
     setMsgLeitura({ texto: temErro ? "Encontrei problemas." : `Li ${nota.itens.length} itens.`, tipo: temErro ? "erro" : "ok" });
@@ -88,13 +100,16 @@ export function ImportarNota() {
     setSalvando(true);
     try {
       const repos = await criarRepositorios();
+      const anterior = await repos.compras.obter(k);
       const { compra, mercado } = await salvarNotaImportada(repos, {
         nota: leitura.resultado.nota,
         chave: k,
         nomes,
         substituir: jaImportadaNota || jaImportadaEm !== null,
+        ignorar: [...ignorados],
+        reporSempre: [...reporSempre],
       });
-      const fechamento = await finalizarCompra(repos, compra, listaId || undefined);
+      const fechamento = await finalizarCompra(repos, compra, listaId || undefined, new Date(), anterior);
       mostrar("Compra salva.");
       const destino = fechamento.lista ? `/resumo?lista=${fechamento.lista.id}` : "/compras";
       const atual = (await repos.mercados.obter(mercado.id)) ?? mercado;
@@ -139,6 +154,11 @@ export function ImportarNota() {
           listasAbertas={listasAbertas}
           listaId={listaId}
           aoMudarLista={setListaId}
+          despensa={despensa}
+          ignorados={ignorados}
+          aoAlternarIgnorar={(c) => setIgnorados((a) => alternar(a, c))}
+          reporSempre={reporSempre}
+          aoAlternarReporSempre={(c) => setReporSempre((a) => alternar(a, c))}
         />
       ) : null}
       <Alert tipo="info">Seus dados ficam só neste aparelho. O app não guarda CPF.</Alert>

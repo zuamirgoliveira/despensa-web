@@ -1,5 +1,6 @@
 // Importação de nota: orquestra domínio e repositórios. Nunca persiste CPF nem o texto bruto.
 import { metaAutomatica, novoProduto } from "@/domain/catalogo";
+import { padraoSugerido, promoverARecorrente } from "@/domain/recorrencia";
 import { sugerirTipoMercado } from "@/domain/mercados";
 import type { NotaParseada } from "@/domain/nfce/parser";
 import { chaveDeProduto, normalizarDescricao, produtosParecidos } from "@/domain/normalizacao";
@@ -54,7 +55,20 @@ export type EntradaImportacao = {
   agora?: Date;
   /** Permite sobrescrever uma compra existente com a mesma chave. */
   substituir?: boolean;
+  /** Códigos de itens que não são da despensa (sacola, serviço): ficam na compra, mas sem produto nem estoque. */
+  ignorar?: readonly string[];
+  /** Códigos de itens a promover a recorrentes ("Repor sempre") ao salvar. */
+  reporSempre?: readonly string[];
 };
+
+/** O que a despensa já tem de cada nome (por `chaveDeProduto`), para mostrar "o que vai mudar" antes de salvar. */
+export type SituacaoNaDespensa = { atual?: number; recorrente: boolean };
+
+export async function situacaoDosProdutos(repos: Repositorios): Promise<Record<string, SituacaoNaDespensa>> {
+  const [produtos, estoques] = await Promise.all([repos.produtos.listar(), repos.estoques.listar()]);
+  const qtd = new Map(estoques.map((e) => [e.produtoId, e.quantidade]));
+  return Object.fromEntries(produtos.map((p) => [chaveDeProduto(p.nome), { atual: qtd.get(p.id), recorrente: p.recorrente }]));
+}
 
 export type ResultadoImportacao = { compra: Compra; mercado: Mercado; produtosCriados: Produto[] };
 
@@ -86,7 +100,13 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
   const itens: Compra["itens"] = [];
   const anterior = await repos.compras.obter(chave);
   let casados = 0;
+  const ignorados = new Set(entrada.ignorar ?? []);
+  const paraRecorrentes: string[] = [];
   for (const item of nota.itens) {
+    if (ignorados.has(item.codigo)) {
+      itens.push({ codigo: item.codigo, descricao: item.descricao, quantidade: item.quantidade, unidade: item.unidade, valorUnitarioCentavos: item.valorUnitarioCentavos, valorTotalCentavos: item.valorTotalCentavos });
+      continue;
+    }
     if (await repos.apelidos.obter([mercado.cnpj, item.codigo])) casados++;
     const nome = (nomes[item.codigo] ?? "").trim() || normalizarDescricao(item.descricao).nome;
     let produto = porNome.get(chaveDeProduto(nome));
@@ -98,6 +118,7 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
       produtosCriados.push(produto);
     }
     await repos.apelidos.salvar({ casaId: casa.id, cnpj: mercado.cnpj, codigo: item.codigo, produtoId: produto.id });
+    if (entrada.reporSempre?.includes(item.codigo)) paraRecorrentes.push(produto.id);
     itens.push({
       codigo: item.codigo,
       descricao: item.descricao,
@@ -122,6 +143,13 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
     importadoEm: (entrada.agora ?? new Date()).toISOString(),
   });
   await atualizarMetasAutomaticas(repos, itens.flatMap((i) => (i.produtoId ? [i.produtoId] : [])));
+  if (paraRecorrentes.length) {
+    const compras = await repos.compras.listar();
+    for (const id of new Set(paraRecorrentes)) {
+      const p = await repos.produtos.obter(id);
+      if (p && !p.recorrente) await repos.produtos.salvar(promoverARecorrente(p, undefined, padraoSugerido(p, compras)));
+    }
+  }
   return { compra, mercado, produtosCriados };
 }
 

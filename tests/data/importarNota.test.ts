@@ -2,9 +2,12 @@ import { readFileSync } from "node:fs";
 import { IDBFactory } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { criarRepositorios } from "@/data/indexeddb";
-import { NotaDuplicadaError, prepararConferencia, salvarNotaImportada } from "@/data/importarNota";
+import { NotaDuplicadaError, prepararConferencia, salvarNotaImportada, situacaoDosProdutos } from "@/data/importarNota";
 import { parseNota } from "@/domain/nfce/parser";
 import type { Repositorios } from "@/data/repositorios";
+import { finalizarCompra } from "@/data/reconciliacao";
+import { chaveDeProduto } from "@/domain/normalizacao";
+import type { Produto } from "@/domain/types";
 
 const texto = readFileSync(new URL("../fixtures/notas/cia-santos-hortifruti.txt", import.meta.url), "utf8");
 const { nota } = parseNota(texto);
@@ -96,5 +99,60 @@ describe("itens casados com o catálogo", () => {
     expect(b.compra.itensCasados).toBe(16);
     const c = await salvarNotaImportada(repos, { nota, chave: CHAVE, nomes: {}, substituir: true });
     expect(c.compra.itensCasados).toBe(0);
+  });
+});
+
+describe("importação soma à despensa (D-06)", () => {
+  it("produto novo nasce não recorrente, com a quantidade comprada no estoque", async () => {
+    const r = await salvarNotaImportada(repos, { nota, chave: CHAVE, nomes: await nomesSugeridos() });
+    await finalizarCompra(repos, r.compra, undefined);
+    expect((await repos.produtos.listar()).every((p) => !p.recorrente)).toBe(true);
+    const melao = r.produtosCriados.find((p) => p.nome === "Melao Japones") as Produto;
+    const qtd = nota.itens.find((i) => i.codigo === "0000000000052")?.quantidade;
+    expect((await repos.estoques.obterPorProduto(melao.id))?.quantidade).toBe(qtd);
+  });
+
+  it("segunda compra do mesmo produto soma; reimportar não soma de novo", async () => {
+    const nomes = await nomesSugeridos();
+    const r1 = await salvarNotaImportada(repos, { nota, chave: CHAVE, nomes });
+    await finalizarCompra(repos, r1.compra, undefined);
+    const melao = r1.produtosCriados.find((p) => p.nome === "Melao Japones") as Produto;
+    const q = nota.itens.find((i) => i.codigo === "0000000000052")?.quantidade as number;
+
+    const outra = { ...nota, emissao: "2026-11-11T10:00:00" };
+    const chave2 = "26261108868231000638650020000689041020778721";
+    const r2 = await salvarNotaImportada(repos, { nota: outra, chave: chave2, nomes });
+    await finalizarCompra(repos, r2.compra, undefined, new Date("2026-11-12T12:00:00Z"));
+    expect((await repos.estoques.obterPorProduto(melao.id))?.quantidade).toBeCloseTo(q * 2, 3);
+
+    const anterior = await repos.compras.obter(chave2);
+    const r3 = await salvarNotaImportada(repos, { nota: outra, chave: chave2, nomes, substituir: true });
+    await finalizarCompra(repos, r3.compra, undefined, new Date("2026-11-12T12:00:00Z"), anterior);
+    expect((await repos.estoques.obterPorProduto(melao.id))?.quantidade).toBeCloseTo(q * 2, 3);
+  });
+
+  it("\"Repor sempre\" promove só os itens marcados, com o padrão sugerido", async () => {
+    const r = await salvarNotaImportada(repos, { nota, chave: CHAVE, nomes: await nomesSugeridos(), reporSempre: ["0000000000052"] });
+    const produtos = await repos.produtos.listar();
+    expect(produtos.filter((p) => p.recorrente).map((p) => p.nome)).toEqual(["Melao Japones"]);
+    expect(r.compra.itens).toHaveLength(16);
+  });
+
+  it("item ignorado fica na nota, sem produto, apelido nem estoque", async () => {
+    const r = await salvarNotaImportada(repos, { nota, chave: CHAVE, nomes: await nomesSugeridos(), ignorar: ["0000000000052"] });
+    await finalizarCompra(repos, r.compra, undefined);
+    expect(r.compra.itens).toHaveLength(16);
+    expect(r.compra.itens.find((i) => i.codigo === "0000000000052")?.produtoId).toBeUndefined();
+    expect(await repos.produtos.listar()).toHaveLength(15);
+    expect(await repos.apelidos.listarPorCnpj("08868231000638")).toHaveLength(15);
+    expect(await repos.estoques.listar()).toHaveLength(15);
+  });
+
+  it("situacaoDosProdutos mostra a quantidade atual e a recorrência por nome", async () => {
+    const r = await salvarNotaImportada(repos, { nota, chave: CHAVE, nomes: await nomesSugeridos(), reporSempre: ["0000000000052"] });
+    await finalizarCompra(repos, r.compra, undefined);
+    const s = await situacaoDosProdutos(repos);
+    expect(s[chaveDeProduto("Melao Japones")]).toMatchObject({ recorrente: true });
+    expect(s[chaveDeProduto("Alho Redinha")]).toMatchObject({ recorrente: false });
   });
 });

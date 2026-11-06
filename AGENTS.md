@@ -250,7 +250,7 @@ Todas as fórmulas vivem em `src/domain/` e têm teste tabelado.
 - `consumoDiario`: com 2 ou mais compras do produto, média das últimas até 4 razões `quantidade_i ÷ dias entre compras` (ignorar intervalos de 0 dia). Com menos, pela frequência declarada: semanal `meta/7`, quinzenal `meta/15`, mensal `meta/30`, sob demanda `indefinido`.
 - `cobertura (dias) = estoque ÷ consumo`; `Infinity` se consumo for 0 ou indefinido.
 - `estoqueNaData = max(0, estoqueAgora − consumo × dias)`.
-- Produto comprado volta a `cheio`.
+- Produto comprado **soma** a quantidade comprada (ver 6.4).
 - "Provavelmente acabando" (`sugerirProvavelmenteAcabando(produto, estoque, compras, hoje)`): cobertura estimada de hoje < 2 dias e nível ainda não é `acabando`/`acabou` → pede confirmação. O estoque de hoje = estoque do nível confirmado − consumo × dias desde `confirmadoEm` (`estoqueAgora`).
 - `quantidadeReferencia(produto, compras)`: a meta; sem meta, a última quantidade comprada. `comprasDoProduto` soma os itens do mesmo produto na mesma nota. `aplicarCompra(estoques, compra, confirmadoEm, gerarId)` devolve só os registros de estoque que mudam ou nascem (`cheio`, `quantidadeExata` zerada).
 - Datas: `diasEntre`, `adicionarDias`, `soData`, `hojeRecife` em `src/lib/datas.ts` (dias civis, validam datas inexistentes).
@@ -312,7 +312,7 @@ Casa itens da nota com `ItemLista` por `produtoId` (resolvido pelo apelido na im
 
 `finalizarCompra(repos, compra, listaId?)` (em `data/reconciliacao.ts`) roda depois de `salvarNotaImportada`:
 
-- **Sempre** (com ou sem lista): produtos comprados voltam a `cheio` (`aplicarCompra`).
+- **Sempre** (com ou sem lista): a quantidade comprada **soma** ao estoque (`aplicarCompra`; `nivel` vira o rótulo pelo padrão). Reimportar a mesma nota soma só a diferença (`anterior`); nota mais antiga que a última confirmação do estoque não altera nada. Itens novos nascem **não recorrentes**; a conferência da importação mostra "o que vai mudar na despensa" e oferece, por item, "Repor sempre" (`reporSempre`) e "Não é da despensa" (`ignorar`: fica só na nota).
 - **Com lista** (a do `?lista=` do modo compra, ou a lista `em_compra` mais recente; o usuário pode trocar ou desassociar): itens comprados ganham `status: pego`, `quantidadePega` e `precoCentavos` da nota; a compra recebe `listaId`; a lista vira `fechada` com `gastoCentavos`. Lista já fechada por outra compra não é reprocessada.
 - Itens que ficaram de fora **voltam na próxima lista do mesmo tipo** (`garantirLista` traz as pendências da última lista fechada, mesmo que a cobertura não as incluísse).
 - Itens fora da lista **não** são criados como itens: o resumo é recalculado (`resumoDaLista`) a partir da lista e da compra ligada. Todos os itens da nota já viram produto do catálogo na importação (C-21), então não há "oferecer criar produto".

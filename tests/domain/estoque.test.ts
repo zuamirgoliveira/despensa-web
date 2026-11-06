@@ -179,6 +179,32 @@ describe("aplicarCompra", () => {
   });
 
   it("compra vazia", () => expect(aplicarCompra([], { casaId, itens: [] }, "x", ids())).toEqual([]));
+
+  it("soma a quantidade comprada à atual, inclusive acima do padrão", () => {
+    const existente = est(P, "metade", { quantidade: 3 });
+    const r = aplicarCompra([existente], compra("2026-11-04", [[P, 5]]), "2026-11-04T10:00:00Z", ids());
+    expect(r[0].quantidade).toBe(8);
+    expect(aplicarCompra([], compra("2026-11-04", [[P, 1], [P, 2]]), "2026-11-04T10:00:00Z", ids())[0].quantidade).toBe(3);
+  });
+
+  it("reimportar a mesma nota soma só a diferença", () => {
+    const antes = compra("2026-11-04", [[P, 2]]);
+    const existente = est(P, "cheio", { quantidade: 5, confirmadoEm: "2026-11-04T10:00:00Z" });
+    expect(aplicarCompra([existente], antes, "2026-11-04T10:00:00Z", ids(), antes)).toEqual([]);
+    expect(aplicarCompra([existente], compra("2026-11-04", [[P, 3]]), "2026-11-04T10:00:00Z", ids(), antes)[0].quantidade).toBe(6);
+    expect(aplicarCompra([existente], compra("2026-11-04", [[P, 1]]), "2026-11-04T10:00:00Z", ids(), antes)[0].quantidade).toBe(4);
+  });
+
+  it("nota mais antiga que a última confirmação não altera o estoque", () => {
+    const existente = est(P, "metade", { quantidade: 3, confirmadoEm: "2026-11-10T10:00:00Z" });
+    expect(aplicarCompra([existente], compra("2026-11-04", [[P, 5]]), "2026-11-04T10:00:00Z", ids())).toEqual([]);
+  });
+
+  it("nunca fica negativo ao reimportar com menos", () => {
+    const antes = compra("2026-11-04", [[P, 5]]);
+    const existente = est(P, "acabou", { quantidade: 1, confirmadoEm: "2026-11-04T10:00:00Z" });
+    expect(aplicarCompra([existente], compra("2026-11-04", [[P, 1]]), "2026-11-04T10:00:00Z", ids(), antes)[0].quantidade).toBe(0);
+  });
 });
 
 describe("sugerirProvavelmenteAcabando", () => {

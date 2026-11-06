@@ -1,4 +1,5 @@
 // Fechar a compra: atualiza o estoque, reconcilia com a lista e fecha a lista (RF-701 a RF-705).
+import { nivelDeQuantidade, quantidadePadrao } from "@/domain/despensa";
 import { aplicarCompra } from "@/domain/estoque";
 import { reconciliar, resumirCompra, type Reconciliacao, type ResumoDaCompra } from "@/domain/reconciliacao";
 import type { Compra, Lista } from "@/domain/types";
@@ -12,7 +13,7 @@ export type ResultadoFechamento = {
 };
 
 /**
- * Depois de salvar a nota: produtos comprados voltam a `cheio` (sempre, com ou sem lista). Com lista
+ * Depois de salvar a nota: a quantidade comprada **soma** ao estoque (sempre, com ou sem lista; `anterior` evita somar duas vezes ao reimportar). Com lista
  * aberta: casa os itens (comprado, faltou, fora da lista), grava preço e quantidade pegos, liga a compra
  * à lista e fecha a lista guardando o gasto. Itens que ficaram de fora seguem pendentes e voltam na
  * próxima lista do mesmo tipo.
@@ -22,13 +23,15 @@ export async function finalizarCompra(
   compra: Compra,
   listaId: string | undefined,
   agora: Date = new Date(),
+  anterior?: Pick<Compra, "itens">,
 ): Promise<ResultadoFechamento> {
   const estoques = await repos.estoques.listar();
   // o estoque "cheio" vale desde a data da nota (Recife = UTC-3, sem horário de verão), não desde a importação
   const daNota = new Date(`${compra.emissao}-03:00`);
   const confirmadoEm = !Number.isNaN(daNota.getTime()) && daNota <= agora ? daNota.toISOString() : agora.toISOString();
-  for (const e of aplicarCompra(estoques, compra, confirmadoEm, () => crypto.randomUUID())) {
-    await repos.estoques.salvar(e);
+  const padroes = new Map((await repos.produtos.listar()).map((p) => [p.id, quantidadePadrao(p)]));
+  for (const e of aplicarCompra(estoques, compra, confirmadoEm, () => crypto.randomUUID(), anterior)) {
+    await repos.estoques.salvar({ ...e, nivel: nivelDeQuantidade(e.quantidade, padroes.get(e.produtoId)) ?? e.nivel });
   }
 
   const lista = listaId ? await repos.listas.obter(listaId) : undefined;

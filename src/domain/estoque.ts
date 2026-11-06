@@ -89,28 +89,37 @@ export function estoqueAgora(
 }
 
 /**
- * Produto comprado **soma** a quantidade comprada ao estoque (rótulo `cheio`; D-06 refina). Devolve só os registros de estoque que mudam ou nascem
- * (um por produto da compra). `gerarId` é injetado para manter a função pura.
+ * Produto comprado **soma** a quantidade comprada ao estoque (a quantidade pode passar do padrão).
+ * Devolve só os registros que mudam ou nascem (um por produto da compra); `gerarId` é injetado.
+ * - `anterior`: a mesma nota importada antes (reimportação). Só a diferença entra, então reimportar não soma duas vezes.
+ * - Nota mais antiga que a última confirmação do estoque (`confirmadoEm`) não altera nada: a contagem posterior já a inclui.
+ * O rótulo `nivel` fica `cheio`; quem grava o ajusta pelo padrão (`nivelDeQuantidade`).
  */
 export function aplicarCompra(
   estoques: readonly Estoque[],
   compra: Pick<Compra, "casaId" | "itens">,
   confirmadoEm: string,
   gerarId: () => string,
+  anterior?: Pick<Compra, "itens">,
 ): Estoque[] {
   const porProduto = new Map(estoques.map((e) => [e.produtoId, e]));
   const vistos = new Set<string>();
   const saida: Estoque[] = [];
-  const comprada = (id: string) => compra.itens.filter((i) => i.produtoId === id).reduce((s, i) => s + i.quantidade, 0);
+  const somar = (c: Pick<Compra, "itens"> | undefined, id: string) =>
+    c ? c.itens.filter((i) => i.produtoId === id).reduce((s, i) => s + i.quantidade, 0) : 0;
+  const arred = (n: number) => Math.round(n * 1000) / 1000;
   for (const item of compra.itens) {
     const id = item.produtoId;
     if (!id || vistos.has(id)) continue;
     vistos.add(id);
     const atual = porProduto.get(id);
+    const delta = arred(somar(compra, id) - somar(anterior, id));
+    if (atual && soData(confirmadoEm) < soData(atual.confirmadoEm)) continue;
+    if (atual && delta === 0) continue;
     saida.push(
       atual
-        ? { ...atual, nivel: "cheio", quantidade: atual.quantidade + comprada(id), quantidadeExata: undefined, confirmadoEm }
-        : { id: gerarId(), casaId: compra.casaId, produtoId: id, nivel: "cheio", quantidade: comprada(id), confirmadoEm },
+        ? { ...atual, nivel: "cheio", quantidade: arred(Math.max(0, atual.quantidade + delta)), quantidadeExata: undefined, confirmadoEm }
+        : { id: gerarId(), casaId: compra.casaId, produtoId: id, nivel: "cheio", quantidade: Math.max(0, delta), confirmadoEm },
     );
   }
   return saida;
