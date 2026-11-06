@@ -24,7 +24,10 @@ export async function finalizarCompra(
   agora: Date = new Date(),
 ): Promise<ResultadoFechamento> {
   const estoques = await repos.estoques.listar();
-  for (const e of aplicarCompra(estoques, compra, agora.toISOString(), () => crypto.randomUUID())) {
+  // o estoque "cheio" vale desde a data da nota (Recife = UTC-3, sem horário de verão), não desde a importação
+  const daNota = new Date(`${compra.emissao}-03:00`);
+  const confirmadoEm = !Number.isNaN(daNota.getTime()) && daNota <= agora ? daNota.toISOString() : agora.toISOString();
+  for (const e of aplicarCompra(estoques, compra, confirmadoEm, () => crypto.randomUUID())) {
     await repos.estoques.salvar(e);
   }
 

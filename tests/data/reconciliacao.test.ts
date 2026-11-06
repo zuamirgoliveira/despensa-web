@@ -28,7 +28,15 @@ describe("sem lista", () => {
     expect(r).toEqual({ compra });
     const estoques = await repos.estoques.listar();
     expect(estoques).toHaveLength(16);
-    expect(estoques.every((e) => e.nivel === "cheio" && e.confirmadoEm === "2026-11-05T12:00:00.000Z")).toBe(true);
+    const desdeANota = new Date(`${compra.emissao}-03:00`).toISOString();
+    expect(estoques.every((e) => e.nivel === "cheio" && e.confirmadoEm === desdeANota)).toBe(true);
+  });
+
+  it("o estoque vale desde a data da nota, não desde a importação (nota de ontem)", async () => {
+    const compra = await importar({ ...nota, emissao: "2026-11-04T10:00:00" });
+    await finalizarCompra(repos, compra, undefined, new Date("2026-11-05T12:00:00Z"));
+    const estoques = await repos.estoques.listar();
+    expect(estoques.every((e) => e.confirmadoEm === "2026-11-04T13:00:00.000Z")).toBe(true);
   });
 
   it("produto que estava como 'acabou' volta a cheio", async () => {
