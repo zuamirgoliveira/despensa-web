@@ -6,7 +6,7 @@ import { Alert, Button, Card, Details, EmptyState, Input, LinkBotao, useToast } 
 import { criarRepositorios } from "@/data";
 import { adicionarAvulso, alterarQuantidade, garantirListaDaCasa, removerItem, restaurarItem } from "@/data/lista";
 import { useRepositorio } from "@/data/useRepositorio";
-import { estimarCusto } from "@/domain/lista";
+import { estimarCusto, ultimoPrecoUnitario } from "@/domain/lista";
 import { avisoIdaPoucoVantajosa, mercadoHabitualDaCasa } from "@/domain/economia";
 import { custoIdaDoMercado } from "@/domain/ida";
 import { alertasPorProduto } from "@/domain/precos";
@@ -91,7 +91,7 @@ export function ListaInteligente() {
     return `Esta ida tem ${visiveis.length} ${visiveis.length === 1 ? "item" : "itens"}, ${brl(estimativa.totalCentavos)}, e custa ${brl(custoIda)} para ir e voltar. Vale esperar e juntar com outra compra?`;
   })();
 
-  const textoParaCompartilhar = textoDaLista(grupos, dataBR(hojeRecife()));
+  const textoParaCompartilhar = textoDaLista(grupos, dataBR(hojeRecife()), (id) => ultimoPrecoUnitario(id, dados?.compras ?? []));
 
   async function compartilhar(): Promise<void> {
     if (!textoParaCompartilhar) return;

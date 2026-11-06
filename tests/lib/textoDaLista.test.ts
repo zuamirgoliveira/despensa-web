@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { textoDaLista } from "@/lib/textoDaLista";
+import { brl } from "@/lib/format";
 import type { GrupoLista } from "@/lib/agruparLista";
 import type { ItemLista, Produto } from "@/domain/types";
 
@@ -33,6 +34,16 @@ describe("textoDaLista", () => {
       "01/01/2027",
     );
     expect(t).toBe("Lista de compras (01/01/2027)\n\nB\n• W: 2 pct");
+  });
+
+  it("com preço conhecido: valor estimado por item e total; sem preço, só a quantidade", () => {
+    const alho = produto("Alho", "kg");
+    const t = textoDaLista(
+      grupos({ titulo: "A", itens: [{ item: item({ produtoId: alho.id, quantidadeSugerida: 1.5 }), produto: alho }, { item: item({ nomeAvulso: "Pilha" }) }] }),
+      "06/11/2026",
+      (id) => (id === "Alho" ? 1000 : undefined),
+    );
+    expect(t).toBe(`Lista de compras (06/11/2026)\n\nA\n• Alho: 1,5 kg (~${brl(1500)})\n• Pilha: 2\n\nEstimativa: ~${brl(1500)}`);
   });
 
   it("sem nada para comprar: undefined", () => {
