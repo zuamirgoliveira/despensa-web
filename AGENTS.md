@@ -131,6 +131,7 @@ despensa-web/
 │  │  ├─ normalizacao.ts           nome normalizado, chave de produto, parecidos e sugestões de mesclagem
 │  │  ├─ mercados.ts               tipo sugerido pelo nome do emitente
 │  │  ├─ despensa.ts               quantidade atual como base: nível → número, conversão do estoque legado
+│  │  ├─ recorrencia.ts            promover a recorrente (padrão sugerido), sugestões "repor sempre" e "deixar de repor"
 │  │  ├─ estoque.ts                níveis, consumo, cobertura
 │  │  ├─ inicio.ts                 próxima ida, produtos que vencem e lembretes da tela Início
 │  │  ├─ conferencia.ts            quais produtos conferir antes de uma ida, agrupados por local
@@ -292,6 +293,7 @@ Decisões de implementação (`gerarLista(entrada)` devolve `{ ida, itens, resum
 
 - `situacaoDoItem(produto, estoque)`: `sem_registro` (ninguém informou a quantidade), `zerado` (≤ 0), `abaixo` (< padrão), `ok`, `acima` (> padrão é permitido: compra a mais, promoção). Padrão = `Produto.meta` > 0; sem padrão, qualquer quantidade > 0 é `ok`. `quantidadeQueFalta` = `max(0, padrão − atual)`. `nivelDeQuantidade` (≥ 75% cheio, ≥ 35% metade, > 5% acabando, senão acabou) é só rótulo.
 - `gerarListaDaCasa({ produtos, estoques, compras })`: lista única, sem ida nem agenda. Entram produtos **ativos, recorrentes e com registro** que estão zerados (quantidade = padrão, senão última comprada, senão 1 passo) ou abaixo do padrão (quantidade = faltante, arredondada para cima ao passo da unidade). **Não recorrente nunca entra**; se zerou vira aviso (`naoRecorrentesZerados`). Motivos `acabou` e `abaixo`. Estimativa de custo = quantidade × último preço.
+- **Recorrência** (`recorrencia.ts`, só sugere; nada é aplicado sozinho): `padraoSugerido` (meta digitada à mão, senão média por nota, senão meta atual; arredondado ao passo, mínimo um passo), `sugerirReporSempre` (não recorrente, ativo, 3 ou mais notas distintas), `sugerirDeixarDeRepor` (recorrente, já comprado, mais de 90 dias sem compra), `promoverARecorrente` (padrão diferente do sugerido trava `metaManual`) e `rebaixarDeRecorrente` (mantém padrão e histórico).
 - **Transição:** a tela `/lista`, `garantirLista` e `lista.ts` (`gerarLista`, por ida) seguem em uso até a tarefa D-11 trocar a tela e removê-los.
 
 ### 6.3.0 Início (`inicio.ts`, tela `/`)
