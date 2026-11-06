@@ -8,6 +8,7 @@ import { quantidadeDoNivel } from "@/domain/despensa";
 import { passoDaUnidade } from "@/domain/lista";
 import { padraoSugerido } from "@/domain/recorrencia";
 import type { Compra, Mercado, Produto } from "@/domain/types";
+import { HistoricoDoItem } from "@/components/precos/HistoricoDoItem";
 import { FormProduto } from "@/components/catalogo/FormProduto";
 import { lerQuantidade, type LinhaDespensa } from "@/lib/despensaVisao";
 import { numeroBR } from "@/lib/format";
@@ -132,6 +133,9 @@ export function LinhaDespensaItem({ linha, compras, mercados, aoSalvarProduto, a
               Definir
             </Button>
           </form>
+          <Details semBorda titulo="Preço e compras">
+            <HistoricoDoItem produtoId={p.id} compras={compras} mercados={mercados} />
+          </Details>
           <Details semBorda titulo="Mais opções">
             <div className="flex flex-col gap-3">
               <FormProduto key={JSON.stringify(p)} produto={p} mercados={mercados} aoSalvar={(novo) => aoSalvarProduto(p, novo)} />
