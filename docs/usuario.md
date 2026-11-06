@@ -17,7 +17,9 @@
 
 ## A lista de compras
 
-**Lista** é uma só: a lista da casa. Entra todo item **recorrente** que está **zerado** ou com **menos da metade** da quantidade padrão, na quantidade que falta para chegar ao padrão. Os zerados vêm primeiro; depois, do mais vazio para o menos vazio. Ajuste quantidades com + e −, remova o que não precisa e adicione avulsos. Veja a estimativa de custo e os alertas de preço. Regerar a lista mantém suas edições.
+**Lista** é uma só: a lista da casa. Entra todo item **recorrente** que está **zerado** ou com **menos da metade** da quantidade padrão, na quantidade que falta para chegar ao padrão. Os zerados vêm primeiro; depois, do mais vazio para o menos vazio. Ajuste quantidades com + e −, remova o que não precisa e adicione avulsos. Veja a estimativa de custo e os alertas de preço. A lista se atualiza sozinha ao abrir a tela e mantém suas edições.
+
+**Compartilhar lista** abre o menu do celular (WhatsApp, e-mail, Telegram, Instagram etc.) com o texto do que ainda falta, agrupado por seção, por exemplo `• Alho: 2 un`. Você escolhe para quem enviar; o app não envia nada sozinho. Se o aparelho não tiver o menu, o texto é copiado para você colar onde quiser.
 
 O que você não achar, não tiver ou achar caro **não vira outra lista**: o item continua faltando na despensa e aparece de novo na próxima vez.
 

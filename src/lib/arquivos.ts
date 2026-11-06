@@ -29,6 +29,24 @@ export async function compartilharArquivo(
   }
 }
 
+/**
+ * Abre o menu de compartilhar com um texto (WhatsApp, e-mail, Telegram, Instagram...). O app não envia nada a ninguém:
+ * quem decide o destino é a pessoa, no menu do sistema. Mesmos resultados de `compartilharArquivo`.
+ */
+export async function compartilharTexto(
+  texto: string,
+  titulo: string,
+  nav: NavegadorCompartilhar | undefined = typeof navigator === "undefined" ? undefined : navigator,
+): Promise<ResultadoCompartilhar> {
+  if (!nav?.share) return "indisponivel";
+  try {
+    await nav.share({ title: titulo, text: texto });
+    return "compartilhado";
+  } catch (e) {
+    return e instanceof DOMException && e.name === "AbortError" ? "cancelado" : "indisponivel";
+  }
+}
+
 export function baixarArquivo(arquivo: File, doc: Document = document): void {
   const url = URL.createObjectURL(arquivo);
   const a = doc.createElement("a");
