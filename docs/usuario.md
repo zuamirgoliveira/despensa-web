@@ -23,10 +23,12 @@ O que você não achar, não tiver ou achar caro **não vira outra lista**: o it
 
 ## No mercado (funciona sem internet)
 
-1. **Iniciar compra**. Toque em **Peguei** em cada item; ajuste a quantidade; informe o preço se quiser (nunca é obrigatório).
-2. **Não encontrei** e **Adiar** deixam o item faltando (ele continua na lista). **Adicionar extra** para o que não estava nela.
-3. O total corrente aparece no topo. Se definir um orçamento, o app avisa quando chegar perto ou passar.
-4. Ao terminar, escolha **um** dos dois caminhos (não use os dois na mesma compra, senão a quantidade soma duas vezes):
+1. **Iniciar compra**. Cada item tem uma linha com três botões do mesmo tamanho: **Peguei**, **Não peguei** e o campo de **preço** (opcional; digite antes de tocar em Peguei, se quiser).
+2. **Peguei**: o item vira uma linha com ✓ verde e o nome riscado, e desce para o fim da seção. Toque no ✓ para desfazer; toque no nome para ajustar quantidade ou preço.
+3. **Não peguei** (não achou, não tinha ou estava caro): o item vira uma linha amarela no fim da lista e **continua faltando** na despensa. Toque nele para desfazer.
+4. Uma seção com tudo resolvido desce para baixo das que ainda têm itens em aberto. Cada seção mostra quantos itens já foram pegos.
+5. **Adicionar extra** para o que não estava na lista. O total corrente fica no topo; se definir um orçamento, o app avisa quando chegar perto ou passar.
+6. Com tudo resolvido aparece "Terminar compra" no topo. Escolha **um** dos dois caminhos (não use os dois na mesma compra, senão a quantidade soma duas vezes):
    - **Terminar sem nota:** o que você pegou soma à despensa e a lista fecha.
    - **Terminar compra (importar a nota):** segue para a importação, que soma o que está na nota.
 

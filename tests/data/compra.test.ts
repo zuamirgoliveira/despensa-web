@@ -88,3 +88,32 @@ describe("extras e orçamento", () => {
     expect((await definirOrcamento(repos, l, undefined)).orcamentoCentavos).toBeUndefined();
   });
 });
+
+describe("cópia antiga do item na tela", () => {
+  it("pegar com a cópia antiga não apaga o preço salvo um instante antes", async () => {
+    const antigo = await novoItem();
+    await definirPreco(repos, antigo, 500); // salvo ao sair do campo
+    const pego = await alternarPego(repos, antigo); // a tela ainda tem a cópia sem preço
+    expect(pego).toMatchObject({ status: "pego", precoCentavos: 500 });
+  });
+  it("mudar a quantidade com cópia antiga preserva o preço e o status", async () => {
+    const antigo = await novoItem();
+    await alternarPego(repos, antigo);
+    const r = await definirQuantidadePega(repos, antigo, 3);
+    expect(r).toMatchObject({ status: "pego", quantidadePega: 3 });
+  });
+});
+
+describe("alterações simultâneas no mesmo item", () => {
+  it("preço e peguei disparados juntos: nenhum sobrescreve o outro", async () => {
+    const antigo = await novoItem();
+    await Promise.all([definirPreco(repos, antigo, 750), alternarPego(repos, antigo), definirQuantidadePega(repos, antigo, 4)]);
+    const [salvo] = await repos.itensLista.listarPorLista(antigo.listaId);
+    expect(salvo).toMatchObject({ status: "pego", precoCentavos: 750, quantidadePega: 4 });
+  });
+  it("na ordem inversa o resultado é o mesmo", async () => {
+    const antigo = await novoItem();
+    await Promise.all([alternarPego(repos, antigo), definirPreco(repos, antigo, 750)]);
+    expect((await repos.itensLista.listarPorLista(antigo.listaId))[0]).toMatchObject({ status: "pego", precoCentavos: 750 });
+  });
+});

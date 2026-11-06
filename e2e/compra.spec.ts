@@ -40,13 +40,21 @@ test("modo compra offline: marcar, preço, extra, não encontrei, orçamento e r
   await expect(page.getByRole("heading", { name: "Modo compra" })).toBeVisible();
   await context.setOffline(true);
 
-  // pegar + preço
-  await linha(page, "Melao Japones").getByRole("button", { name: "Peguei", exact: true }).click();
-  await expect(linha(page, "Melao Japones").getByRole("button", { name: /Peguei ✓/ })).toBeVisible();
+  // pegar: o card vira uma linha com ✓; o preço se edita ao abrir a linha
+  await linha(page, "Melao Japones").getByRole("button", { name: "Peguei Melao Japones", exact: true }).click();
+  await expect(linha(page, "Melao Japones").getByRole("button", { name: "Desfazer peguei: Melao Japones" })).toBeVisible();
+  await expect(linha(page, "Melao Japones").getByLabel(/Preço unitário de Melao Japones/)).toHaveCount(0); // linha recolhida
+  await linha(page, "Melao Japones").getByRole("button", { name: "Editar Melao Japones" }).click();
   const preco = linha(page, "Melao Japones").getByLabel(/Preço unitário de Melao Japones/);
   await preco.fill("8,00");
   await preco.blur();
   await expect(page.getByLabel("Total corrente")).not.toContainText("R$ 0,00");
+  await expect(linha(page, "Melao Japones")).toContainText("R$ 8,00");
+
+  // preço informado antes de pegar (no próprio card pendente) aparece na linha
+  await linha(page, "Goiaba").getByLabel(/Preço unitário de Goiaba/).fill("5,00");
+  await linha(page, "Goiaba").getByRole("button", { name: "Peguei Goiaba", exact: true }).click();
+  await expect(linha(page, "Goiaba")).toContainText("R$ 5,00");
 
   // extra já entra como pego, com preço, e soma no total
   const totalAntes = await page.getByLabel("Total corrente").textContent();
@@ -56,13 +64,11 @@ test("modo compra offline: marcar, preço, extra, não encontrei, orçamento e r
   await page.getByRole("button", { name: "Adicionar extra" }).click();
   await expect(linha(page, "Chiclete").getByText("Extra", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Total corrente")).not.toHaveText(totalAntes ?? "");
-  await expect(page.getByText("2 de 17 itens")).toBeVisible();
+  await expect(page.getByText("3 de 17 itens")).toBeVisible();
 
-  // não encontrei e adiar
-  await linha(page, "Banana Prata").getByRole("button", { name: "Não encontrei Banana Prata" }).click();
-  await expect(linha(page, "Banana Prata").getByText(/Não encontrei: volta na próxima ida/)).toBeVisible();
-  await linha(page, "Cenoura").getByRole("button", { name: "Adiar Cenoura" }).click();
-  await expect(linha(page, "Cenoura").getByText("Adiado", { exact: true })).toBeVisible();
+  // não peguei: linha amarela, no fim da lista
+  await linha(page, "Banana Prata").getByRole("button", { name: "Não peguei Banana Prata" }).click();
+  await expect(linha(page, "Banana Prata").getByRole("button", { name: "Desfazer não peguei: Banana Prata" })).toContainText("Não peguei");
 
   // orçamento baixo: alerta ao passar
   const orc = page.getByLabel("Orçamento da compra (opcional)");
@@ -73,21 +79,43 @@ test("modo compra offline: marcar, preço, extra, não encontrei, orçamento e r
   // recarregar offline: tudo preservado
   await page.reload();
   await expect(page.getByRole("heading", { name: "Modo compra" })).toBeVisible();
-  await expect(linha(page, "Melao Japones").getByRole("button", { name: /Peguei ✓/ })).toBeVisible();
+  await expect(linha(page, "Melao Japones").getByRole("button", { name: "Desfazer peguei: Melao Japones" })).toBeVisible();
+  await linha(page, "Melao Japones").getByRole("button", { name: "Editar Melao Japones" }).click();
   await expect(linha(page, "Melao Japones").getByLabel(/Preço unitário de Melao Japones/)).toHaveValue("8,00");
   await expect(linha(page, "Chiclete").getByText("Extra", { exact: true })).toBeVisible();
-  await expect(linha(page, "Banana Prata").getByText(/Não encontrei: volta na próxima ida/)).toBeVisible();
-  await expect(page.getByText("2 de 17 itens")).toBeVisible();
+  await expect(linha(page, "Banana Prata").getByRole("button", { name: "Desfazer não peguei: Banana Prata" })).toBeVisible();
+  await expect(page.getByText("3 de 17 itens")).toBeVisible(); // melão, goiaba e o extra
   await expect(page.getByText(/Passou do orçamento/)).toBeVisible();
 
-  // pegos vão para o fim do grupo: o primeiro item do grupo não é o Melão
-  const primeiro = page.getByRole("list").nth(0).getByRole("listitem").first();
-  await expect(primeiro).not.toContainText("Melao Japones");
+  // ordem no grupo: pendentes primeiro, pegos depois e "não peguei" por último
+  const grupo = page.getByRole("list").nth(0).getByRole("listitem");
+  await expect(grupo.first()).not.toContainText("Melao Japones");
+  await expect(grupo.last()).toContainText("Banana Prata");
 
-  // desfazer o peguei
-  await linha(page, "Melao Japones").getByRole("button", { name: /Peguei ✓/ }).click();
-  await expect(page.getByText("1 de 17 itens")).toBeVisible();
+  // desfazer o peguei e o não peguei
+  await linha(page, "Melao Japones").getByRole("button", { name: "Desfazer peguei: Melao Japones" }).click();
+  await expect(page.getByText("2 de 17 itens")).toBeVisible();
+  await linha(page, "Banana Prata").getByRole("button", { name: "Desfazer não peguei: Banana Prata" }).click();
+  await expect(linha(page, "Banana Prata").getByRole("button", { name: "Peguei Banana Prata", exact: true })).toBeVisible();
 
   await expect(page.getByRole("link", { name: "Terminar compra" })).toHaveAttribute("href", /^\/importar\?lista=/);
   semViolacaoDeCsp(erros);
+});
+
+test("tudo resolvido: aparece o atalho para terminar a compra e a seção concluída vai para baixo", async ({ page }) => {
+  await prepararLista(page);
+  await expect(page.getByTestId("compra-resolvida")).toHaveCount(0);
+  for (let i = 0; i < 15; i++) await page.getByRole("button", { name: /^Peguei / }).first().click();
+  await expect(page.getByText("15 de 16 itens")).toBeVisible();
+  await page.getByRole("button", { name: /^Não peguei / }).first().click();
+  await expect(page.getByTestId("compra-resolvida")).toBeVisible();
+  await expect(page.getByTestId("compra-resolvida").getByRole("link", { name: /Terminar compra/ })).toHaveAttribute("href", /^\/importar\?lista=/);
+});
+
+test("cada seção mostra quantos itens já foram pegos", async ({ page }) => {
+  await prepararLista(page);
+  const secao = page.getByRole("heading", { level: 2, name: /^Hortifruti/ });
+  await expect(secao).toContainText("0/16");
+  await page.getByRole("button", { name: /^Peguei / }).first().click();
+  await expect(secao).toContainText("1/16");
 });

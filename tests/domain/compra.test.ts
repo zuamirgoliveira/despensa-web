@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { estadoDoOrcamento, ordenarParaCompra, progressoDaCompra, quantidadeDoItem, totalCorrente } from "@/domain/compra";
+import { compraResolvida, estadoDoOrcamento, foiNaoPego, ordenarParaCompra, ordenarSecoes, progressoDaCompra, quantidadeDoItem, totalCorrente } from "@/domain/compra";
 import type { ItemLista } from "@/domain/types";
 
 const casaId = crypto.randomUUID();
@@ -45,12 +45,42 @@ describe("progressoDaCompra", () => {
 });
 
 describe("ordenarParaCompra", () => {
-  it("pendentes, depois não encontrados/adiados, e pegos no fim, mantendo a ordem original", () => {
+  it("pendentes, depois pegos, e por último os não peguei, mantendo a ordem original", () => {
     const [a, b, c, d, e] = [item({ status: "pego" }), item({ status: "pendente" }), item({ status: "adiado" }), item({ status: "pendente" }), item({ status: "extra" })];
     const r = ordenarParaCompra([a, b, c, d, e].map((i) => ({ item: i })));
-    expect(r.map((x) => x.item.id)).toEqual([b.id, d.id, c.id, a.id, e.id]);
+    expect(r.map((x) => x.item.id)).toEqual([b.id, d.id, a.id, e.id, c.id]);
+  });
+  it("não encontrado fica abaixo dos pegos", () => {
+    const [nao, pego] = [item({ status: "nao_encontrado" }), item({ status: "pego" })];
+    expect(ordenarParaCompra([nao, pego].map((i) => ({ item: i }))).map((x) => x.item.id)).toEqual([pego.id, nao.id]);
   });
   it("vazio", () => expect(ordenarParaCompra([])).toEqual([]));
+});
+
+describe("ordenarSecoes", () => {
+  const sec = (nome: string, ...status: ItemLista["status"][]) => ({ nome, itens: status.map((s) => ({ item: item({ status: s }) })) });
+  it("com pendente primeiro; concluídas só com pegos; concluídas com não peguei por último; ordem estável", () => {
+    const grupos = [sec("Hortifruti", "pego", "pego"), sec("Mercearia", "pendente"), sec("Limpeza", "pego", "nao_encontrado"), sec("Bebidas", "pego", "pendente"), sec("Carnes", "pego")];
+    expect(ordenarSecoes(grupos).map((g) => g.nome)).toEqual(["Mercearia", "Bebidas", "Hortifruti", "Carnes", "Limpeza"]);
+  });
+  it("extra conta como pego; vazio", () => {
+    expect(ordenarSecoes([sec("A", "extra"), sec("B", "pendente")]).map((g) => g.nome)).toEqual(["B", "A"]);
+    expect(ordenarSecoes([])).toEqual([]);
+  });
+});
+
+describe("compraResolvida / foiNaoPego", () => {
+  it("só quando há itens e nenhum pendente (removidos não contam)", () => {
+    expect(compraResolvida([])).toBe(false);
+    expect(compraResolvida([item({ status: "pego" }), item({ status: "nao_encontrado" })])).toBe(true);
+    expect(compraResolvida([item({ status: "pego" }), item({ status: "pendente" })])).toBe(false);
+    expect(compraResolvida([item({ status: "pego" }), item({ status: "pendente", removido: true })])).toBe(true);
+  });
+  it("adiado vale como não peguei", () => {
+    expect(foiNaoPego({ status: "adiado" })).toBe(true);
+    expect(foiNaoPego({ status: "nao_encontrado" })).toBe(true);
+    expect(foiNaoPego({ status: "pego" })).toBe(false);
+  });
 });
 
 describe("estadoDoOrcamento", () => {

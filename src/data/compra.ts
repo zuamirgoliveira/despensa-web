@@ -6,6 +6,23 @@ import type { Repositorios } from "./repositorios";
 
 const arred = (n: number): number => Math.max(0, Math.round(n * 1000) / 1000);
 
+/** Fila por item: as alterações de um mesmo item rodam uma de cada vez (leitura + gravação), então nenhuma sobrescreve a outra. */
+const filas = new Map<string, Promise<unknown>>();
+function emSerie<T>(itemId: string, tarefa: () => Promise<T>): Promise<T> {
+  const anterior = filas.get(itemId) ?? Promise.resolve();
+  const atual = anterior.then(tarefa, tarefa);
+  filas.set(itemId, atual.catch(() => undefined));
+  return atual;
+}
+
+/**
+ * O item como está gravado agora. A tela pode estar com uma cópia antiga (ex.: o preço foi salvo ao sair do campo
+ * um instante antes do toque em "Peguei"); gravar a cópia antiga por cima apagaria a edição mais nova.
+ */
+async function atual(repos: Repositorios, item: ItemLista): Promise<ItemLista> {
+  return (await repos.itensLista.obter(item.id)) ?? item;
+}
+
 /** Abre a lista para compra: passa a `em_compra` (uma lista fechada não reabre). */
 export async function iniciarCompra(repos: Repositorios, listaId: string): Promise<Lista | undefined> {
   const lista = await repos.listas.obter(listaId);
@@ -15,24 +32,30 @@ export async function iniciarCompra(repos: Repositorios, listaId: string): Promi
 }
 
 /** Peguei: pendente → pego (com a quantidade editada ou a sugerida). Tocar de novo desfaz. */
-export async function alternarPego(repos: Repositorios, item: ItemLista): Promise<ItemLista> {
-  if (item.status === "pego") return repos.itensLista.salvar({ ...item, status: "pendente" });
-  return repos.itensLista.salvar({ ...item, status: "pego", quantidadePega: item.quantidadePega ?? item.quantidadeSugerida });
+export function alternarPego(repos: Repositorios, anterior: ItemLista): Promise<ItemLista> {
+  return emSerie(anterior.id, async () => {
+    const item = await atual(repos, anterior);
+    if (item.status === "pego") return repos.itensLista.salvar({ ...item, status: "pendente" });
+    return repos.itensLista.salvar({ ...item, status: "pego", quantidadePega: item.quantidadePega ?? item.quantidadeSugerida });
+  });
 }
 
-/** "Não encontrei" (volta na próxima ida) e "Adiar". Tocar de novo no mesmo estado volta a pendente. */
-export async function marcarEstado(repos: Repositorios, item: ItemLista, estado: "nao_encontrado" | "adiado"): Promise<ItemLista> {
-  return repos.itensLista.salvar({ ...item, status: item.status === estado ? "pendente" : estado, quantidadePega: undefined });
+/** "Não peguei" (`nao_encontrado`; `adiado` é legado). O item fica faltando e volta pela regra da lista. Tocar de novo no mesmo estado volta a pendente. */
+export function marcarEstado(repos: Repositorios, anterior: ItemLista, estado: "nao_encontrado" | "adiado"): Promise<ItemLista> {
+  return emSerie(anterior.id, async () => {
+    const item = await atual(repos, anterior);
+    return repos.itensLista.salvar({ ...item, status: item.status === estado ? "pendente" : estado, quantidadePega: undefined });
+  });
 }
 
 /** Ajusta a quantidade pega; não muda o status. */
-export async function definirQuantidadePega(repos: Repositorios, item: ItemLista, quantidade: number): Promise<ItemLista> {
-  return repos.itensLista.salvar({ ...item, quantidadePega: arred(quantidade) });
+export function definirQuantidadePega(repos: Repositorios, anterior: ItemLista, quantidade: number): Promise<ItemLista> {
+  return emSerie(anterior.id, async () => repos.itensLista.salvar({ ...(await atual(repos, anterior)), quantidadePega: arred(quantidade) }));
 }
 
 /** Preço unitário opcional (nunca obrigatório); `undefined` limpa. */
-export async function definirPreco(repos: Repositorios, item: ItemLista, precoCentavos: number | undefined): Promise<ItemLista> {
-  return repos.itensLista.salvar({ ...item, precoCentavos });
+export function definirPreco(repos: Repositorios, anterior: ItemLista, precoCentavos: number | undefined): Promise<ItemLista> {
+  return emSerie(anterior.id, async () => repos.itensLista.salvar({ ...(await atual(repos, anterior)), precoCentavos }));
 }
 
 export async function removerDaCompra(repos: Repositorios, item: ItemLista): Promise<void> {

@@ -2,6 +2,8 @@
 
 ## Não lançado (reposicionamento: a despensa em primeiro lugar)
 
+- **Modo compra compacto:** item pego vira uma linha (✓ verde, nome riscado); "Não encontrei" e "Adiar" viram **"Não peguei"** (linha amarela, no fim da lista); card pendente com Peguei, Não peguei e preço na mesma linha; seções concluídas descem; cabeçalho mais baixo; cartão "Tudo resolvido". Corrige o preço digitado se perder ao tocar em Peguei.
+
 - **Câmera:** o foco contínuo agora é confirmado e mostrado na tela; toque na imagem ou botão Focar refoca; "Tirar foto" usa a câmera do app com botão Fotografar (foto em resolução máxima via ImageCapture) em vez do seletor do navegador.
 
 - **Lista única:** só existe a lista da casa; entram os recorrentes zerados ou com menos de 50% do padrão, ordenados do mais vazio ao menos vazio. Sai a divisão entre mercados e o botão "Ver a lista de outro mercado"; listas abertas do modelo antigo são fechadas.

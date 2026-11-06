@@ -10,10 +10,10 @@ import {
 } from "@/data/compra";
 import { useRepositorio } from "@/data/useRepositorio";
 import { alertasPorProduto } from "@/domain/precos";
-import { estadoDoOrcamento, ordenarParaCompra, progressoDaCompra, totalCorrente } from "@/domain/compra";
+import { compraResolvida, estadoDoOrcamento, ordenarParaCompra, ordenarSecoes, progressoDaCompra, totalCorrente } from "@/domain/compra";
 import { agruparPorCategoria, type ItemVisao } from "@/lib/agruparLista";
 import { centavosParaCampo, reaisParaCentavos } from "@/lib/dinheiro";
-import { brl, dataBR } from "@/lib/format";
+import { brl } from "@/lib/format";
 import { manterTelaAcesa } from "@/lib/wakeLock";
 import { LinhaDaCompra } from "./LinhaDaCompra";
 
@@ -59,7 +59,7 @@ export function ModoCompra() {
     const visao: ItemVisao[] = itens
       .filter((i) => !i.removido)
       .map((item) => ({ item, produto: item.produtoId ? dados?.produtos.get(item.produtoId) : undefined }));
-    return agruparPorCategoria(ordenarParaCompra(visao)).map((g) => ({ ...g, itens: ordenarParaCompra(g.itens) }));
+    return ordenarSecoes(agruparPorCategoria(ordenarParaCompra(visao)).map((g) => ({ ...g, itens: ordenarParaCompra(g.itens) })));
   }, [itens, dados]);
 
   if (semLista) {
@@ -86,25 +86,31 @@ export function ModoCompra() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="sticky top-0 z-30 -mx-4 flex flex-col gap-2 border-b border-borda bg-fundo px-4 py-3">
+      <div className="sticky top-0 z-30 -mx-4 flex flex-col gap-1 border-b border-borda bg-fundo px-4 py-2">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-sm text-suave">
-            Lista de {dataBR(lista.data)}
+          <p className="text-2xl font-semibold" aria-label="Total corrente">
+            {brl(total)}
+            {lista.estimativaCentavos !== undefined ? (
+              <span className="ml-2 text-sm font-normal text-suave">de {brl(lista.estimativaCentavos)} estimados</span>
+            ) : null}
           </p>
-          <p className="text-sm" aria-live="polite">
+          <p className="shrink-0 text-sm" aria-live="polite">
             {progresso.pegos} de {progresso.total} itens
           </p>
         </div>
         <Progress rotulo="Itens pegos" valor={progresso.pegos} maximo={Math.max(progresso.total, 1)} />
-        <p className="text-2xl font-semibold" aria-label="Total corrente">
-          {brl(total)}
-          {lista.estimativaCentavos !== undefined ? (
-            <span className="ml-2 text-sm font-normal text-suave">de {brl(lista.estimativaCentavos)} estimados</span>
-          ) : null}
-        </p>
         {estado === "estourou" ? <Alert tipo="erro">Passou do orçamento de {brl(lista.orcamentoCentavos as number)}.</Alert> : null}
         {estado === "perto" ? <Alert tipo="aviso">Perto do orçamento de {brl(lista.orcamentoCentavos as number)}.</Alert> : null}
       </div>
+
+      {compraResolvida(itens) ? (
+        <Card className="flex flex-col gap-2" data-testid="compra-resolvida">
+          <p className="font-medium">Tudo resolvido. Pode terminar a compra.</p>
+          <LinkBotao href={`/importar?lista=${lista.id}`} tamanho="grande">
+            Terminar compra (importar a nota)
+          </LinkBotao>
+        </Card>
+      ) : null}
 
       {itens.filter((i) => !i.removido).length === 0 ? <EmptyState titulo="A lista está vazia">Adicione extras abaixo ou volte e gere a lista.</EmptyState> : null}
 
@@ -112,8 +118,11 @@ export function ModoCompra() {
         <section key={g.titulo} aria-labelledby={`g-${g.titulo}`} className="flex flex-col gap-2">
           <h2 id={`g-${g.titulo}`} className="text-sm">
             {g.titulo}
+            <span className="ml-2 font-sans text-xs font-normal text-suave">
+              {g.itens.filter((v) => v.item.status === "pego" || v.item.status === "extra").length}/{g.itens.length}
+            </span>
           </h2>
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-2">
             {g.itens.map(({ item, produto }) => (
               <LinhaDaCompra
                 key={item.id}

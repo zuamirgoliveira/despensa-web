@@ -27,10 +27,33 @@ export function progressoDaCompra(itens: readonly ItemLista[]): Progresso {
   return { pegos: ativos.filter((i) => CONTA_COMO_PEGO.has(i.status)).length, total: ativos.length };
 }
 
-/** Pendentes primeiro; pegos vão para o fim. A ordem original é mantida dentro de cada grupo. */
+const NAO_PEGO = new Set<ItemLista["status"]>(["nao_encontrado", "adiado"]);
+
+/** Resolvido sem comprar: "Não peguei" (o status `adiado` é legado e vale o mesmo). */
+export function foiNaoPego(i: Pick<ItemLista, "status">): boolean {
+  return NAO_PEGO.has(i.status);
+}
+
+/** Pendentes primeiro, depois os pegos, e por último os "não peguei". A ordem original é mantida dentro de cada grupo. */
 export function ordenarParaCompra<T extends { item: ItemLista }>(itens: readonly T[]): T[] {
-  const peso = (i: ItemLista): number => (CONTA_COMO_PEGO.has(i.status) ? 2 : i.status === "pendente" ? 0 : 1);
+  const peso = (i: ItemLista): number => (i.status === "pendente" ? 0 : CONTA_COMO_PEGO.has(i.status) ? 1 : 2);
   return itens.map((v, idx) => ({ v, idx })).sort((a, b) => peso(a.v.item) - peso(b.v.item) || a.idx - b.idx).map((x) => x.v);
+}
+
+/**
+ * Seções (categorias) na ordem de exibição: primeiro as que ainda têm item pendente; depois as concluídas só com pegos;
+ * por último as concluídas que têm "não peguei". Dentro de cada faixa, a ordem original é mantida.
+ */
+export function ordenarSecoes<G extends { itens: readonly { item: ItemLista }[] }>(grupos: readonly G[]): G[] {
+  const faixa = (g: G): number =>
+    g.itens.some((v) => v.item.status === "pendente") ? 0 : g.itens.some((v) => foiNaoPego(v.item)) ? 2 : 1;
+  return grupos.map((g, idx) => ({ g, idx })).sort((a, b) => faixa(a.g) - faixa(b.g) || a.idx - b.idx).map((x) => x.g);
+}
+
+/** Todos os itens ativos já foram resolvidos (pegos ou "não peguei"): hora de terminar a compra. */
+export function compraResolvida(itens: readonly ItemLista[]): boolean {
+  const ativos = itens.filter((i) => !i.removido);
+  return ativos.length > 0 && ativos.every((i) => i.status !== "pendente");
 }
 
 export type EstadoOrcamento = "sem_orcamento" | "dentro" | "perto" | "estourou";

@@ -56,10 +56,10 @@ test("ciclo da E1: importar → agenda → conferir → lista → comprar offlin
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
   await page.reload();
   await context.setOffline(true);
-  await page.getByRole("listitem").filter({ hasText: "Melao Japones" }).first().getByRole("button", { name: "Peguei", exact: true }).click();
+  await page.getByRole("listitem").filter({ hasText: "Melao Japones" }).first().getByRole("button", { name: "Peguei Melao Japones", exact: true }).click();
   await page.getByLabel("Nome do extra").fill("Chiclete");
   await page.getByRole("button", { name: "Adicionar extra" }).click();
-  await page.getByRole("button", { name: "Não encontrei Cenoura" }).click();
+  await page.getByRole("button", { name: "Não peguei Cenoura" }).click();
   await page.reload();
   await expect(page.getByText("2 de 17 itens")).toBeVisible(); // melão + extra
   await context.setOffline(false);

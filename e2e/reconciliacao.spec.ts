@@ -32,7 +32,7 @@ test("fluxo completo: lista → compra → nota → resumo, com estoque e pendê
   await page.goto("/lista?ida=hortifruti_semanal");
   await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(16);
   await page.getByRole("link", { name: "Iniciar compra" }).click();
-  await page.getByRole("listitem").filter({ hasText: "Melao Japones" }).first().getByRole("button", { name: "Peguei", exact: true }).click();
+  await page.getByRole("listitem").filter({ hasText: "Melao Japones" }).first().getByRole("button", { name: "Peguei Melao Japones", exact: true }).click();
   await page.getByRole("link", { name: "Terminar compra" }).click();
   await expect(page).toHaveURL(/\/importar\?lista=/);
 

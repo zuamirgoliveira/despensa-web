@@ -307,9 +307,11 @@ Abre com o **estado da despensa**: quantos itens faltam (recorrentes zerados ou 
 
 ### 6.3.1 Modo compra (`compra.ts`, tela `/compra?lista=<id>`)
 
-- Abrir a tela coloca a lista em `em_compra`. Cada toque persiste na hora (offline). Status do item: `pendente` → `pego` (grava `quantidadePega`; tocar de novo desfaz), `nao_encontrado` (volta como pendente na próxima ida, C-26), `adiado`, `extra` (comprado fora da lista, já entra como pego).
-- `ItemLista.precoCentavos` é o **preço unitário** informado (opcional, nunca bloqueia). Total corrente = Σ `quantidadePega (ou sugerida) × preço` dos itens `pego`/`extra` com preço. Orçamento opcional por lista (`Lista.orcamentoCentavos`): aviso a partir de 90%, alerta ao passar de 100%.
-- Pegos vão para o fim do grupo (`ordenarParaCompra`). A tela mantém a tela acesa pela Screen Wake Lock API quando existe (`lib/wakeLock.ts`, silencioso sem suporte). "Terminar compra" leva a `/importar?lista=<id>` (a reconciliação é a C-26).
+- Abrir a tela coloca a lista em `em_compra`. Cada toque persiste na hora (offline) e **lê o item gravado antes de alterar** (a tela pode ter cópia antiga; sem isso o preço salvo ao sair do campo se perdia ao tocar em "Peguei"). Status do item: `pendente` → `pego` (grava `quantidadePega`; tocar no ✓ desfaz), `nao_encontrado` (**"Não peguei"**: o item segue faltando e volta pela regra da lista; `adiado` é legado e vale o mesmo), `extra` (comprado fora da lista, já entra como pego).
+- **Cards:** pendente = nome + quantidade (−/+) e **uma linha com três controles do mesmo tamanho: Peguei, Não peguei e o preço**. Pego = **uma linha** de 44 px (✓ verde desfaz; o nome, riscado, abre quantidade e preço; mostra `qtd · preço`). Não peguei = linha mínima **amarela** (token `aviso`, ícone ✕ e texto "Não peguei"; amarelo e não vermelho porque o vermelho é só de erro), desfaz ao tocar.
+- **Ordem** (`ordenarParaCompra`, `ordenarSecoes`): dentro da seção, pendentes → pegos → não peguei. Seções com item pendente primeiro; depois as concluídas só com pegos; por último as concluídas com "não peguei". Cada seção mostra `pegos/total`. Quando nada está pendente (`compraResolvida`) aparece um cartão "Tudo resolvido" com "Terminar compra" no topo.
+- `ItemLista.precoCentavos` é o **preço unitário** informado (opcional, nunca bloqueia). Total corrente = Σ `quantidadePega (ou sugerida) × preço` dos itens `pego`/`extra` com preço. Orçamento opcional por lista (`Lista.orcamentoCentavos`): aviso a partir de 90%, alerta ao passar de 100%. Cabeçalho fixo compacto: total, progresso e barra.
+- A tela mantém a tela acesa pela Screen Wake Lock API quando existe (`lib/wakeLock.ts`, silencioso sem suporte). Dois caminhos ao terminar: "Terminar compra" → `/importar?lista=<id>` (a nota soma e reconcilia) ou "Terminar sem nota" (soma o que foi pego).
 
 ### 6.4 Reconciliação (`reconciliacao.ts`)
 
