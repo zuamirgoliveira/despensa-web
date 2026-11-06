@@ -1,18 +1,23 @@
 // Dados da tela Início ("Hoje"): próxima ida, quantos produtos vencem nela e lembretes.
-import { dataRecife, diasEntre } from "@/lib/datas";
-import { proximaIdaDoTipo, type Ida } from "./agenda";
-import { gerarLista, type EntradaLista } from "./lista";
-import type { AgendaIda, Compra, Lista, Mercado, TipoIda } from "./types";
+import { dataRecife, diasEntre, soData } from "@/lib/datas";
+import { idaSeguinte, proximaIdaDoTipo, type Ida } from "./agenda";
+import { gerarListaDaCasa } from "./despensa";
+import type { AgendaIda, Compra, Estoque, Lista, Mercado, Produto, TipoIda } from "./types";
 
 /** Em empate de data, a feira vem antes (é a ida mais pesada). */
 const ORDEM_EMPATE: TipoIda[] = ["feira_mensal", "mercado_semanal", "hortifruti_semanal"];
 
 export type ProximaIda = Ida & { diasAte: number };
 
-/** A próxima ida da agenda, de qualquer tipo (hoje conta). `undefined` sem nenhuma agenda. */
-export function proximaIdaGeral(agendas: readonly AgendaIda[], hoje: string): ProximaIda | undefined {
+/**
+ * A próxima ida da agenda, de qualquer tipo (hoje conta). `undefined` sem nenhuma agenda.
+ * Com `compras`, uma ida cuja data já tem compra importada é dada como feita e passa para a seguinte do mesmo tipo.
+ */
+export function proximaIdaGeral(agendas: readonly AgendaIda[], hoje: string, compras: readonly Compra[] = []): ProximaIda | undefined {
+  const datasComprou = new Set(compras.map((c) => soData(c.emissao)));
   const idas = ORDEM_EMPATE.flatMap((t) => {
-    const i = proximaIdaDoTipo(agendas, t, hoje);
+    let i = proximaIdaDoTipo(agendas, t, hoje);
+    if (i && datasComprou.has(i.data)) i = idaSeguinte(agendas, t, i.data);
     return i ? [i] : [];
   });
   const primeira = idas.sort((a, b) => a.data.localeCompare(b.data))[0];
@@ -34,25 +39,40 @@ export function mercadosComEstimativaPendente(mercados: readonly Mercado[], comp
 }
 
 export type ResumoDoDia = {
+  /** Itens ativos da despensa. */
+  itens: number;
+  /** Recorrentes que iriam para a lista agora (zerados ou abaixo do padrão). */
+  faltando: number;
+  /** Desses, os zerados. */
+  zerados: number;
+  /** Eventuais (não recorrentes) que acabaram: não vão para a lista sozinhos. */
+  eventuaisZerados: number;
   proxima?: ProximaIda;
-  /** Itens que a lista da próxima ida teria agora. */
-  quantosVencem: number;
   notasPendentes: Lista[];
   estimativasPendentes: Mercado[];
-  /** Nenhuma nota importada ainda. */
-  semNotas: boolean;
+  /** Despensa vazia e nenhuma nota importada: tela de boas-vindas. */
+  semNada: boolean;
 };
 
-export function resumirDia(
-  e: Omit<EntradaLista, "tipo"> & { listas: readonly Lista[]; mercados: readonly Mercado[] },
-): ResumoDoDia {
-  const proxima = proximaIdaGeral(e.agendas, e.hoje);
-  const lista = proxima && gerarLista({ ...e, tipo: proxima.tipo });
+export function resumirDia(e: {
+  hoje: string;
+  produtos: readonly Produto[];
+  estoques: readonly Estoque[];
+  compras: readonly Compra[];
+  agendas: readonly AgendaIda[];
+  listas: readonly Lista[];
+  mercados: readonly Mercado[];
+}): ResumoDoDia {
+  const ativos = e.produtos.filter((p) => p.ativo);
+  const lista = gerarListaDaCasa({ produtos: e.produtos, estoques: e.estoques, compras: e.compras });
   return {
-    proxima,
-    quantosVencem: lista?.itens.length ?? 0,
+    itens: ativos.length,
+    faltando: lista.itens.length,
+    zerados: lista.itens.filter((i) => i.motivo === "acabou").length,
+    eventuaisZerados: lista.naoRecorrentesZerados.length,
+    proxima: proximaIdaGeral(e.agendas, e.hoje, e.compras),
     notasPendentes: listasComNotaPendente(e.listas, e.hoje),
     estimativasPendentes: mercadosComEstimativaPendente(e.mercados, e.compras),
-    semNotas: e.compras.length === 0,
+    semNada: ativos.length === 0 && e.compras.length === 0,
   };
 }

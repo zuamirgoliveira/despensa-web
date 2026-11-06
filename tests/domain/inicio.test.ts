@@ -63,30 +63,47 @@ describe("mercadosComEstimativaPendente", () => {
   });
 });
 
+describe("proximaIdaGeral com compras", () => {
+  const compraEm = (data: string): Compra => ({ casaId, chave: "1".repeat(44), mercadoId: id(), emissao: `${data}T10:00:00`, valorTotalCentavos: 1, pagamento: "", itens: [], importadoEm: "x" });
+  it("a ida cuja data já tem compra é dada como feita e passa para a seguinte do tipo", () => {
+    // hoje é quarta (hortifruti): comprou hoje, então a próxima é a de sábado
+    expect(proximaIdaGeral(AGENDAS, "2026-11-11", [compraEm("2026-11-11")])).toMatchObject({ tipo: "mercado_semanal", data: "2026-11-14" });
+  });
+  it("compra em outro dia não muda nada", () => {
+    expect(proximaIdaGeral(AGENDAS, "2026-11-11", [compraEm("2026-11-10")])).toMatchObject({ tipo: "hortifruti_semanal", data: "2026-11-11" });
+  });
+});
+
 describe("resumirDia", () => {
   const produto = (extra: Partial<Produto> = {}): Produto => ({
-    id: id(), casaId, nome: "P", categoria: "hortifruti", unidade: "un", meta: 7, metaManual: false, recorrente: true, frequencia: "semanal",
-    tipoIda: "hortifruti_semanal", vidaUtilDias: 7, contavel: false, ativo: true, ...extra,
+    id: id(), casaId, nome: "P", categoria: "mercearia", unidade: "un", meta: 4, metaManual: true, recorrente: true, frequencia: "semanal",
+    tipoIda: "mercado_semanal", vidaUtilDias: 180, contavel: false, ativo: true, ...extra,
   });
-  const base = { hoje: "2026-11-08", agendas: AGENDAS, folgaDias: 2, listas: [], mercados: [] };
+  const est = (p: Produto, quantidade: number): Estoque => ({ id: id(), casaId, produtoId: p.id, quantidade, nivel: "cheio", confirmadoEm: "2026-11-08T10:00:00Z" });
+  const base = { hoje: "2026-11-08", agendas: AGENDAS, listas: [], mercados: [] };
 
-  it("sem notas: orienta a primeira importação", () => {
+  it("despensa vazia e sem notas: boas-vindas", () => {
     const r = resumirDia({ ...base, produtos: [], estoques: [], compras: [] });
-    expect(r).toMatchObject({ semNotas: true, quantosVencem: 0, notasPendentes: [], estimativasPendentes: [] });
+    expect(r).toMatchObject({ semNada: true, itens: 0, faltando: 0, zerados: 0, notasPendentes: [], estimativasPendentes: [] });
     expect(r.proxima?.tipo).toBe("hortifruti_semanal");
   });
 
-  it("conta quantos produtos vencem na próxima ida", () => {
-    const [a, b, c] = [produto(), produto(), produto({ tipoIda: "mercado_semanal" })];
-    const est = (p: Produto): Estoque => ({ id: id(), casaId, produtoId: p.id, quantidade: 0, nivel: "acabou", confirmadoEm: "2026-11-08T10:00:00Z" });
-    const r = resumirDia({ ...base, produtos: [a, b, c], estoques: [a, b, c].map(est), compras: [] });
-    expect(r.proxima?.tipo).toBe("hortifruti_semanal");
-    expect(r.quantosVencem).toBe(2); // só os do hortifruti
+  it("conta o que falta (recorrentes zerados ou abaixo) e os eventuais que acabaram", () => {
+    const [zerado, abaixo, ok, eventual, arquivado] = [produto(), produto(), produto(), produto({ recorrente: false }), produto({ ativo: false })];
+    const r = resumirDia({
+      ...base,
+      produtos: [zerado, abaixo, ok, eventual, arquivado],
+      estoques: [est(zerado, 0), est(abaixo, 1), est(ok, 4), est(eventual, 0), est(arquivado, 0)],
+      compras: [],
+    });
+    expect(r).toMatchObject({ semNada: false, itens: 4, faltando: 2, zerados: 1, eventuaisZerados: 1 });
   });
 
-  it("sem agendas: sem próxima ida e nada vence", () => {
-    const r = resumirDia({ ...base, agendas: [], produtos: [produto()], estoques: [], compras: [] });
-    expect(r.proxima).toBeUndefined();
-    expect(r.quantosVencem).toBe(0);
+  it("só itens cadastrados, sem notas: já não é boas-vindas", () => {
+    expect(resumirDia({ ...base, produtos: [produto()], estoques: [], compras: [] }).semNada).toBe(false);
+  });
+
+  it("sem agendas: sem próxima ida", () => {
+    expect(resumirDia({ ...base, agendas: [], produtos: [produto()], estoques: [], compras: [] }).proxima).toBeUndefined();
   });
 });
