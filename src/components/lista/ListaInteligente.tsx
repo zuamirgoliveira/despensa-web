@@ -4,57 +4,44 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, Details, EmptyState, Input, LinkBotao, useToast } from "@/components/ui";
 import { criarRepositorios } from "@/data";
-import { adicionarAvulso, alterarQuantidade, dividirLista, garantirLista, removerItem, restaurarItem, SemAgendaError, tipoMaisProximo } from "@/data/lista";
+import { adicionarAvulso, alterarQuantidade, dividirLista, garantirListaDaCasa, removerItem, restaurarItem } from "@/data/lista";
 import { useRepositorio } from "@/data/useRepositorio";
-import { proximaIdaDoTipo } from "@/domain/agenda";
 import { estimarCusto } from "@/domain/lista";
 import { melhorMercadoPorProduto } from "@/domain/comparacao";
 import { avisoIdaPoucoVantajosa, mercadoHabitual, proporDivisao } from "@/domain/economia";
 import { custoIdaDoMercado } from "@/domain/ida";
 import { alertasPorProduto } from "@/domain/precos";
-import type { TipoIda } from "@/domain/types";
-import { TIPOS_IDA } from "@/schemas";
 import { agruparPorCategoria, agruparPorMercado, temMercadosDiferentes, type ItemVisao } from "@/lib/agruparLista";
 import { hojeRecife } from "@/lib/datas";
-import { brl, dataBR } from "@/lib/format";
-import { TIPO_IDA_ROTULO } from "@/lib/rotulos";
+import { brl } from "@/lib/format";
 import { ItemDaLista } from "./ItemDaLista";
 
 export function ListaInteligente() {
   const { mostrar } = useToast();
-  const [tipo, setTipo] = useState<TipoIda | null>(null);
   const [listaId, setListaId] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [porMercado, setPorMercado] = useState(false);
   const [nome, setNome] = useState("");
   const [quantidade, setQuantidade] = useState("1");
 
-  async function gerar(t: TipoIda): Promise<void> {
+  async function gerar(): Promise<void> {
     setErro(null);
     try {
-      const l = await garantirLista(await criarRepositorios(), t, hojeRecife());
-      setTipo(t);
-      setListaId(l.id);
-    } catch (e) {
+      const { lista } = await garantirListaDaCasa(await criarRepositorios(), hojeRecife());
+      setListaId(lista.id);
+    } catch {
       setListaId(null);
-      setErro(e instanceof SemAgendaError ? e.message : "Não consegui gerar a lista.");
+      setErro("Não consegui gerar a lista.");
     }
   }
 
   useEffect(() => {
     (async () => {
       const repos = await criarRepositorios();
-      const params = new URLSearchParams(location.search);
-      const listaPedida = params.get("lista") ? await repos.listas.obter(params.get("lista") as string) : undefined;
-      if (listaPedida) {
-        setTipo(listaPedida.tipoIda);
-        setListaId(listaPedida.id);
-        return;
-      }
-      const pedido = params.get("ida");
-      const inicial = (TIPOS_IDA as readonly string[]).includes(pedido ?? "") ? (pedido as TipoIda) : await tipoMaisProximo(repos, hojeRecife());
-      if (inicial) await gerar(inicial);
-      else setErro("Nenhuma agenda de ida configurada. Defina as datas em Ajustes.");
+      const pedida = new URLSearchParams(location.search).get("lista");
+      const listaPedida = pedida ? await repos.listas.obter(pedida) : undefined;
+      if (listaPedida) setListaId(listaPedida.id);
+      else await gerar();
     })();
   }, []);
 
@@ -86,7 +73,7 @@ export function ListaInteligente() {
   );
 
   if (erro && !dados?.lista) return <Alert tipo="erro">{erro}</Alert>;
-  if (!tipo || !dados?.lista) return <p aria-live="polite">Carregando...</p>;
+  if (!dados?.lista) return <p aria-live="polite">Carregando...</p>;
   const { lista } = dados;
   const nomeDoItem = (id: string): string => {
     const it = dados.itens.find((x) => x.id === id);
@@ -97,7 +84,7 @@ export function ListaInteligente() {
     const m = dados.mercados.find((x) => x.id === id);
     return m?.apelido || m?.nome || "outro mercado";
   };
-  const irmas = dados.listas.filter((l) => l.id !== lista.id && l.tipoIda === lista.tipoIda && l.data === lista.data && l.status !== "fechada");
+  const irmas = dados.listas.filter((l) => l.id !== lista.id && l.status !== "fechada");
   const sugestoes = (() => {
     const perfil = dados.perfil;
     const habitualId = lista.mercadoId ?? mercadoHabitual(dados.agendas, lista.tipoIda, dados.compras);
@@ -113,9 +100,7 @@ export function ListaInteligente() {
     return {
       aviso:
         aviso && custoIda !== undefined
-          ? `Esta ida tem ${visiveis.length} ${visiveis.length === 1 ? "item" : "itens"}, ${brl(estimativa.totalCentavos)}, e custa ${brl(custoIda)} para ir e voltar. ${
-              lista.tipoIda === "feira_mensal" ? "Vale juntar com outra ida?" : "Dá para esperar a feira mensal?"
-            }`
+          ? `Esta ida tem ${visiveis.length} ${visiveis.length === 1 ? "item" : "itens"}, ${brl(estimativa.totalCentavos)}, e custa ${brl(custoIda)} para ir e voltar. Vale esperar e juntar com outra compra?`
           : undefined,
       divisao: p ? { p, habitualId, habitual: nomeMercado(habitualId), alternativo: nomeMercado(p.mercadoAlternativoId) } : undefined,
     };
@@ -132,29 +117,8 @@ export function ListaInteligente() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-3 gap-2" role="group" aria-label="Tipo de ida">
-        {TIPOS_IDA.map((t) => {
-          const ida = proximaIdaDoTipo(dados.agendas, t, hojeRecife());
-          return (
-            <Button
-              key={t}
-              variante={t === tipo ? "primario" : "secundario"}
-              aria-pressed={t === tipo}
-              className="h-auto flex-col py-2 text-sm"
-              disabled={!ida}
-              onClick={() => void gerar(t)}
-            >
-              {TIPO_IDA_ROTULO[t]}
-              <span className="text-xs font-normal">{ida ? dataBR(ida.data) : "sem agenda"}</span>
-            </Button>
-          );
-        })}
-      </div>
-
       <Card className="flex flex-col gap-1">
-        <p className="text-sm text-suave">
-          {TIPO_IDA_ROTULO[lista.tipoIda]} · {dataBR(lista.data)}
-        </p>
+        <p className="text-sm text-suave">Lista da casa: o que está zerado ou abaixo do padrão</p>
         <p className="text-2xl font-semibold" aria-label="Estimativa de custo">
           {brl(estimativa.totalCentavos)}
         </p>
@@ -205,10 +169,10 @@ export function ListaInteligente() {
       ) : null}
 
       {visiveis.length === 0 ? (
-        <EmptyState titulo="Nenhum item na lista">
-          Confira a despensa para o app saber o que falta, ou adicione itens avulsos abaixo.
-          <Link href={`/conferencia?ida=${tipo}`} className="mt-2 inline-flex min-h-11 items-center font-medium text-primario underline">
-            Conferir despensa
+        <EmptyState titulo="Nada faltando">
+          Os itens recorrentes zerados ou abaixo do padrão aparecem aqui. Ajuste as quantidades na despensa ou adicione itens avulsos abaixo.
+          <Link href="/despensa" className="mt-2 inline-flex min-h-11 items-center font-medium text-primario underline">
+            Ir para a despensa
           </Link>
         </EmptyState>
       ) : null}
@@ -270,7 +234,7 @@ export function ListaInteligente() {
         <Button
           variante="secundario"
           onClick={async () => {
-            await gerar(tipo);
+            await gerar();
             mostrar("Lista atualizada. Suas edições foram mantidas.");
           }}
         >
