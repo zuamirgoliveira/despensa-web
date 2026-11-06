@@ -43,7 +43,13 @@ describe("textoDaLista", () => {
       "06/11/2026",
       (id) => (id === "Alho" ? 1000 : undefined),
     );
-    expect(t).toBe(`Lista de compras (06/11/2026)\n\nA\n• 1,5 kg Alho (~${brl(1500)})\n• 2 Pilha\n\nEstimativa: ~${brl(1500)}`);
+    expect(t).toBe(`Lista de compras (06/11/2026)\n\nA\n• 1,5 kg Alho (~${brl(1500)})\n• 2 Pilha`);
+  });
+
+  it("linha de estimativa só quando todos os itens têm preço", () => {
+    const alho = produto("Alho", "kg");
+    const t = textoDaLista(grupos({ titulo: "A", itens: [{ item: item({ produtoId: alho.id }), produto: alho }] }), "06/11/2026", () => 1000);
+    expect(t).toContain(`Estimativa: ~${brl(2000)}`);
   });
 
   it("sem nada para comprar: undefined", () => {
