@@ -128,15 +128,14 @@ export function Conferencia() {
           </Button>
         ) : null}
 
-        {produto.contavel ? (
-          <Input
-            rotulo="Quantidade exata (opcional)"
-            inputMode="decimal"
-            value={quantidade}
-            onChange={(e) => setQuantidade(e.target.value)}
-            ajuda="Digite antes de tocar no nível."
-          />
-        ) : null}
+        <Input
+          rotulo="Quantidade exata (opcional)"
+          inputMode="decimal"
+          value={quantidade}
+          onChange={(e) => setQuantidade(e.target.value)}
+          ajuda="Opcional: digite antes de tocar no nível."
+        />
+
         {erro ? <Alert tipo="erro">{erro}</Alert> : null}
       </Card>
 

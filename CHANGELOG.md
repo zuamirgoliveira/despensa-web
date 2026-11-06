@@ -2,6 +2,8 @@
 
 ## Não lançado (reposicionamento: a despensa em primeiro lugar)
 
+- **Card da Despensa:** saem os 4 atalhos de nível; "Ajustar" e "Editar" viram janelas (montadas só ao abrir, o que alivia listas grandes); "Repor sempre" vira um interruptor no card; volta o "Voltar ao cálculo automático" do padrão; frequência, tipo de ida, vida útil e "contável" saem do formulário; a revisão da despensa sempre aceita quantidade exata.
+
 - **Câmera:** o foco contínuo agora é confirmado e mostrado na tela; toque na imagem ou botão Focar refoca; "Tirar foto" usa a câmera do app com botão Fotografar (foto em resolução máxima via ImageCapture) em vez do seletor do navegador.
 
 - **Lista única:** só existe a lista da casa; entram os recorrentes zerados ou com menos de 50% do padrão, ordenados do mais vazio ao menos vazio. Sai a divisão entre mercados e o botão "Ver a lista de outro mercado"; listas abertas do modelo antigo são fechadas.

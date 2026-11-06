@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Badge, Button, Card, Details, Dialog, Input } from "@/components/ui";
+import { liberarMetaAutomatica } from "@/data/catalogo";
 import { definirQuantidade, deixarDeRepor, reporSempre } from "@/data/despensa";
 import { criarRepositorios } from "@/data";
-import { quantidadeDoNivel } from "@/domain/despensa";
+import { situacaoDoItem } from "@/domain/despensa";
 import { passoDaUnidade } from "@/domain/lista";
 import { padraoSugerido } from "@/domain/recorrencia";
 import type { Compra, Mercado, Produto } from "@/domain/types";
@@ -13,9 +14,6 @@ import { FormProduto } from "@/components/catalogo/FormProduto";
 import { lerQuantidade, type LinhaDespensa } from "@/lib/despensaVisao";
 import { numeroBR } from "@/lib/format";
 import { UNIDADE_ROTULO } from "@/lib/rotulos";
-import { NIVEIS } from "@/schemas";
-
-const NIVEL_ROTULO = { cheio: "Cheio", metade: "Metade", acabando: "Acabando", acabou: "Acabou" } as const;
 
 const SITUACAO: Record<LinhaDespensa["situacao"], { texto: string; tom: "neutro" | "info" | "sucesso" | "aviso" | "erro" }> = {
   sem_registro: { texto: "Sem quantidade", tom: "neutro" },
@@ -41,6 +39,8 @@ export function LinhaDespensaItem({ linha, compras, mercados, aoSalvarProduto, a
   const unidade = UNIDADE_ROTULO[p.unidade];
   const passo = passoDaUnidade(p.unidade);
   const [exata, setExata] = useState("");
+  const [ajustando, setAjustando] = useState(false);
+  const [editando, setEditando] = useState(false);
   const [promovendo, setPromovendo] = useState(false);
   const [padrao, setPadrao] = useState("");
   const s = SITUACAO[linha.situacao];
@@ -50,6 +50,17 @@ export function LinhaDespensaItem({ linha, compras, mercados, aoSalvarProduto, a
   }
 
   const atual = linha.atual ?? 0;
+  const novaQuantidade = lerQuantidade(exata);
+  const abrirAjuste = () => {
+    setExata(linha.atual === undefined ? "" : numeroBR(linha.atual));
+    setAjustando(true);
+  };
+  const efeito = (() => {
+    if (novaQuantidade === undefined) return undefined;
+    const quando = situacaoDoItem(p, { quantidade: novaQuantidade });
+    if (!p.recorrente) return undefined;
+    return quando === "zerado" || quando === "abaixo" ? "Com essa quantidade, o item vai para a lista de compras." : "Com essa quantidade, o item não entra na lista.";
+  })();
   const abrirPromocao = () => {
     setPadrao(numeroBR(padraoSugerido(p, compras) ?? 0));
     setPromovendo(true);
@@ -79,12 +90,27 @@ export function LinhaDespensaItem({ linha, compras, mercados, aoSalvarProduto, a
         <Button variante="secundario" aria-label={`Aumentar ${p.nome}`} onClick={() => void gravar(atual + passo)}>
           +
         </Button>
-        {!p.recorrente ? (
-          <Button variante="secundario" onClick={abrirPromocao}>
-            Repor sempre
-          </Button>
-        ) : null}
+        <Button variante="secundario" onClick={abrirAjuste}>
+          Ajustar
+        </Button>
+        <Button variante="secundario" onClick={() => setEditando(true)}>
+          Editar
+        </Button>
       </div>
+
+      <label className="flex min-h-11 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={p.recorrente}
+          onChange={async (e) => {
+            if (e.target.checked) return abrirPromocao();
+            await deixarDeRepor(await criarRepositorios(), p.id);
+            aoAvisar("Não vai mais para a lista sozinho.");
+          }}
+        />
+        Repor sempre
+      </label>
 
       {linha.sugestao ? (
         <p className="text-sm text-suave">
@@ -108,61 +134,79 @@ export function LinhaDespensaItem({ linha, compras, mercados, aoSalvarProduto, a
         </p>
       ) : null}
 
-      <Details semBorda titulo="Ajustar e editar">
-        <div className="flex flex-col gap-3">
-          <div role="group" aria-label={`Atalhos de quantidade de ${p.nome}`} className="flex flex-wrap gap-2">
-            {NIVEIS.map((n) => (
-              <Button key={n} variante="secundario" disabled={linha.padrao === undefined} onClick={() => void gravar(quantidadeDoNivel(n, linha.padrao ?? 0))}>
-                {NIVEL_ROTULO[n]}
-              </Button>
-            ))}
+      {ajustando ? (
+        <Dialog
+          aberto
+          titulo={`Ajustar “${p.nome}”`}
+          rotuloConfirmar="Salvar"
+          confirmarDesabilitado={novaQuantidade === undefined}
+          aoConfirmar={async () => {
+            if (novaQuantidade === undefined) return;
+            await gravar(novaQuantidade);
+            setAjustando(false);
+            aoAvisar("Quantidade atualizada.");
+          }}
+          aoCancelar={() => setAjustando(false)}
+        >
+          <div className="flex flex-col gap-3">
+            <Input
+              rotulo={`Quantidade atual (${unidade})`}
+              inputMode="decimal"
+              value={exata}
+              onChange={(e) => setExata(e.target.value)}
+              erro={novaQuantidade === undefined ? "Digite uma quantidade válida." : undefined}
+              ajuda={linha.padrao !== undefined ? `Padrão: ${numeroBR(linha.padrao)} ${unidade}.` : "Sem quantidade padrão definida."}
+            />
+            {efeito ? <p data-testid="efeito-ajuste">{efeito}</p> : null}
           </div>
-          {linha.padrao === undefined ? <p className="text-xs text-suave">Defina a quantidade padrão para usar os atalhos.</p> : null}
-          <form
-            className="flex items-end gap-2"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const q = lerQuantidade(exata);
-              if (q === undefined) return aoAvisar("Digite uma quantidade válida.", "erro");
-              await gravar(q);
-              setExata("");
-              aoAvisar("Quantidade atualizada.");
-            }}
-          >
-            <Input rotulo={`Quantidade atual (${unidade})`} inputMode="decimal" value={exata} onChange={(e) => setExata(e.target.value)} />
-            <Button type="submit" variante="secundario">
-              Definir
-            </Button>
-          </form>
-          <Details semBorda titulo="Preço e compras">
-            <HistoricoDoItem produtoId={p.id} compras={compras} mercados={mercados} />
-          </Details>
-          <Details semBorda titulo="Mais opções">
-            <div className="flex flex-col gap-3">
-              <FormProduto key={JSON.stringify(p)} produto={p} mercados={mercados} aoSalvar={(novo) => aoSalvarProduto(p, novo)} />
-              <div className="flex flex-wrap gap-2">
-                {p.recorrente ? (
-                  <Button
-                    variante="secundario"
-                    onClick={async () => {
-                      await deixarDeRepor(await criarRepositorios(), p.id);
-                      aoAvisar("Não vai mais para a lista sozinho.");
-                    }}
-                  >
-                    Deixar de repor
-                  </Button>
-                ) : null}
-                <Button variante="secundario" onClick={() => aoArquivar(p)}>
-                  {p.ativo ? "Arquivar" : "Desarquivar"}
-                </Button>
-                <Button variante="secundario" onClick={() => aoMesclar(p)}>
-                  Mesclar com outro
-                </Button>
-              </div>
+        </Dialog>
+      ) : null}
+
+      {editando ? (
+        <Dialog aberto semRodape titulo={`Editar “${p.nome}”`} aoConfirmar={() => undefined} aoCancelar={() => setEditando(false)}>
+          <div className="flex flex-col gap-4">
+            <FormProduto
+              key={JSON.stringify(p)}
+              produto={p}
+              mercados={mercados}
+              aoSalvar={async (novo) => {
+                await aoSalvarProduto(p, novo);
+                setEditando(false);
+              }}
+              aoLiberarPadrao={async () => {
+                await liberarMetaAutomatica(await criarRepositorios(), p.id);
+                aoAvisar("O padrão voltou ao cálculo automático.");
+              }}
+            />
+            <Details semBorda titulo="Preço e compras">
+              <HistoricoDoItem produtoId={p.id} compras={compras} mercados={mercados} />
+            </Details>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variante="secundario"
+                onClick={() => {
+                  setEditando(false);
+                  aoArquivar(p);
+                }}
+              >
+                {p.ativo ? "Arquivar" : "Desarquivar"}
+              </Button>
+              <Button
+                variante="secundario"
+                onClick={() => {
+                  setEditando(false);
+                  aoMesclar(p);
+                }}
+              >
+                Mesclar com outro
+              </Button>
+              <Button variante="secundario" onClick={() => setEditando(false)}>
+                Fechar
+              </Button>
             </div>
-          </Details>
-        </div>
-      </Details>
+          </div>
+        </Dialog>
+      ) : null}
 
       <Dialog
         aberto={promovendo}

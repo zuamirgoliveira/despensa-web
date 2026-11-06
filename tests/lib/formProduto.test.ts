@@ -26,19 +26,30 @@ describe("formulário de produto", () => {
   });
 
   it("erros por campo, em português", () => {
-    const r = validarProduto(produto, { ...valoresDoProduto(produto), nome: " ", meta: "abc", vidaUtilDias: "0", unidade: "caixa" });
+    const r = validarProduto(produto, { ...valoresDoProduto(produto), nome: " ", meta: "abc", unidade: "caixa" });
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.erros.nome).toBe("Informe o nome do produto.");
       expect(r.erros.meta).toMatch(/maior ou igual a zero/);
-      expect(r.erros.vidaUtilDias).toMatch(/vida útil/);
       expect(r.erros.unidade).toBe("Escolha a unidade.");
       expect(r.erros.categoria).toBeUndefined();
     }
   });
 
-  it("meta negativa e vida útil fracionária são rejeitadas", () => {
-    const r = validarProduto(produto, { ...valoresDoProduto(produto), meta: "-1", vidaUtilDias: "2,5" });
+  it("meta negativa é rejeitada", () => {
+    const r = validarProduto(produto, { ...valoresDoProduto(produto), meta: "-1" });
     expect(r.ok).toBe(false);
+  });
+
+  it("frequência, tipo de ida, vida útil e contável não aparecem no formulário e são preservados ao salvar", () => {
+    const original = { ...produto, frequencia: "mensal" as const, tipoIda: "feira_mensal" as const, vidaUtilDias: 90, contavel: true };
+    expect(Object.keys(valoresDoProduto(original)).sort()).toEqual(["categoria", "localCasa", "mercadoPreferidoId", "meta", "nome", "recorrente", "unidade"]);
+    const r = validarProduto(original, { ...valoresDoProduto(original), nome: "Tomate cereja" });
+    expect(r.ok && r.produto).toMatchObject({ nome: "Tomate cereja", frequencia: "mensal", tipoIda: "feira_mensal", vidaUtilDias: 90, contavel: true });
+  });
+
+  it("o interruptor Repor sempre vai e volta pelo formulário", () => {
+    const r = validarProduto(produto, { ...valoresDoProduto(produto), recorrente: false });
+    expect(r.ok && r.produto.recorrente).toBe(false);
   });
 });

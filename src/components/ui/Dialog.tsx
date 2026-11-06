@@ -12,6 +12,8 @@ type Props = {
   perigo?: boolean;
   /** Mantém o botão de confirmar desabilitado (ex.: até o usuário marcar que entendeu). */
   confirmarDesabilitado?: boolean;
+  /** Sem os botões Cancelar/Confirmar: o conteúdo traz as próprias ações (ex.: formulário com Salvar). Esc ainda chama `aoCancelar`. */
+  semRodape?: boolean;
   aoConfirmar: () => void;
   aoCancelar: () => void;
 };
@@ -25,6 +27,7 @@ export function Dialog({
   rotuloCancelar = "Cancelar",
   perigo,
   confirmarDesabilitado,
+  semRodape,
   aoConfirmar,
   aoCancelar,
 }: Props) {
@@ -46,21 +49,23 @@ export function Dialog({
         e.preventDefault();
         aoCancelar();
       }}
-      className="w-[min(92vw,26rem)] rounded-xl border border-borda bg-superficie p-0 text-texto backdrop:bg-black/50"
+      className="max-h-[90dvh] w-[min(92vw,26rem)] overflow-y-auto rounded-xl border border-borda bg-superficie p-0 text-texto backdrop:bg-black/50"
     >
       <div className="flex flex-col gap-4 p-4">
         <h2 id={tituloId} className="text-sm">
           {titulo}
         </h2>
         {children ? <div className="text-sm">{children}</div> : null}
-        <div className="flex justify-end gap-2">
-          <Button variante="secundario" onClick={aoCancelar}>
-            {rotuloCancelar}
-          </Button>
-          <Button variante={perigo ? "perigo" : "primario"} disabled={confirmarDesabilitado} onClick={aoConfirmar}>
-            {rotuloConfirmar}
-          </Button>
-        </div>
+        {semRodape ? null : (
+          <div className="flex justify-end gap-2">
+            <Button variante="secundario" onClick={aoCancelar}>
+              {rotuloCancelar}
+            </Button>
+            <Button variante={perigo ? "perigo" : "primario"} disabled={confirmarDesabilitado} onClick={aoConfirmar}>
+              {rotuloConfirmar}
+            </Button>
+          </div>
+        )}
       </div>
     </dialog>
   );
