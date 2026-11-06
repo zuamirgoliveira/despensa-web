@@ -8,7 +8,6 @@ import { resumoDaLista } from "@/data/reconciliacao";
 import { useRepositorio } from "@/data/useRepositorio";
 import { ehIdaDeReposicao } from "@/domain/reconciliacao";
 import { brl, dataBR, numeroBR } from "@/lib/format";
-import { TIPO_IDA_ROTULO } from "@/lib/rotulos";
 
 export function ResumoCompra() {
   const [listaId, setListaId] = useState<string | null | undefined>(undefined);
@@ -40,7 +39,7 @@ export function ResumoCompra() {
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-1">
         <p className="text-sm text-suave">
-          {TIPO_IDA_ROTULO[lista.tipoIda]} · lista de {dataBR(lista.data)} · nota de {dataBR(compra.emissao)}
+          Lista de {dataBR(lista.data)} · nota de {dataBR(compra.emissao)}
         </p>
         <p className="text-2xl font-semibold" aria-label="Total gasto">
           {brl(resumo.gastoCentavos)}

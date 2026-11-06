@@ -53,3 +53,59 @@ export async function restaurarBackupPelaTela(page: Page, arquivo: ArquivoBackup
   }
   await expect(page.getByText(/^Restaurado:/)).toBeVisible();
 }
+
+/**
+ * Prepara a despensa para testes que dependem da lista da casa: todos os itens viram recorrentes e zerados
+ * (a lista é "recorrentes zerados ou abaixo do padrão"). Escreve direto no IndexedDB e recarrega a página;
+ * é só semente de teste, os fluxos de tela têm seus próprios testes.
+ */
+export async function prepararDespensa(page: Page, opcoes: { zerar?: boolean } = {}): Promise<void> {
+  const zerar = opcoes.zerar ?? true;
+  await page.waitForURL((u) => !u.pathname.startsWith("/importar")); // espera a navegação de depois de salvar a nota
+  await page.evaluate(async (zerarTudo) => {
+    const db = await new Promise<IDBDatabase>((ok, erro) => {
+      const r = indexedDB.open("despensa");
+      r.onsuccess = () => ok(r.result);
+      r.onerror = () => erro(r.error);
+    });
+    await new Promise<void>((ok, erro) => {
+      const tx = db.transaction(["produtos", "estoques"], "readwrite");
+      const produtos = tx.objectStore("produtos");
+      produtos.getAll().onsuccess = (e) => {
+        for (const p of (e.target as IDBRequest).result) produtos.put({ ...p, recorrente: true });
+      };
+      if (zerarTudo) {
+        const estoques = tx.objectStore("estoques");
+        estoques.getAll().onsuccess = (e) => {
+          for (const s of (e.target as IDBRequest).result) estoques.put({ ...s, quantidade: 0, nivel: "acabou", quantidadeExata: undefined });
+        };
+      }
+      tx.oncomplete = () => ok();
+      tx.onerror = () => erro(tx.error);
+    });
+    db.close();
+  }, zerar);
+  await page.reload();
+}
+
+/** Deixa a quantidade de todos os itens "sem confirmação há meses" (entram na revisão da despensa). Semente de teste, via IndexedDB. */
+export async function envelhecerEstoques(page: Page): Promise<void> {
+  await page.waitForURL((u) => !u.pathname.startsWith("/importar"));
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((ok, erro) => {
+      const r = indexedDB.open("despensa");
+      r.onsuccess = () => ok(r.result);
+      r.onerror = () => erro(r.error);
+    });
+    await new Promise<void>((ok, erro) => {
+      const tx = db.transaction("estoques", "readwrite");
+      const estoques = tx.objectStore("estoques");
+      estoques.getAll().onsuccess = (e) => {
+        for (const s of (e.target as IDBRequest).result) estoques.put({ ...s, confirmadoEm: "2026-01-10T10:00:00.000Z" });
+      };
+      tx.oncomplete = () => ok();
+      tx.onerror = () => erro(tx.error);
+    });
+    db.close();
+  });
+}

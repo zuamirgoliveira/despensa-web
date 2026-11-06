@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole, pularEstimativa } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, pularEstimativa, prepararDespensa } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 
@@ -26,6 +26,7 @@ test("fluxo completo: lista → compra → nota → resumo, com estoque e pendê
   await page.getByRole("button", { name: /Salvar compra|Substituir compra/ }).click();
   await pularEstimativa(page);
   await expect(page).toHaveURL(/\/compras$/); // sem lista aberta: vai para Compras
+  await prepararDespensa(page);
 
   // lista da ida de hortifruti e modo compra
   await page.goto("/lista?ida=hortifruti_semanal");
@@ -41,7 +42,7 @@ test("fluxo completo: lista → compra → nota → resumo, com estoque e pendê
   await page.getByLabel("Texto copiado da página da SEFAZ").fill(texto);
   await page.getByRole("button", { name: "Ler nota" }).click();
   await expect(page.getByText("Li 14 itens.")).toBeVisible();
-  await expect(page.getByLabel("Associar esta nota à lista")).toContainText("Hortifruti semanal");
+  await expect(page.getByLabel("Associar esta nota à lista")).toContainText("Lista de");
   await expect(page.getByLabel("Associar esta nota à lista")).not.toHaveValue("");
   await page.getByRole("button", { name: /Salvar compra/ }).click();
 
@@ -72,6 +73,7 @@ test("nota com item fora da lista conta como emergência em ida de reposição",
   await page.getByRole("button", { name: /Salvar compra/ }).click();
   await pularEstimativa(page);
   await expect(page).toHaveURL(/\/compras$/);
+  await prepararDespensa(page);
   await page.goto("/lista?ida=hortifruti_semanal");
   await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(16);
   // remove a Cenoura da lista: ela virá na nota, mas não estava na lista

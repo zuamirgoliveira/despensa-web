@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { pularEstimativa, semViolacaoDeCsp, vigiarConsole } from "./util";
+import { pularEstimativa, semViolacaoDeCsp, vigiarConsole, prepararDespensa } from "./util";
 
 const NOTA_A = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 const metade = (v: string): string => (Number(v.replace(",", ".")) / 2).toFixed(2).replace(".", ",");
@@ -17,6 +17,7 @@ async function salvar(page: Page, texto: string) {
   await page.getByRole("button", { name: "Ler nota" }).click();
   await page.getByRole("button", { name: "Salvar compra" }).click();
   await pularEstimativa(page);
+  await prepararDespensa(page);
 }
 
 async function distancia(page: Page, nome: RegExp, km: string, meio: string) {
@@ -61,7 +62,7 @@ test("economia líquida positiva: propõe dividir e a divisão cria duas listas 
 
   // regerar a original não duplica os itens
   await page.goto("/lista?ida=hortifruti_semanal");
-  await expect(page.getByText("Nenhum item na lista")).toBeVisible();
+  await expect(page.getByText("Nada faltando")).toBeVisible();
   semViolacaoDeCsp(erros);
 });
 
@@ -81,5 +82,5 @@ test("aviso de ida pouco vantajosa: poucos itens e ida cara", async ({ page }) =
   await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(16);
   for (let i = 0; i < 12; i++) await page.getByRole("button", { name: /^Remover / }).first().click(); // sobram 4 itens
   await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(4);
-  await expect(page.getByText(/Esta ida tem 4 itens, R\$ \d+,\d{2}, e custa R\$ 36,00 para ir e voltar\. Dá para esperar a feira mensal\?/)).toBeVisible();
+  await expect(page.getByText(/Esta ida tem 4 itens, R\$ \d+,\d{2}, e custa R\$ 36,00 para ir e voltar\. Vale esperar e juntar com outra compra\?/)).toBeVisible();
 });

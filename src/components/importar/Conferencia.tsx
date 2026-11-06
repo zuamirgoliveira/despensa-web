@@ -5,7 +5,6 @@ import type { ItemConferencia, SituacaoNaDespensa } from "@/data/importarNota";
 import { chaveDeProduto } from "@/domain/normalizacao";
 import type { ResultadoParser } from "@/domain/nfce/parser";
 import type { Lista } from "@/domain/types";
-import { TIPO_IDA_ROTULO } from "@/lib/rotulos";
 import { brl, dataBR, horaBR, numeroBR } from "@/lib/format";
 
 type Props = {
@@ -130,7 +129,7 @@ export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, 
           <option value="">Nenhuma (só importar)</option>
           {listasAbertas.map((l) => (
             <option key={l.id} value={l.id}>
-              {TIPO_IDA_ROTULO[l.tipoIda]} · {dataBR(l.data)}
+              Lista de {dataBR(l.data)}
             </option>
           ))}
         </Select>

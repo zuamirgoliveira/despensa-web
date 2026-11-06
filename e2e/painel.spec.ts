@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { pularEstimativa, semViolacaoDeCsp, vigiarConsole } from "./util";
+import { envelhecerEstoques, pularEstimativa, semViolacaoDeCsp, vigiarConsole } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 const NOTA2 = NOTA.replace("Número: 68903", "Número: 68904")
@@ -27,7 +27,8 @@ test("com compras, conferência e ruptura: métricas do mês e comparação com 
   // as duas notas são importadas hoje (o mês atual); o mês anterior fica sem dados
   await salvar(page, NOTA);
   await salvar(page, NOTA2);
-  await page.goto("/conferencia?ida=hortifruti_semanal");
+  await envelhecerEstoques(page);
+  await page.goto("/conferencia");
   await page.getByRole("button", { name: "Acabou", exact: true }).click();
   await page.getByRole("button", { name: "Concluir antes" }).click();
 

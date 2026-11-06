@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole } from "./util";
+import { envelhecerEstoques, prepararDespensa, semViolacaoDeCsp, vigiarConsole } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 const NOTA2 = NOTA.replace(/CENOURA KG\(Código[\s\S]*?\n\n(?=[A-Z])/, "")
@@ -35,12 +35,16 @@ test("ciclo da E1: importar → agenda → conferir → lista → comprar offlin
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/compras$/);
 
-  // 2) conferir a despensa: alguns acabaram, outros pela metade
-  await page.goto("/conferencia?ida=hortifruti_semanal");
+  // 2) revisar a despensa (itens desatualizados): um acabou, outro está pela metade
+  await envelhecerEstoques(page);
+  await page.goto("/conferencia");
   await page.getByRole("button", { name: "Acabou", exact: true }).click();
   await page.getByRole("button", { name: "Metade", exact: true }).click();
   await page.getByRole("button", { name: "Concluir antes" }).click();
-  await page.getByRole("link", { name: "Gerar lista" }).click();
+  await expect(page.getByRole("link", { name: "Voltar à despensa" })).toBeVisible();
+  await page.goto("/despensa");
+  await prepararDespensa(page); // a lista da casa leva os recorrentes zerados: marca tudo como tal (semente de teste)
+  await page.goto("/lista");
 
   // 3) lista da ida; o que acabou entra com motivo "Acabou"
   await expect(page.getByText("Acabou", { exact: true }).first()).toBeVisible();

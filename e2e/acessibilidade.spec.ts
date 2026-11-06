@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const ROTAS = ["/", "/importar", "/lista", "/compras", "/catalogo", "/precos", "/gastos", "/painel", "/mercados", "/ajustes", "/conferencia"];
+const ROTAS = ["/", "/importar", "/lista", "/compras", "/despensa", "/precos", "/gastos", "/painel", "/mercados", "/ajustes", "/conferencia"];
 
 /** Nome acessível aproximado: aria-label, aria-labelledby, label associado, texto ou title. */
 async function semNomeAcessivel(page: Page): Promise<string[]> {

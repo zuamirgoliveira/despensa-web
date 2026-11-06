@@ -89,7 +89,7 @@ test("backup: exportar, apagar tudo e importar de volta restaura os dados", asyn
   const caminho = info.outputPath("backup.json");
   await download.saveAs(caminho);
   const conteudo = JSON.parse(readFileSync(caminho, "utf8"));
-  expect(conteudo.versao).toBe(2);
+  expect(conteudo.versao).toBe(3);
   expect(conteudo.meta.integridade.algoritmo).toBe("SHA-256");
   expect(conteudo.colecoes.compras).toHaveLength(1);
   expect(JSON.stringify(conteudo)).not.toMatch(/cpf/i);

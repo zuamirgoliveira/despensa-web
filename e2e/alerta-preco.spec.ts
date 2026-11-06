@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { pularEstimativa, semViolacaoDeCsp, vigiarConsole } from "./util";
+import { pularEstimativa, semViolacaoDeCsp, vigiarConsole, prepararDespensa } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 const CHAVE_ORIGINAL = "2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8720";
@@ -23,6 +23,7 @@ async function salvar(page: Page, texto: string) {
   await page.getByRole("button", { name: "Ler nota" }).click();
   await page.getByRole("button", { name: "Salvar compra" }).click();
   await pularEstimativa(page);
+  await prepararDespensa(page);
 }
 
 const melao = (page: Page) => page.getByRole("listitem").filter({ hasText: "Melao Japones" }).first();

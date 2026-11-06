@@ -14,7 +14,6 @@ import { estadoDoOrcamento, ordenarParaCompra, progressoDaCompra, totalCorrente 
 import { agruparPorCategoria, type ItemVisao } from "@/lib/agruparLista";
 import { centavosParaCampo, reaisParaCentavos } from "@/lib/dinheiro";
 import { brl, dataBR } from "@/lib/format";
-import { TIPO_IDA_ROTULO } from "@/lib/rotulos";
 import { manterTelaAcesa } from "@/lib/wakeLock";
 import { LinhaDaCompra } from "./LinhaDaCompra";
 
@@ -90,7 +89,7 @@ export function ModoCompra() {
       <div className="sticky top-0 z-30 -mx-4 flex flex-col gap-2 border-b border-borda bg-fundo px-4 py-3">
         <div className="flex items-baseline justify-between gap-2">
           <p className="text-sm text-suave">
-            {TIPO_IDA_ROTULO[lista.tipoIda]} · {dataBR(lista.data)}
+            Lista de {dataBR(lista.data)}
           </p>
           <p className="text-sm" aria-live="polite">
             {progresso.pegos} de {progresso.total} itens

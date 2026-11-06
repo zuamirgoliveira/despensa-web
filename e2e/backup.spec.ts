@@ -79,7 +79,7 @@ test("guardar pelo menu de compartilhar: entrega a cópia íntegra e registra; c
     return { nome: r.nome, json: JSON.parse(await r.texto) };
   });
   expect(recebido.nome).toMatch(/^despensa-backup-\d{4}-\d{2}-\d{2}\.json$/);
-  expect(recebido.json).toMatchObject({ versao: 2, meta: { contagens: { compras: 1, produtos: 16 } } });
+  expect(recebido.json).toMatchObject({ versao: 3, meta: { contagens: { compras: 1, produtos: 16 } } });
   expect(JSON.stringify(recebido.json)).not.toMatch(/cpf/i);
 });
 

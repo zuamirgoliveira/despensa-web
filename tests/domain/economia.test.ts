@@ -105,3 +105,13 @@ describe("avisoIdaPoucoVantajosa", () => {
     expect(avisoIdaPoucoVantajosa({ itens: 3, totalEstimadoCentavos: 10000, custoIdaCentavos: 100, minItens: 3 })).toBeUndefined();
   });
 });
+
+import { mercadoHabitualDaCasa } from "@/domain/economia";
+describe("mercadoHabitualDaCasa", () => {
+  it("o primeiro definido na agenda (semanal, hortifruti, feira); sem agenda, o mais usado", () => {
+    expect(mercadoHabitualDaCasa([{ tipo: "feira_mensal", mercadoId: "F" }, { tipo: "hortifruti_semanal", mercadoId: "H" }], [])).toBe("H");
+    expect(mercadoHabitualDaCasa([{ tipo: "mercado_semanal", mercadoId: "M" }, { tipo: "hortifruti_semanal", mercadoId: "H" }], [])).toBe("M");
+    expect(mercadoHabitualDaCasa([{ tipo: "mercado_semanal" }], [{ mercadoId: "X" }, { mercadoId: "Y" }, { mercadoId: "Y" }])).toBe("Y");
+    expect(mercadoHabitualDaCasa([], [])).toBeUndefined();
+  });
+});

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { semViolacaoDeCsp, vigiarConsole, irParaTela } from "./util";
 
-const ROTAS = ["/", "/importar", "/compras", "/catalogo", "/precos", "/painel", "/gastos", "/ajustes", "/conferencia", "/lista", "/compra", "/resumo", "/mercados"];
+const ROTAS = ["/", "/importar", "/compras", "/despensa", "/precos", "/painel", "/gastos", "/ajustes", "/conferencia", "/lista", "/compra", "/resumo", "/mercados"];
 
 test("manifest válido com ícones e share_target", async ({ request }) => {
   const m = await (await request.get("/manifest.webmanifest")).json();
@@ -39,7 +39,7 @@ test("service worker: todas as rotas funcionam offline, inclusive ao recarregar"
 
   // navegação interna pelas abas, sem rede
   await page.goto("/importar");
-  await page.getByRole("link", { name: "Compras" }).click();
+  await irParaTela(page, "Compras");
   await expect(page).toHaveURL(/\/compras$/);
   await expect(page.getByRole("heading", { name: "Compras" })).toBeVisible();
   await irParaTela(page, "Preços");

@@ -49,11 +49,12 @@ test("2 mercados: melhor preço por produto, cesta com cobertura e sugestão de 
   await expect(page.getByText("Mercado preferido de Melao Japones definido.")).toBeVisible();
   await expect(melao.getByText(/é 24% mais barato/)).toHaveCount(0);
 
-  // o catálogo mostra o preferido
-  await irParaTela(page, "Catálogo");
-  const noCatalogo = page.getByRole("listitem").filter({ hasText: "Melao Japones" }).first();
-  await noCatalogo.getByText("Melao Japones").first().click();
-  await expect(noCatalogo.getByLabel("Mercado preferido")).not.toHaveValue("");
+  // a despensa mostra o preferido
+  await irParaTela(page, "Despensa");
+  const naDespensa = page.getByRole("listitem").filter({ hasText: "Melao Japones" }).first();
+  await naDespensa.getByText("Ajustar e editar").click();
+  await naDespensa.getByText("Mais opções").click();
+  await expect(naDespensa.getByLabel("Mercado preferido")).not.toHaveValue("");
   semViolacaoDeCsp(erros);
 });
 

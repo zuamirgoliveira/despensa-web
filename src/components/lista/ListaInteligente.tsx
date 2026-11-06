@@ -8,7 +8,7 @@ import { adicionarAvulso, alterarQuantidade, dividirLista, garantirListaDaCasa, 
 import { useRepositorio } from "@/data/useRepositorio";
 import { estimarCusto } from "@/domain/lista";
 import { melhorMercadoPorProduto } from "@/domain/comparacao";
-import { avisoIdaPoucoVantajosa, mercadoHabitual, proporDivisao } from "@/domain/economia";
+import { avisoIdaPoucoVantajosa, mercadoHabitualDaCasa, proporDivisao } from "@/domain/economia";
 import { custoIdaDoMercado } from "@/domain/ida";
 import { alertasPorProduto } from "@/domain/precos";
 import { agruparPorCategoria, agruparPorMercado, temMercadosDiferentes, type ItemVisao } from "@/lib/agruparLista";
@@ -87,7 +87,7 @@ export function ListaInteligente() {
   const irmas = dados.listas.filter((l) => l.id !== lista.id && l.status !== "fechada");
   const sugestoes = (() => {
     const perfil = dados.perfil;
-    const habitualId = lista.mercadoId ?? mercadoHabitual(dados.agendas, lista.tipoIda, dados.compras);
+    const habitualId = lista.mercadoId ?? mercadoHabitualDaCasa(dados.agendas, dados.compras);
     if (!perfil || !habitualId) return { aviso: undefined, divisao: undefined };
     const habitual = dados.mercados.find((m) => m.id === habitualId);
     const custoIda = habitual ? custoIdaDoMercado(habitual, perfil) : undefined;

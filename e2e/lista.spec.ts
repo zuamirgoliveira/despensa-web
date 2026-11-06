@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { semViolacaoDeCsp, vigiarConsole, pularEstimativa } from "./util";
+import { semViolacaoDeCsp, vigiarConsole, pularEstimativa, prepararDespensa } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 
@@ -11,20 +11,21 @@ async function importarNota(page: Page) {
   await page.getByRole("button", { name: /Salvar compra|Substituir compra/ }).click();
   await pularEstimativa(page);
   await expect(page).toHaveURL(/\/compras$/);
+  await prepararDespensa(page);
 }
 
 const item = (page: Page, nome: string) => page.getByRole("listitem").filter({ hasText: nome }).first();
 
-test("sem dados, a lista fica vazia e oferece conferir a despensa", async ({ page }) => {
-  await page.goto("/lista?ida=mercado_semanal");
-  await expect(page.getByText("Nenhum item na lista")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Conferir despensa" })).toHaveAttribute("href", "/conferencia?ida=mercado_semanal");
+test("sem dados, a lista fica vazia e leva à despensa", async ({ page }) => {
+  await page.goto("/lista");
+  await expect(page.getByText("Nada faltando")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ir para a despensa" })).toHaveAttribute("href", "/despensa");
 });
 
 test("lista gerada do catálogo: itens, estimativa, edição, remoção, avulso e regerar preservam as edições", async ({ page }) => {
   const { erros } = vigiarConsole(page);
   await importarNota(page);
-  await page.goto("/lista?ida=hortifruti_semanal");
+  await page.goto("/lista");
 
   await expect(page.getByRole("heading", { name: "Hortifruti", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(16);
@@ -62,15 +63,12 @@ test("lista gerada do catálogo: itens, estimativa, edição, remoção, avulso 
   await page.getByRole("button", { name: "Restaurar" }).click();
   await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(17); // 16 + avulso
 
-  // trocar de tipo de ida: os produtos são de hortifruti, então o mercado semanal fica vazio
-  await page.getByRole("button", { name: /Mercado semanal/ }).click();
-  await expect(page.getByText("Nenhum item na lista")).toBeVisible();
   semViolacaoDeCsp(erros);
 });
 
 test("quantidade nunca fica negativa", async ({ page }) => {
   await importarNota(page);
-  await page.goto("/lista?ida=hortifruti_semanal");
+  await page.goto("/lista");
   const quase = item(page, "Coentro"); // unidade: passo 1
   const quantidade = quase.locator("[aria-live=polite]");
   for (let i = 0; i < 6; i++) {

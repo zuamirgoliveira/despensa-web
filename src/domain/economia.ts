@@ -17,6 +17,18 @@ export function mercadoHabitual(agendas: readonly Pick<AgendaIda, "tipo" | "merc
   return [...uso.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
 }
 
+/**
+ * Mercado habitual da lista da casa (que não é de uma ida só): o primeiro definido na agenda
+ * (mercado semanal, hortifruti, feira); sem nenhum, o mais usado nas compras.
+ */
+export function mercadoHabitualDaCasa(agendas: readonly Pick<AgendaIda, "tipo" | "mercadoId">[], compras: readonly Pick<Compra, "mercadoId">[]): string | undefined {
+  for (const tipo of ["mercado_semanal", "hortifruti_semanal", "feira_mensal"] as const) {
+    const m = agendas.find((a) => a.tipo === tipo)?.mercadoId;
+    if (m) return m;
+  }
+  return mercadoHabitual(agendas, "mercado_semanal", compras);
+}
+
 export type PropostaDivisao = {
   mercadoAlternativoId: string;
   /** Itens que passariam para o mercado alternativo (só os que ficam mais baratos lá). */
