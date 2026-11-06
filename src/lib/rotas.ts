@@ -10,11 +10,11 @@ export type Rota = {
 
 export const ROTAS: readonly Rota[] = [
   { href: "/", rotulo: "Início", naBarra: true },
-  { href: "/importar", rotulo: "Importar", naBarra: true },
+  { href: "/despensa", rotulo: "Despensa", naBarra: true },
   { href: "/lista", rotulo: "Lista", naBarra: true },
-  { href: "/compras", rotulo: "Compras", naBarra: true },
+  { href: "/importar", rotulo: "Importar", naBarra: true },
+  { href: "/compras", rotulo: "Compras", naBarra: false, noMais: true },
   { href: "/conferencia", rotulo: "Conferir despensa", naBarra: false, noMais: true },
-  { href: "/catalogo", rotulo: "Catálogo", naBarra: false, noMais: true },
   { href: "/precos", rotulo: "Preços", naBarra: false, noMais: true },
   { href: "/painel", rotulo: "Painel", naBarra: false, noMais: true },
   { href: "/gastos", rotulo: "Gastos", naBarra: false, noMais: true },

@@ -5,6 +5,10 @@ const config: NextConfig = {
   env: { NEXT_PUBLIC_BUILD_ID: String(Date.now()) },
   output: "standalone",
   poweredByHeader: false,
+  async redirects() {
+    // O Catálogo virou a Despensa.
+    return [{ source: "/catalogo", destination: "/despensa", permanent: true }];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

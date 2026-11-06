@@ -2,7 +2,7 @@ import { IDBFactory } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { terminarSemNota } from "@/data/compra";
 import {
-  agruparLinhas, ajustarEstoque, apagarCompraDesfazendoEstoque, definirQuantidade, deixarDeRepor, efeitoDeApagarCompra, reporSempre,
+  agruparLinhas, ajustarEstoque, apagarCompraDesfazendoEstoque, criarItemManual, definirQuantidade, deixarDeRepor, efeitoDeApagarCompra, ItemJaExisteError, reporSempre,
 } from "@/data/despensa";
 import { criarRepositorios } from "@/data/indexeddb";
 import type { Repositorios } from "@/data/repositorios";
@@ -100,5 +100,23 @@ describe("repor sempre / deixar de repor", () => {
     expect(await reporSempre(repos, p.id, 3)).toMatchObject({ recorrente: true, meta: 3, metaManual: true });
     expect(await deixarDeRepor(repos, p.id)).toMatchObject({ recorrente: false, meta: 3 });
     expect(await reporSempre(repos, crypto.randomUUID())).toBeUndefined();
+  });
+});
+
+describe("criarItemManual", () => {
+  it("nasce recorrente, com padrão e quantidade atual opcionais", async () => {
+    const p = await criarItemManual(repos, { nome: " Café ", categoria: "mercearia", unidade: "pacote", padrao: 2, atual: 1 });
+    expect(p).toMatchObject({ nome: "Café", recorrente: true, meta: 2, metaManual: true, ativo: true });
+    expect(await repos.estoques.obterPorProduto(p.id)).toMatchObject({ quantidade: 1, nivel: "metade" });
+  });
+  it("sem padrão nem quantidade: sem registro de estoque", async () => {
+    const p = await criarItemManual(repos, { nome: "Sal", categoria: "mercearia", unidade: "kg" });
+    expect(p).toMatchObject({ meta: 0, metaManual: false });
+    expect(await repos.estoques.obterPorProduto(p.id)).toBeUndefined();
+  });
+  it("recusa nome vazio e nome repetido (ignora caixa e acento)", async () => {
+    await criarItemManual(repos, { nome: "Feijão", categoria: "mercearia", unidade: "kg" });
+    await expect(criarItemManual(repos, { nome: "feijao", categoria: "mercearia", unidade: "kg" })).rejects.toBeInstanceOf(ItemJaExisteError);
+    await expect(criarItemManual(repos, { nome: "  ", categoria: "mercearia", unidade: "kg" })).rejects.toThrow();
   });
 });

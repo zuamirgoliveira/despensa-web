@@ -1,10 +1,10 @@
-import { Catalogo } from "@/components/catalogo/Catalogo";
+import { Despensa } from "@/components/despensa/Despensa";
 import { Pagina } from "@/components/Pagina";
 
 export default function Page() {
   return (
-    <Pagina titulo="Catálogo">
-      <Catalogo />
+    <Pagina titulo="Despensa">
+      <Despensa />
     </Pagina>
   );
 }

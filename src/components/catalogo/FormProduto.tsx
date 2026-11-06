@@ -52,12 +52,12 @@ export function FormProduto({ produto, mercados, aoSalvar }: Props) {
         </Select>
       </div>
       <Input
-        rotulo={`Meta (${UNIDADE_ROTULO[v.unidade as Produto["unidade"]] ?? "quantidade"})`}
+        rotulo={`Quantidade padrão (${UNIDADE_ROTULO[v.unidade as Produto["unidade"]] ?? "quantidade"})`}
         inputMode="decimal"
         value={v.meta}
         onChange={muda("meta")}
         erro={erros.meta}
-        ajuda={produto.metaManual ? "Meta fixada por você: não muda mais com as compras." : "Calculada pela média das compras."}
+        ajuda={produto.metaManual ? "Padrão fixado por você: não muda mais com as compras." : "Calculado pela média das compras."}
       />
       <div className="grid grid-cols-2 gap-3">
         <Select rotulo="Frequência" value={v.frequencia} onChange={muda("frequencia")} erro={erros.frequencia}>

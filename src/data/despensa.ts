@@ -1,7 +1,9 @@
 // Operações da despensa sobre a quantidade atual (somar, subtrair, ajustar, recorrência). Tudo passa pelo repositório.
 import { nivelDeQuantidade, quantidadePadrao } from "@/domain/despensa";
 import { padraoSugerido, promoverARecorrente, rebaixarDeRecorrente } from "@/domain/recorrencia";
-import type { Compra, Estoque, Produto } from "@/domain/types";
+import { chaveDeProduto } from "@/domain/normalizacao";
+import type { Categoria, Compra, Estoque, Produto } from "@/domain/types";
+import { VIDA_UTIL_PADRAO_DIAS } from "@/schemas/constantes";
 import type { Repositorios } from "./repositorios";
 
 const arred = (n: number): number => Math.max(0, Math.round(n * 1000) / 1000);
@@ -83,4 +85,42 @@ export async function reporSempre(repos: Repositorios, produtoId: string, padrao
 export async function deixarDeRepor(repos: Repositorios, produtoId: string): Promise<Produto | undefined> {
   const p = await repos.produtos.obter(produtoId);
   return p ? repos.produtos.salvar(rebaixarDeRecorrente(p)) : undefined;
+}
+
+export class ItemJaExisteError extends Error {
+  constructor(public readonly nome: string) {
+    super(`“${nome}” já está na despensa.`);
+    this.name = "ItemJaExisteError";
+  }
+}
+
+export type NovoItem = { nome: string; categoria: Categoria; unidade: Produto["unidade"]; padrao?: number; atual?: number; localCasa?: string };
+
+/**
+ * Cadastro à mão: quem cadastra quer controlar, então o item nasce **recorrente**. Padrão e quantidade atual são opcionais
+ * (sem quantidade atual o item fica "sem quantidade" e não entra na lista até alguém informar).
+ */
+export async function criarItemManual(repos: Repositorios, novo: NovoItem): Promise<Produto> {
+  const casa = await repos.iniciar();
+  const nome = novo.nome.trim();
+  if (!nome) throw new Error("Informe o nome do item.");
+  if ((await repos.produtos.listar()).some((p) => chaveDeProduto(p.nome) === chaveDeProduto(nome))) throw new ItemJaExisteError(nome);
+  const produto = await repos.produtos.salvar({
+    id: crypto.randomUUID(),
+    casaId: casa.id,
+    nome,
+    categoria: novo.categoria,
+    unidade: novo.unidade,
+    meta: novo.padrao ?? 0,
+    metaManual: novo.padrao !== undefined,
+    recorrente: true,
+    frequencia: "semanal",
+    tipoIda: novo.categoria === "hortifruti" ? "hortifruti_semanal" : "mercado_semanal",
+    vidaUtilDias: VIDA_UTIL_PADRAO_DIAS[novo.categoria],
+    localCasa: novo.localCasa?.trim() || undefined,
+    contavel: false,
+    ativo: true,
+  });
+  if (novo.atual !== undefined) await definirQuantidade(repos, produto, novo.atual);
+  return produto;
 }

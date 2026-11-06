@@ -7,6 +7,7 @@
 - **D-05:** regras de recorrência (padrão sugerido, "repor sempre", "deixar de repor").
 - **D-06:** a nota soma à despensa (sem somar duas vezes ao reimportar); itens novos entram não recorrentes; a conferência mostra o efeito na despensa e oferece "Repor sempre" e "Não é da despensa".
 - **D-07/D-08:** modo compra com "Terminar sem nota" (soma à despensa); apagar compra mostra e desfaz a soma; operações da despensa no repositório.
+- **D-09:** tela **Despensa** (substitui o Catálogo, que redireciona): quantidade atual e padrão em cada linha, +/−, atalhos, filtros, busca, agrupar, adicionar item e "Repor sempre"; a barra agora é Início, Despensa, Lista e Importar.
 
 ## 0.4.0 (cópia de segurança e persistência)
 

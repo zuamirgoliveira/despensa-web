@@ -14,7 +14,7 @@ const ICONES: Record<string, string> = {
   "/compras": "M5 8h14l-1 12H6L5 8ZM9 8a3 3 0 0 1 6 0",
   mais: "M5 12h.01M12 12h.01M19 12h.01",
   "/conferencia": "M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1ZM8 5H6.5A1.5 1.5 0 0 0 5 6.5v13A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 17.5 5H16M9 14l2 2 4-4",
-  "/catalogo": "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
+  "/despensa": "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
   "/precos": "M3 12V4h8l10 10-8 8L3 12ZM7.5 8.5h.01",
   "/painel": "M5 20V10M12 20V4M19 20v-7",
   "/gastos": "M3 17l6-6 4 4 8-8M15 7h6v6",
