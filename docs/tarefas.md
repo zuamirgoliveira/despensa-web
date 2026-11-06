@@ -867,3 +867,10 @@ Estes valores foram assumidos para não bloquear a implementação. Todos são e
 | Aviso de ida pouco vantajosa                        | custo da ida ≥ 40% do total estimado, ou menos de 5 itens                                             |
 | Limite de memória do container                      | 256 MB                                                                                                |
 | Regra de "puxar" item da feira para uma ida semanal | seção C-20 (interpretação formal a validar na Z-11)                                                   |
+
+
+---
+
+## 3. Reposicionamento: a despensa em primeiro lugar
+
+Plano e desfecho em [proposta-despensa.md](proposta-despensa.md). Concluídas: D-01 a D-15 (modelo e migração 003, backup v3, regras da despensa e da lista da casa, recorrência, nota que soma, terminar sem nota, tela Despensa, histórico de preço no item, lista única, Início, revisão opcional, e2e, documentação). Pendente: **D-16 (Zuma)**: fazer a cópia de segurança, migrar o aparelho e usar a despensa por duas semanas.

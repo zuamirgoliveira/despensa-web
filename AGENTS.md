@@ -8,6 +8,7 @@ Referência técnica para qualquer agente ou desenvolvedor que altere este repos
 
 PWA de gestão de despensa doméstica. Funciona offline, instala no Android, roda 100% no aparelho (sem backend, sem autenticação, sem banco no servidor). O servidor só entrega arquivos estáticos e o shell Next.js.
 
+- **Foco do produto:** gerenciar a despensa da família. Toda funcionalidade apoia isso: saber o que há (quantidade atual × padrão), saber o que falta (lista da casa), comprar e manter atualizado com pouco esforço. A nota fiscal é um meio de atualizar a despensa e guardar preços, nunca o centro (`docs/proposta-despensa.md`).
 - **Perfil de projeto:** A, com dados locais (IndexedDB).
 - **Idioma da interface:** português do Brasil. **Moeda:** BRL. **Fuso:** `America/Recife`.
 - **Usuários:** uso pessoal. Existe um único `casaId` padrão, mas todo registro já o carrega para permitir evolução para multiusuário.
@@ -247,7 +248,7 @@ Todas as fórmulas vivem em `src/domain/` e têm teste tabelado.
 
 ### 6.1 Estoque (`estoque.ts`)
 
-- Níveis → fração: `cheio` 1, `metade` 0,5, `acabando` 0,2, `acabou` 0.
+- **A quantidade numérica (`Estoque.quantidade`) é a base** (ver 6.3.-1); os níveis abaixo são atalhos e a base da estimativa de consumo (previsão, que é só sugestão: revisão da despensa e atalho "Mesmo que o estimado"). Níveis → fração: `cheio` 1, `metade` 0,5, `acabando` 0,2, `acabou` 0.
 - `estoqueEstimado = fração × quantidadeReferência` (meta, ou última quantidade comprada).
 - `consumoDiario`: com 2 ou mais compras do produto, média das últimas até 4 razões `quantidade_i ÷ dias entre compras` (ignorar intervalos de 0 dia). Com menos, pela frequência declarada: semanal `meta/7`, quinzenal `meta/15`, mensal `meta/30`, sob demanda `indefinido`.
 - `cobertura (dias) = estoque ÷ consumo`; `Infinity` se consumo for 0 ou indefinido.
@@ -428,7 +429,7 @@ Consulta pública de PE: `https://nfce.sefaz.pe.gov.br/nfce-web/consNfce`, prote
 - Pré-cache: `npm run build` roda `scripts/gen-precache.mjs` depois do `next build`, que escreve `public/precache.json` (não versionado) com as rotas (HTML em `.next/server/app`) e os estáticos. Rota nova precisa ser pré-renderizada para entrar; **rotas dinâmicas (`[id]`) não são pré-renderizadas: use rota estática com parâmetro na query** (ex.: `/compra?lista=<id>`) para funcionar offline.
 - Navegação: rede primeiro com limite de 4 s, depois cache; a chave do cache é o caminho sem query (`/importar?text=…` usa o HTML de `/importar`). RSC (`?_rsc=`) não é cacheado: offline devolve erro e o Next faz navegação completa (o log "Failed to fetch RSC payload… Falling back to browser navigation" é esperado).
 - Registro: `RegistrarSW` (em `layout.tsx`) registra `/sw.js?v=<NEXT_PUBLIC_BUILD_ID>` (o parâmetro muda a cada build e força a instalação do SW novo) só em produção ou `localhost`. O SW usa `skipWaiting`; ao trocar de controlador a interface mostra "Nova versão disponível" com botão Atualizar.
-- Alterou rota, asset ou estratégia: incremente a versão do cache (hoje `despensa-v2`; `theme-init.js` entra no pré-cache).
+- Alterou rota, asset ou estratégia: incremente a versão do cache (hoje `despensa-v3`; `theme-init.js` entra no pré-cache).
 - Funcionalidades que dependem de rede (mapas) degradam sem bloquear (ver seção 9.4).
 
 ---
@@ -536,7 +537,7 @@ Diretório `/opt/docker/despensa-web` (dono `deploy`), `.env` com permissão 600
 ### 11.3 Testes
 
 - **Vitest** (`tests/`, espelha `src/`): toda regra de `src/domain` com testes tabelados, incluindo bordas (zero, vazio, mês curto, ano bissexto, limites de tolerância). Relógio sempre injetado. Repositórios testados com `fake-indexeddb`, incluindo migração e backup ida e volta.
-- **Playwright** (`e2e/`): roda contra `next start` para exercitar CSP e service worker. Câmera simulada com flags do Chrome (`--use-fake-ui-for-media-stream`, `--use-fake-device-for-media-stream`, `--use-file-for-fake-video-capture`). Falha o teste se aparecer violação de CSP no console. Cobre offline (navegar e recarregar todas as rotas). `backup.spec.ts` cobre guardar (download e menu de compartilhar simulado), lembrete, restaurar em aparelho vazio e com dados, as confirmações duplas e arquivos adulterados, cortados ou de versão nova; use o helper `restaurarBackupPelaTela` (`e2e/util.ts`) para carregar dados de seed. Acessibilidade roda nos dois temas e em 360×640 (`acessibilidade.spec.ts`); `tema.spec.ts` cobre Claro/Escuro/Sistema, persistência e a coluna em telas largas. O contraste dos tokens é testado em Vitest (`tests/lib/contraste.test.ts`).
+- **Playwright** (`e2e/`): roda contra `next start` para exercitar CSP e service worker. Câmera simulada com flags do Chrome (`--use-fake-ui-for-media-stream`, `--use-fake-device-for-media-stream`, `--use-file-for-fake-video-capture`). Falha o teste se aparecer violação de CSP no console. Cobre offline (navegar e recarregar todas as rotas). Helpers de semente em `e2e/util.ts`: `prepararDespensa` (todos os itens recorrentes e zerados, via IndexedDB, para testes que dependem da lista da casa) e `envelhecerEstoques` (itens sem confirmação há meses, para a revisão); os fluxos de tela têm testes próprios (`despensa.spec.ts`). `backup.spec.ts` cobre guardar (download e menu de compartilhar simulado), lembrete, restaurar em aparelho vazio e com dados, as confirmações duplas e arquivos adulterados, cortados ou de versão nova; use o helper `restaurarBackupPelaTela` (`e2e/util.ts`) para carregar dados de seed. Acessibilidade roda nos dois temas e em 360×640 (`acessibilidade.spec.ts`); `tema.spec.ts` cobre Claro/Escuro/Sistema, persistência e a coluna em telas largas. O contraste dos tokens é testado em Vitest (`tests/lib/contraste.test.ts`).
 - E2E: `e2e/global-setup.ts` gera o vídeo falso da câmera (`test-results/camera-qr.y4m`, a partir de `tests/fixtures/fotos/qr-nota.png`, com `ffmpeg`); sem `ffmpeg` o teste da câmera é pulado. `tests/fixtures/foto-nota-real.jpeg` **não é versionada** (mostra final de cartão); o teste de OCR com ela é pulado quando o arquivo não existe (ex.: no CI). Imagens sintéticas (QR, ruído, chave com DV errado, sem chave) vêm de `scripts/gerar-fixtures-fotos.py`.
 - Fixtures em `tests/fixtures/`: notas reais em texto (sem CPF) e fotos. Ao encontrar nota que o parser não lê, adicione-a como fixture e corrija sem quebrar as anteriores.
 - E2E: `playwright.config.ts` nunca reaproveita servidor já em pé (`reuseExistingServer: false`, porta por `E2E_PORT`): um `next start` esquecido de uma rodada interrompida serve build antigo e gera falhas falsas. Se a porta estiver ocupada, use `E2E_PORT=3105 npm run e2e`.

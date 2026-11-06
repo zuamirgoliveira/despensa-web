@@ -1,34 +1,41 @@
-# Guia de uso: antes, durante e depois da ida
+# Guia de uso: a despensa da casa
 
 ## Primeira vez
 
 0. Em **Mais → Ajustes → Aparência**, escolha o tema: **Sistema** (padrão, segue o aparelho), **Claro** ou **Escuro**. A escolha vale só neste aparelho e não entra no backup.
-
 1. Abra o endereço do app no Android e **instale** (menu do navegador → Adicionar à tela inicial).
-2. Em **Mais → Ajustes**: confira a agenda das idas (dia da feira, dia do mercado, dia do hortifruti), a folga e os custos do carro/bike. Toque em **Estou em casa agora** (uma vez) para o app estimar a distância até os mercados.
-3. Importe a primeira nota (veja "Depois"). O catálogo nasce das notas.
+2. Monte a **Despensa**: em **Despensa → Adicionar item**, informe o nome, a **quantidade padrão** (quanto você quer ter em casa) e a **quantidade atual**. Ou importe a nota de uma compra e deixe os itens dela entrarem sozinhos (veja "Atualizar pela nota").
+3. Opcional, em **Mais → Ajustes**: agenda das idas (vira só um lembrete no Início) e custos do carro/bike. Toque em **Estou em casa agora** (uma vez) para o app estimar a distância até os mercados.
 
-## Antes da ida (cerca de 3 minutos)
+## A despensa
 
-1. **Início** mostra a próxima ida e quantos produtos vencem nela. Toque em **Conferir despensa**.
-2. Para cada produto, toque no nível: **Cheio, Metade, Acabando, Acabou**. "Mesmo que o estimado" aceita o palpite do app. Dá para pular, voltar ou concluir antes.
-3. Toque em **Gerar lista**. Ajuste quantidades com + e −, remova o que não precisa e adicione avulsos. Veja a estimativa de custo, os alertas de preço e, se houver, a sugestão de dividir a lista entre mercados.
+- Cada item mostra **quantidade atual de quantidade padrão** (por exemplo, `1,26 de 1,26 kg`) e uma situação: **Zerado**, **Abaixo do padrão**, **No padrão** ou **Acima do padrão**. Ter mais que o padrão (uma promoção, por exemplo) é normal.
+- **+ e −** ajustam na hora. Em **Ajustar e editar** há os atalhos **Cheio, Metade, Acabando, Acabou** (calculam a quantidade a partir do padrão) e o campo de **quantidade exata**.
+- **Filtros:** Todos, Faltando, Zerados, Eventuais e Sem padrão. Dá para buscar e agrupar por categoria ou por local da casa.
+- **Recorrente ou eventual?** Só os itens **recorrentes** (de uso contínuo) entram sozinhos na lista quando faltam. Item que chega pela nota nasce **eventual**: fica na despensa, mas não vai para a lista. Para um item de uso contínuo, toque em **Repor sempre**: o app sugere a quantidade padrão pelas suas compras e você confirma. Item cadastrado à mão já nasce recorrente. O app avisa "Parece de uso contínuo" quando você compra o mesmo item 3 vezes, e pergunta se quer **deixar de repor** o que ficou mais de 90 dias sem compra.
+- Em **Mais → Conferir despensa** há uma revisão opcional: o app pergunta, um item por vez, o que está sem quantidade, desatualizado (mais de 14 dias) ou provavelmente acabando.
 
-## Durante (no mercado, funciona sem internet)
+## A lista de compras
+
+**Lista** é única e contínua: entra todo item **recorrente** que está zerado ou abaixo do padrão, na quantidade que falta para chegar ao padrão. Ajuste quantidades com + e −, remova o que não precisa e adicione avulsos. Veja a estimativa de custo, os alertas de preço e, se houver, a sugestão de dividir a lista entre mercados. Regerar a lista mantém suas edições.
+
+## No mercado (funciona sem internet)
 
 1. **Iniciar compra**. Toque em **Peguei** em cada item; ajuste a quantidade; informe o preço se quiser (nunca é obrigatório).
-2. **Não encontrei** e **Adiar** fazem o item voltar na próxima ida. **Adicionar extra** para o que não estava na lista.
+2. **Não encontrei** e **Adiar** deixam o item na lista. **Adicionar extra** para o que não estava nela.
 3. O total corrente aparece no topo. Se definir um orçamento, o app avisa quando chegar perto ou passar.
+4. Ao terminar, escolha **um** dos dois caminhos (não use os dois na mesma compra, senão a quantidade soma duas vezes):
+   - **Terminar sem nota:** o que você pegou soma à despensa e a lista fecha.
+   - **Terminar compra (importar a nota):** segue para a importação, que soma o que está na nota.
 
-## Depois (cerca de 30 segundos)
+## Atualizar pela nota
 
-1. **Terminar compra** → importar a nota:
-   - informe a chave de 44 dígitos (digitar, **Escanear QR**, **Tirar foto** ou **Enviar imagem**);
-   - toque em **Copiar chave e abrir SEFAZ**, resolva o captcha e consulte;
-   - copie o texto da nota e cole no app (ou use Compartilhar → Despensa no Android);
-   - confira os itens e toque em **Salvar compra**.
-2. O app atualiza o estoque, fecha a lista e mostra o **resumo**: o que foi comprado, o que faltou (volta na próxima lista) e o que veio fora da lista.
-3. Na primeira nota de um mercado novo, confirme se foi de carro ou de bike elétrica; o custo da ida entra na compra. Sem internet ou sem casa cadastrada, decida depois em **Mercados**.
+1. Informe a chave de 44 dígitos (digitar, **Escanear QR**, **Tirar foto** ou **Enviar imagem**).
+2. Toque em **Copiar chave e abrir SEFAZ**, resolva o captcha e consulte.
+3. Copie o texto da nota e cole no app (ou use Compartilhar → Despensa no Android).
+4. Na conferência, cada item mostra **o que vai mudar na despensa** (por exemplo, `Despensa: 1 → 3 (+2)`). Marque **Repor sempre** nos de uso contínuo e **Não é da despensa** em sacola ou serviço (ficam só no histórico da nota). Toque em **Salvar compra**.
+5. A nota **soma** à quantidade atual. Reimportar a mesma nota não soma duas vezes. Se você apagar uma compra em **Mais → Compras**, o app mostra o que será tirado da despensa (nunca abaixo de zero) antes de confirmar.
+6. Na primeira nota de um mercado novo, confirme se foi de carro ou de bike elétrica; o custo da ida entra na compra. Sem internet ou sem casa cadastrada, decida depois em **Mercados**.
 
 ## Produtos repetidos com nomes diferentes
 
@@ -36,7 +43,7 @@ A nota de cada mercado escreve o produto de um jeito. O app junta sozinho o que 
 
 - **Marca diferente** (Helmaz × Liza) continua sendo outro produto.
 - **Tamanho diferente ou ausente** (`Maionese Liza` × `Maionese Liza 500g`): o app não junta sozinho. Na conferência da nota aparece "Já existe algo parecido: é o mesmo produto?" com um botão **Usar “…”**. Tocando, o item passa a usar o produto que já existe, e nas próximas notas daquele mercado ele já vem certo.
-- **O que já estava repetido:** em **Mais → Catálogo → Possíveis duplicados** o app lista os pares que parecem iguais. Você escolhe qual manter e confirma. Vale fazer um backup antes (Ajustes → Backup), porque mesclar não tem volta.
+- **O que já estava repetido:** em **Despensa → Possíveis duplicados** o app lista os pares que parecem iguais. Você escolhe qual manter e confirma. Vale fazer um backup antes (Ajustes → Backup), porque mesclar não tem volta.
 
 ## Cópia de segurança (importante)
 
@@ -53,8 +60,8 @@ Seus dados ficam **só neste celular**. Se ele for perdido, quebrado, formatado 
 
 - **Preços**: histórico por produto (preço normalizado, variação, gráfico) e **Comparar** mercados.
 - **Gastos**: custo real por mês (itens + idas), por categoria e a inflação pessoal.
-- **Painel**: idas, emergências, rupturas e tempo de conferência contra o mês anterior.
-- **Catálogo**: ajuste metas, frequência e tipo de ida; arquive ou mescle produtos duplicados.
+- **Painel**: idas, emergências, rupturas e tempo de conferência contra o mês anterior (métricas do objetivo antigo, mantidas sem destaque).
+- **Despensa**: o histórico de preço de cada item fica em **Ajustar e editar → Preço e compras**; arquive ou mescle itens duplicados.
 
 ## Dicas
 

@@ -1,6 +1,6 @@
 // Service worker manual (sem plugin). Estratégias em AGENTS.md seção 8.
 // Alterou rota, asset ou estratégia: incremente VERSAO.
-const VERSAO = "despensa-v2";
+const VERSAO = "despensa-v3";
 const PREFIXO = "despensa-";
 const TIMEOUT_NAVEGACAO_MS = 4000;
 

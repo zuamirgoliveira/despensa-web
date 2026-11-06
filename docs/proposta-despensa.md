@@ -1,6 +1,6 @@
 # Proposta: a despensa em primeiro lugar
 
-> **Status:** proposta para revisão. Nada aqui foi implementado. Deriva de `docs/discovery-despensa.md` e das decisões de 06/11/2026. Quando aprovada, substitui o foco do `blue-print.md`; o `AGENTS.md` só muda junto com o código de cada tarefa.
+> **Status:** implementada (D-01 a D-15, nov/2026). As decisões abertas da seção 5 ficaram com as recomendações indicadas; ver "Desfecho" no fim. Deriva de `docs/discovery-despensa.md` e das decisões de 06/11/2026. Quando aprovada, substitui o foco do `blue-print.md`; o `AGENTS.md` só muda junto com o código de cada tarefa.
 
 ## 1. Decisões já tomadas
 
@@ -104,3 +104,9 @@ Prefixo **D-** (despensa). Cada uma: um branch `feat/D-nn-…`, commits `tipo(es
 - **Migração irreversível no aparelho:** o IndexedDB não volta atrás. Mitigação: exigir cópia de segurança antes (aviso na primeira abertura após a migração) e testar a migração com o seed e a fixture v1.
 - **Soma dobrada** (modo compra + nota, reimportação): coberta por D-06 e D-07 com testes específicos.
 - **Lista vazia por engano** se poucos itens forem recorrentes: o Início mostra "N itens não recorrentes zeraram" e a promoção em lote na importação reduz o risco.
+
+## 8. Desfecho (implementação)
+
+- **Decisões da seção 5:** (1) apagar compra **desfaz** a soma, com aviso do efeito; (2) modo compra tem os dois caminhos, **Terminar sem nota** (soma) e **Terminar compra** (importa a nota, que soma), e o diálogo avisa que usar os dois soma duas vezes; (3) item que não é da despensa é **ignorado por nota** (fica na compra, sem produto nem estoque; a memória por apelido ficou de fora); (4) item sem unidade contável **não** ganhou modo "tem / não tem" próprio: usa a quantidade numérica comum (pendência); (5) Despensa agrupa por categoria, com opção de local; (6) custo da ida, comparação de mercados, inflação e Painel **ficaram, sem destaque** (menu Mais); (7) migração 003 como descrita.
+- **Fora do escopo desta entrega:** reformular as métricas do Painel para a despensa; modo "tem / não tem"; memória de "não é da despensa" por apelido; agenda das idas só como lembrete no Início (continua configurável em Ajustes).
+- **Riscos:** a migração 003 não tem volta: fazer cópia de segurança antes de abrir a versão nova com dados reais (D-16, tarefa da Zuma).
