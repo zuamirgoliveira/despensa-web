@@ -87,3 +87,40 @@ describe("garantirListaDaCasa", () => {
     expect((await itens(lista.id))[0]).toMatchObject({ status: "pego", quantidadePega: 2 });
   });
 });
+
+describe("uma única lista", () => {
+  it("listas abertas do modelo antigo são fechadas e não interferem", async () => {
+    const a = await produto("A");
+    await definirQuantidade(repos, a, 0);
+    const antiga = (extra: Partial<{ criadaEm: string; mercadoId: string }> = {}) =>
+      repos.listas.salvar({ id: crypto.randomUUID(), casaId, tipoIda: "hortifruti_semanal", data: "2026-10-01", status: "rascunho", criadaEm: "2026-10-01T10:00:00Z", ...extra });
+    const [l1, l2] = [await antiga(), await antiga({ criadaEm: "2026-10-02T10:00:00Z", mercadoId: crypto.randomUUID() })];
+    await repos.itensLista.salvar({ id: crypto.randomUUID(), casaId, listaId: l1.id, produtoId: a.id, quantidadeSugerida: 9, status: "pendente", urgente: false, removido: false, quantidadeEditada: false, motivo: "cobertura" });
+
+    const { lista } = await garantirListaDaCasa(repos, "2026-11-06");
+    const abertas = (await repos.listas.listar()).filter((l) => l.status !== "fechada");
+    expect(abertas.map((l) => l.id)).toEqual([lista.id]); // só uma segue aberta
+    expect([l1.id, l2.id]).toContain(lista.id); // reaproveita a mais antiga
+  });
+
+  it("prefere a lista em compra e fecha as demais", async () => {
+    const emCompra = await repos.listas.salvar({ id: crypto.randomUUID(), casaId, tipoIda: "mercado_semanal", data: "2026-11-05", status: "em_compra", criadaEm: "2026-11-05T10:00:00Z" });
+    const rascunho = await repos.listas.salvar({ id: crypto.randomUUID(), casaId, tipoIda: "mercado_semanal", data: "2026-11-01", status: "rascunho", criadaEm: "2026-11-01T10:00:00Z" });
+    const { lista } = await garantirListaDaCasa(repos, "2026-11-06");
+    expect(lista.id).toBe(emCompra.id);
+    expect((await repos.listas.obter(rascunho.id))?.status).toBe("fechada");
+  });
+
+  it("o que não foi comprado segue faltando na lista seguinte", async () => {
+    const [a, b] = [await produto("A"), await produto("B")];
+    await definirQuantidade(repos, a, 0);
+    await definirQuantidade(repos, b, 0);
+    const { lista } = await garantirListaDaCasa(repos, "2026-11-06");
+    const [ia] = (await itens(lista.id)).filter((x) => x.produtoId === a.id);
+    await repos.itensLista.salvar({ ...ia, status: "pego", quantidadePega: 4 });
+    await definirQuantidade(repos, a, 4); // comprou só o A
+    await repos.listas.salvar({ ...lista, status: "fechada" });
+    const proxima = await garantirListaDaCasa(repos, "2026-11-13");
+    expect((await itens(proxima.lista.id)).map((x) => x.produtoId)).toEqual([b.id]);
+  });
+});

@@ -20,7 +20,8 @@ const NIVEL_ROTULO = { cheio: "Cheio", metade: "Metade", acabando: "Acabando", a
 const SITUACAO: Record<LinhaDespensa["situacao"], { texto: string; tom: "neutro" | "info" | "sucesso" | "aviso" | "erro" }> = {
   sem_registro: { texto: "Sem quantidade", tom: "neutro" },
   zerado: { texto: "Zerado", tom: "erro" },
-  abaixo: { texto: "Abaixo do padrão", tom: "aviso" },
+  abaixo: { texto: "Menos da metade", tom: "aviso" },
+  parcial: { texto: "Abaixo do padrão", tom: "neutro" },
   ok: { texto: "No padrão", tom: "sucesso" },
   acima: { texto: "Acima do padrão", tom: "info" },
 };

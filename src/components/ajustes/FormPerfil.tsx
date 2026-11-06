@@ -53,13 +53,6 @@ export function FormPerfil({ perfil, aoSalvar }: { perfil: Perfil; aoSalvar: () 
           erro={erros.janelaPrecoDias}
           ajuda="Só preços dessa janela entram em 'melhor mercado' e na cesta."
         />
-        <Input
-          rotulo="Economia mínima para dividir a lista (R$)"
-          inputMode="decimal"
-          value={v.economiaMinimaDivisao}
-          onChange={muda("economiaMinimaDivisao")}
-          erro={erros.economiaMinimaDivisao}
-        />
       </Card>
 
       <Card className="flex flex-col gap-3">

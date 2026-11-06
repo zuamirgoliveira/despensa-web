@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, Details, EmptyState, Input, LinkBotao, useToast } from "@/components/ui";
 import { criarRepositorios } from "@/data";
-import { adicionarAvulso, alterarQuantidade, dividirLista, garantirListaDaCasa, removerItem, restaurarItem } from "@/data/lista";
+import { adicionarAvulso, alterarQuantidade, garantirListaDaCasa, removerItem, restaurarItem } from "@/data/lista";
 import { useRepositorio } from "@/data/useRepositorio";
 import { estimarCusto } from "@/domain/lista";
-import { melhorMercadoPorProduto } from "@/domain/comparacao";
-import { avisoIdaPoucoVantajosa, mercadoHabitualDaCasa, proporDivisao } from "@/domain/economia";
+import { avisoIdaPoucoVantajosa, mercadoHabitualDaCasa } from "@/domain/economia";
 import { custoIdaDoMercado } from "@/domain/ida";
 import { alertasPorProduto } from "@/domain/precos";
 import { agruparPorCategoria, agruparPorMercado, temMercadosDiferentes, type ItemVisao } from "@/lib/agruparLista";
@@ -80,30 +79,14 @@ export function ListaInteligente() {
     return (it?.produtoId && dados.produtos.get(it.produtoId)?.nome) || it?.nomeAvulso || "";
   };
 
-  const nomeMercado = (id?: string): string => {
-    const m = dados.mercados.find((x) => x.id === id);
-    return m?.apelido || m?.nome || "outro mercado";
-  };
-  const irmas = dados.listas.filter((l) => l.id !== lista.id && l.status !== "fechada");
-  const sugestoes = (() => {
+  const aviso = (() => {
     const perfil = dados.perfil;
-    const habitualId = lista.mercadoId ?? mercadoHabitualDaCasa(dados.agendas, dados.compras);
-    if (!perfil || !habitualId) return { aviso: undefined, divisao: undefined };
+    const habitualId = mercadoHabitualDaCasa(dados.agendas, dados.compras);
+    if (!perfil || !habitualId || visiveis.length === 0) return undefined;
     const habitual = dados.mercados.find((m) => m.id === habitualId);
     const custoIda = habitual ? custoIdaDoMercado(habitual, perfil) : undefined;
-    const aviso =
-      custoIda !== undefined && visiveis.length > 0
-        ? avisoIdaPoucoVantajosa({ itens: visiveis.length, totalEstimadoCentavos: estimativa.totalCentavos, custoIdaCentavos: custoIda })
-        : undefined;
-    const comparacoes = melhorMercadoPorProduto(dados.compras, hojeRecife(), perfil.janelaPrecoDias);
-    const p = lista.mercadoId ? undefined : proporDivisao({ itens: visiveis.map((v) => v.item), habitualId, mercados: dados.mercados, comparacoes, perfil });
-    return {
-      aviso:
-        aviso && custoIda !== undefined
-          ? `Esta ida tem ${visiveis.length} ${visiveis.length === 1 ? "item" : "itens"}, ${brl(estimativa.totalCentavos)}, e custa ${brl(custoIda)} para ir e voltar. Vale esperar e juntar com outra compra?`
-          : undefined,
-      divisao: p ? { p, habitualId, habitual: nomeMercado(habitualId), alternativo: nomeMercado(p.mercadoAlternativoId) } : undefined,
-    };
+    if (custoIda === undefined || !avisoIdaPoucoVantajosa({ itens: visiveis.length, totalEstimadoCentavos: estimativa.totalCentavos, custoIdaCentavos: custoIda })) return undefined;
+    return `Esta ida tem ${visiveis.length} ${visiveis.length === 1 ? "item" : "itens"}, ${brl(estimativa.totalCentavos)}, e custa ${brl(custoIda)} para ir e voltar. Vale esperar e juntar com outra compra?`;
   })();
 
   async function adicionar(): Promise<void> {
@@ -137,36 +120,7 @@ export function ListaInteligente() {
 
       {erro ? <Alert tipo="erro">{erro}</Alert> : null}
 
-      {sugestoes.aviso ? <Alert tipo="aviso">{sugestoes.aviso}</Alert> : null}
-      {sugestoes.divisao ? (
-        <Alert tipo="info">
-          <p>
-            Dividir a lista entre {sugestoes.divisao.habitual} e {sugestoes.divisao.alternativo} economiza {brl(sugestoes.divisao.p.economiaLiquidaCentavos)} líquidos
-            ({brl(sugestoes.divisao.p.economiaPrecoCentavos)} de preço menos {brl(sugestoes.divisao.p.custoIdaExtraCentavos)} da ida extra).
-          </p>
-          <Button
-            variante="secundario"
-            className="mt-2"
-            onClick={async () => {
-              const d = sugestoes.divisao;
-              if (!d) return;
-              await dividirLista(await criarRepositorios(), lista, d.habitualId, d.p.mercadoAlternativoId, d.p.produtoIds);
-              mostrar(`Lista dividida: ${d.p.produtoIds.length} itens foram para ${d.alternativo}.`);
-            }}
-          >
-            Dividir lista
-          </Button>
-        </Alert>
-      ) : null}
-      {irmas.length ? (
-        <div className="flex flex-col gap-1" aria-label="Outras listas desta ida">
-          {irmas.map((l) => (
-            <Button key={l.id} variante="secundario" onClick={() => setListaId(l.id)}>
-              Ver a lista de {nomeMercado(l.mercadoId)}
-            </Button>
-          ))}
-        </div>
-      ) : null}
+      {aviso ? <Alert tipo="aviso">{aviso}</Alert> : null}
 
       {visiveis.length === 0 ? (
         <EmptyState titulo="Nada faltando">

@@ -2,6 +2,8 @@
 
 ## Não lançado (reposicionamento: a despensa em primeiro lugar)
 
+- **Lista única:** só existe a lista da casa; entram os recorrentes zerados ou com menos de 50% do padrão, ordenados do mais vazio ao menos vazio. Sai a divisão entre mercados e o botão "Ver a lista de outro mercado"; listas abertas do modelo antigo são fechadas.
+
 - **D-01/D-02:** estoque passa a ter quantidade numérica (`Estoque.quantidade`) e produto ganha `recorrente`; migração 003 converte os estoques atuais (nível × padrão) e marca os produtos existentes como recorrentes; backup v3 lê v1 e v2. A compra agora soma ao estoque.
 - **D-03/D-04:** regras puras da despensa (situação, o que falta, rótulo de nível) e a nova lista da casa (`padrão − atual`, só recorrentes). Ainda não ligadas às telas.
 - **D-05:** regras de recorrência (padrão sugerido, "repor sempre", "deixar de repor").

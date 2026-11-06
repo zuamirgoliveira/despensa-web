@@ -1,4 +1,4 @@
-// Serviço da lista de compras: lista da casa, regeração preservando edições, edição de itens e divisão entre mercados.
+// Serviço da lista de compras: lista única da casa, regeração preservando edições e edição de itens.
 import { gerarListaDaCasa } from "@/domain/despensa";
 import { mesclarRegeracao, estimarCusto } from "@/domain/lista";
 import type { ItemLista, Lista } from "@/domain/types";
@@ -15,14 +15,16 @@ export async function garantirListaDaCasa(repos: Repositorios, hoje: string, ago
   const [produtos, estoques, compras, listas] = await Promise.all([repos.produtos.listar(), repos.estoques.listar(), repos.compras.listar(), repos.listas.listar()]);
   const gerada = gerarListaDaCasa({ produtos, estoques, compras });
 
-  // Depois de dividir pode haver duas listas abertas: a regeração é da original (a mais antiga).
-  const abertas = listas.filter((l) => l.status !== "fechada").sort((a, b) => a.criadaEm.localeCompare(b.criadaEm));
-  const irmaos = new Set<string>();
-  for (const l of abertas.slice(1)) for (const i of await repos.itensLista.listarPorLista(l.id)) if (i.produtoId && !i.removido) irmaos.add(i.produtoId);
-  const sugeridos = gerada.itens.filter((i) => !irmaos.has(i.produtoId));
+  // Só existe uma lista: a que está em compra (a mais recente) ou, sem ela, o rascunho mais antigo. As outras listas
+  // abertas são do modelo antigo (uma por ida, ou dividida entre mercados) e são fechadas, para não interferirem.
+  const abertas = listas.filter((l) => l.status !== "fechada");
+  const emCompra = abertas.filter((l) => l.status === "em_compra").sort((a, b) => b.criadaEm.localeCompare(a.criadaEm))[0];
+  const escolhida = emCompra ?? abertas.sort((a, b) => a.criadaEm.localeCompare(b.criadaEm))[0];
+  for (const l of abertas) if (l.id !== escolhida?.id) await repos.listas.salvar({ ...l, status: "fechada" });
+  const sugeridos = gerada.itens;
 
   const base =
-    abertas[0] ??
+    escolhida ??
     (await repos.listas.salvar({ id: crypto.randomUUID(), casaId: casa.id, tipoIda: "mercado_semanal", data: hoje, status: "rascunho", criadaEm: agora.toISOString() }));
   const lista = base.status === "rascunho" && base.data !== hoje ? await repos.listas.salvar({ ...base, data: hoje }) : base;
 
@@ -66,31 +68,4 @@ export async function adicionarAvulso(repos: Repositorios, lista: Lista, nome: s
     id: crypto.randomUUID(), casaId: lista.casaId, listaId: lista.id, nomeAvulso: nome.trim(), quantidadeSugerida: quantidade,
     status: "pendente", motivo: "manual", urgente: false, removido: false, quantidadeEditada: true,
   });
-}
-
-/**
- * Divide a lista entre o mercado habitual e um alternativo: cria uma segunda lista (mesma ida, `mercadoId`
- * do alternativo) e move para ela os itens indicados. Nenhum item se perde.
- */
-export async function dividirLista(
-  repos: Repositorios,
-  lista: Lista,
-  habitualId: string,
-  alternativoId: string,
-  produtoIds: readonly string[],
-  agora: Date = new Date(),
-): Promise<{ original: Lista; nova: Lista }> {
-  const mover = new Set(produtoIds);
-  // A nova lista é sempre posterior à original (a regeração usa a mais antiga), mesmo no mesmo milissegundo.
-  const criadaEm = new Date(Math.max(agora.getTime(), new Date(lista.criadaEm).getTime() + 1)).toISOString();
-  const nova = await repos.listas.salvar({
-    id: crypto.randomUUID(), casaId: lista.casaId, tipoIda: lista.tipoIda, data: lista.data, status: "rascunho", mercadoId: alternativoId, criadaEm,
-  });
-  for (const i of await repos.itensLista.listarPorLista(lista.id)) {
-    if (!i.removido && i.produtoId && mover.has(i.produtoId)) await repos.itensLista.salvar({ ...i, listaId: nova.id });
-  }
-  const compras = await repos.compras.listar();
-  const estimar = async (l: Lista): Promise<Lista> => repos.listas.salvar({ ...l, estimativaCentavos: estimarCusto(await repos.itensLista.listarPorLista(l.id), compras).totalCentavos });
-  const original = await estimar({ ...lista, mercadoId: habitualId });
-  return { original, nova: await estimar(nova) };
 }

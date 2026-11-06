@@ -43,7 +43,7 @@ const est = (produtoId: string, quantidade: number): Estoque => ({ id: `e-${prod
 
 describe("situacaoDoItem / quantidadeQueFalta", () => {
   it.each([
-    [4, 0, "zerado", 4], [4, 1, "abaixo", 3], [4, 4, "ok", 0], [4, 9, "acima", 0], [0, 0, "zerado", undefined], [0, 3, "ok", undefined],
+    [4, 0, "zerado", 4], [4, 1, "abaixo", 3], [4, 1.9, "abaixo", 2.1], [4, 2, "parcial", 2], [4, 3, "parcial", 1], [4, 4, "ok", 0], [4, 9, "acima", 0], [0, 0, "zerado", undefined], [0, 3, "ok", undefined],
   ] as const)("padrão %d, atual %d → %s, falta %s", (meta, atual, situacao, falta) => {
     expect(situacaoDoItem({ meta }, { quantidade: atual })).toBe(situacao);
     expect(quantidadeQueFalta({ meta }, { quantidade: atual })).toBe(falta);
@@ -68,8 +68,8 @@ describe("gerarListaDaCasa", () => {
   const lista = (produtos: Produto[], estoques: Estoque[]) => gerarListaDaCasa({ produtos, estoques, compras: [] });
 
   it("zerado entra com o padrão; abaixo entra com o que falta; ok e acima não entram", () => {
-    const r = lista([prod("a"), prod("b"), prod("c"), prod("d")], [est("a", 0), est("b", 1), est("c", 4), est("d", 9)]);
-    expect(r.itens.map((i) => [i.produtoId, i.quantidade, i.motivo])).toEqual([["a", 4, "acabou"], ["b", 3, "abaixo"]]);
+    const r = lista([prod("a"), prod("b"), prod("c"), prod("d"), prod("e")], [est("a", 0), est("b", 1), est("c", 4), est("d", 9), est("e", 2)]);
+    expect(r.itens.map((i) => [i.produtoId, i.quantidade, i.motivo])).toEqual([["a", 4, "acabou"], ["b", 3, "abaixo"]]); // "e" está em 50%: ainda não repõe
   });
   it("arredonda ao passo da unidade (kg: 0,1) e respeita o mínimo", () => {
     const r = lista([prod("k", { unidade: "kg", meta: 1.05 })], [est("k", 0.52)]);
@@ -100,5 +100,14 @@ describe("gerarListaDaCasa", () => {
   it("itens sem preço ficam fora da soma e são listados", () => {
     const r = lista([prod("a")], [est("a", 0)]);
     expect(r.resumo).toMatchObject({ totalEstimadoCentavos: 0, semPreco: ["a"] });
+  });
+});
+
+describe("ordem da lista da casa", () => {
+  it("zerados primeiro, depois do mais vazio ao menos vazio; empate por nome", () => {
+    const produtos = [prod("Zeta", { meta: 10 }), prod("Beta", { meta: 10 }), prod("Alfa", { meta: 10 }), prod("Gama", { meta: 10 }), prod("Delta", { meta: 8 })];
+    const estoques = [est("Zeta", 4), est("Beta", 0), est("Alfa", 2), est("Gama", 0), est("Delta", 4)]; // frações: 0,4 · 0 · 0,2 · 0 · 0,5(fora)
+    const r = gerarListaDaCasa({ produtos, estoques, compras: [] });
+    expect(r.itens.map((i) => i.produtoId)).toEqual(["Beta", "Gama", "Alfa", "Zeta"]);
   });
 });

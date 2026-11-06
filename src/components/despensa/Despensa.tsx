@@ -85,7 +85,7 @@ export function Despensa() {
       ) : (
         <section aria-label="Resumo da despensa" className="flex flex-col gap-2">
           <p className="text-sm" data-testid="resumo-despensa">
-            {resumo.itens} {resumo.itens === 1 ? "item" : "itens"} · {resumo.zerados} {resumo.zerados === 1 ? "zerado" : "zerados"} · {resumo.abaixo} abaixo do padrão
+            {resumo.itens} {resumo.itens === 1 ? "item" : "itens"} · {resumo.zerados} {resumo.zerados === 1 ? "zerado" : "zerados"} · {resumo.abaixo} com menos da metade
           </p>
           {resumo.naoRecorrentesZerados ? (
             <Alert tipo="info">

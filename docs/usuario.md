@@ -17,12 +17,14 @@
 
 ## A lista de compras
 
-**Lista** é única e contínua: entra todo item **recorrente** que está zerado ou abaixo do padrão, na quantidade que falta para chegar ao padrão. Ajuste quantidades com + e −, remova o que não precisa e adicione avulsos. Veja a estimativa de custo, os alertas de preço e, se houver, a sugestão de dividir a lista entre mercados. Regerar a lista mantém suas edições.
+**Lista** é uma só: a lista da casa. Entra todo item **recorrente** que está **zerado** ou com **menos da metade** da quantidade padrão, na quantidade que falta para chegar ao padrão. Os zerados vêm primeiro; depois, do mais vazio para o menos vazio. Ajuste quantidades com + e −, remova o que não precisa e adicione avulsos. Veja a estimativa de custo e os alertas de preço. Regerar a lista mantém suas edições.
+
+O que você não achar, não tiver ou achar caro **não vira outra lista**: o item continua faltando na despensa e aparece de novo na próxima vez.
 
 ## No mercado (funciona sem internet)
 
 1. **Iniciar compra**. Toque em **Peguei** em cada item; ajuste a quantidade; informe o preço se quiser (nunca é obrigatório).
-2. **Não encontrei** e **Adiar** deixam o item na lista. **Adicionar extra** para o que não estava nela.
+2. **Não encontrei** e **Adiar** deixam o item faltando (ele continua na lista). **Adicionar extra** para o que não estava nela.
 3. O total corrente aparece no topo. Se definir um orçamento, o app avisa quando chegar perto ou passar.
 4. Ao terminar, escolha **um** dos dois caminhos (não use os dois na mesma compra, senão a quantidade soma duas vezes):
    - **Terminar sem nota:** o que você pegou soma à despensa e a lista fecha.

@@ -2,7 +2,7 @@ import { IDBFactory } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { registrarNivel } from "@/data/conferencia";
 import { criarRepositorios } from "@/data/indexeddb";
-import { adicionarAvulso, alterarQuantidade, dividirLista, garantirListaDaCasa, removerItem, restaurarItem } from "@/data/lista";
+import { adicionarAvulso, alterarQuantidade, garantirListaDaCasa, removerItem, restaurarItem } from "@/data/lista";
 import type { Repositorios } from "@/data/repositorios";
 import type { Produto } from "@/domain/types";
 
@@ -39,27 +39,5 @@ describe("itens", () => {
     const a = await adicionarAvulso(repos, l, "Pilha", 1);
     await removerItem(repos, a);
     expect(await repos.itensLista.listarPorLista(l.id)).toEqual([]);
-  });
-});
-
-describe("dividirLista", () => {
-  it("cria a segunda lista, move os itens indicados e não perde nenhum; regerar não duplica", async () => {
-    const [a, b, c] = [await novo("A"), await novo("B"), await novo("C")];
-    for (const p of [a, b, c]) await acabou(p);
-    const lista = (await garantirListaDaCasa(repos, HOJE)).lista;
-    const mercadoA = crypto.randomUUID();
-    const mercadoB = crypto.randomUUID();
-    const { original, nova } = await dividirLista(repos, lista, mercadoA, mercadoB, [b.id, c.id]);
-    expect(original).toMatchObject({ id: lista.id, mercadoId: mercadoA });
-    expect(nova).toMatchObject({ tipoIda: "mercado_semanal", data: lista.data, mercadoId: mercadoB, status: "rascunho" });
-    expect((await repos.itensLista.listarPorLista(lista.id)).map((i) => i.produtoId)).toEqual([a.id]);
-    expect((await repos.itensLista.listarPorLista(nova.id)).map((i) => i.produtoId).sort()).toEqual([b.id, c.id].sort());
-    expect((await repos.itensLista.listar())).toHaveLength(3); // nada se perdeu
-
-    // regerar a original não traz de volta o que foi para a outra lista
-    const regerada = (await garantirListaDaCasa(repos, HOJE)).lista;
-    expect(regerada.id).toBe(lista.id);
-    expect((await repos.itensLista.listarPorLista(lista.id)).map((i) => i.produtoId)).toEqual([a.id]);
-    expect(await repos.listas.listar()).toHaveLength(2);
   });
 });

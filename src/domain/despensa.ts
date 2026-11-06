@@ -30,8 +30,14 @@ export function converterEstoqueLegado(
 /** Tolerância de ponto flutuante nas comparações de quantidade. */
 const EPS = 1e-9;
 
-/** Onde o item está em relação ao padrão. `sem_registro`: ainda ninguém informou a quantidade. */
-export type SituacaoItem = "sem_registro" | "zerado" | "abaixo" | "ok" | "acima";
+/** Fração do padrão abaixo da qual um item recorrente vai para a lista de compras (50%). */
+export const FRACAO_PARA_REPOR = 0.5;
+
+/**
+ * Onde o item está em relação ao padrão. `sem_registro`: ainda ninguém informou a quantidade.
+ * `abaixo`: menos de 50% do padrão (entra na lista). `parcial`: de 50% até o padrão (ainda não repõe).
+ */
+export type SituacaoItem = "sem_registro" | "zerado" | "abaixo" | "parcial" | "ok" | "acima";
 
 /** Quantidade padrão do item: `Produto.meta` quando há (> 0). */
 export function quantidadePadrao(produto: Pick<Produto, "meta">): number | undefined {
@@ -43,7 +49,8 @@ export function situacaoDoItem(produto: Pick<Produto, "meta">, estoque: Pick<Est
   if (estoque.quantidade <= EPS) return "zerado";
   const padrao = quantidadePadrao(produto);
   if (padrao === undefined) return "ok";
-  if (estoque.quantidade < padrao - EPS) return "abaixo";
+  if (estoque.quantidade < padrao * FRACAO_PARA_REPOR - EPS) return "abaixo";
+  if (estoque.quantidade < padrao - EPS) return "parcial";
   return estoque.quantidade > padrao + EPS ? "acima" : "ok";
 }
 
@@ -72,9 +79,10 @@ export type ListaDaCasa = {
 
 /**
  * Lista única da casa (decisão de 06/11/2026): itens **recorrentes**, ativos e com registro de quantidade
- * que estão zerados (quantidade = padrão, ou a última comprada, ou uma unidade mínima) ou abaixo do padrão
- * (quantidade = padrão − atual, arredondada para cima ao passo da unidade). Acima ou no padrão nunca entra.
- * Não depende de agenda, ida nem consumo.
+ * que estão zerados (quantidade = padrão, ou a última comprada, ou uma unidade mínima) ou com **menos de 50% do
+ * padrão** (quantidade = padrão − atual, arredondada para cima ao passo da unidade). De 50% para cima nunca entra.
+ * Ordem: zerados primeiro, depois do mais vazio ao menos vazio (fração do padrão), empate por nome.
+ * Não depende de agenda, ida nem consumo. Só existe uma lista; o que não foi comprado segue faltando.
  */
 export function gerarListaDaCasa(entrada: {
   produtos: readonly Produto[];
@@ -85,6 +93,7 @@ export function gerarListaDaCasa(entrada: {
   const itens: ItemListaSugerido[] = [];
   const semPreco: string[] = [];
   const naoRecorrentesZerados: string[] = [];
+  const ordem = new Map<string, { fracao: number; nome: string }>();
   let total = 0;
 
   for (const p of entrada.produtos) {
@@ -107,6 +116,12 @@ export function gerarListaDaCasa(entrada: {
       total += item.precoEstimadoCentavos;
     }
     itens.push(item);
+    const padrao = quantidadePadrao(p);
+    ordem.set(p.id, { fracao: situacao === "zerado" || padrao === undefined ? 0 : (estoque?.quantidade ?? 0) / padrao, nome: p.nome });
   }
+  itens.sort((a, b) => {
+    const [x, y] = [ordem.get(a.produtoId), ordem.get(b.produtoId)];
+    return (x?.fracao ?? 0) - (y?.fracao ?? 0) || (x?.nome ?? "").localeCompare(y?.nome ?? "", "pt-BR");
+  });
   return { itens, resumo: { totalEstimadoCentavos: total, semPreco, avisos: [] }, naoRecorrentesZerados };
 }

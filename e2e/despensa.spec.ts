@@ -49,7 +49,7 @@ test("a nota popula a despensa: eventuais, quantidades, filtros, +/−, repor se
   await importarNota(page);
   await irParaTela(page, "Despensa");
 
-  await expect(page.getByTestId("resumo-despensa")).toHaveText("16 itens · 0 zerados · 0 abaixo do padrão");
+  await expect(page.getByTestId("resumo-despensa")).toHaveText("16 itens · 0 zerados · 0 com menos da metade");
   await expect(page.getByRole("heading", { name: "Hortifruti" })).toBeVisible();
   await expect(page.getByRole("listitem").filter({ hasText: "Eventual" })).toHaveCount(16); // nascem da nota: não vão sozinhos para a lista
 
@@ -91,14 +91,14 @@ test("a nota popula a despensa: eventuais, quantidades, filtros, +/−, repor se
   await melao.getByRole("button", { name: "Salvar produto" }).click();
   await expect(page.getByText("Item salvo.")).toBeVisible();
   await expect(melao.getByTestId("quantidade")).toHaveText("1,36 de 3,5 kg");
-  await expect(melao).toContainText("Abaixo do padrão");
+  await expect(melao).toContainText("Menos da metade"); // 39% do padrão: já entra na lista
 
   // quantidade exata
   await melao.getByLabel(/^Quantidade atual \(kg\)/).fill("0");
   await melao.getByRole("button", { name: "Definir" }).click();
   await expect(melao.getByTestId("quantidade")).toHaveText("0 de 3,5 kg");
   await expect(melao).toContainText("Zerado");
-  await expect(page.getByTestId("resumo-despensa")).toHaveText("16 itens · 1 zerado · 0 abaixo do padrão");
+  await expect(page.getByTestId("resumo-despensa")).toHaveText("16 itens · 1 zerado · 0 com menos da metade");
 
   // arquivar some; "Mostrar arquivados" traz de volta
   await melao.getByRole("button", { name: "Arquivar" }).click();
