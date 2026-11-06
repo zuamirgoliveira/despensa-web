@@ -7,7 +7,7 @@ const UNIDADE_CURTA = { kg: "kg", un: "un", pacote: "pct", l: "L" } as const;
 const faltaComprar = (status: string): boolean => status !== "pego" && status !== "extra";
 
 /**
- * Monta o texto da lista: título com a data, seções e uma linha `• quantidade unidade Nome (~valor)` por item; o valor só aparece com preço conhecido e a linha de estimativa do fim só aparece quando todos os itens têm preço.
+ * Monta o texto da lista: título com a data, seções e uma linha `• quantidade unidade Nome (~valor)` por item; o valor só aparece com preço conhecido e a linha de estimativa do fim indica quantos itens têm preço quando não são todos.
  * Ficam de fora os itens removidos (a tela já os separa), os já pegos e os extras. `undefined` se não sobra nada.
  */
 export function textoDaLista(
@@ -17,7 +17,8 @@ export function textoDaLista(
 ): string | undefined {
   const blocos: string[] = [];
   let total = 0;
-  let semPreco = 0;
+  let itens = 0;
+  let comPreco = 0;
   for (const g of grupos) {
     const linhas = g.itens
       .filter((v) => !v.item.removido && faltaComprar(v.item.status))
@@ -27,10 +28,11 @@ export function textoDaLista(
         const quantidade = `${numeroBR(v.item.quantidadeSugerida)}${unidade}`;
         const preco = v.item.produtoId ? precoUnitario?.(v.item.produtoId) : undefined;
         let estimativa = "";
-        if (preco === undefined) semPreco += 1;
+        itens += 1;
         if (preco !== undefined) {
           const valor = Math.round(v.item.quantidadeSugerida * preco);
           total += valor;
+          comPreco += 1;
           estimativa = ` (~${brl(valor)})`;
         }
         return `• ${quantidade} ${nome}${estimativa}`;
@@ -38,6 +40,9 @@ export function textoDaLista(
     if (linhas.length) blocos.push([g.titulo, ...linhas].join("\n"));
   }
   if (!blocos.length) return undefined;
-  if (semPreco === 0) blocos.push(`Estimativa: ~${brl(total)}`);
+  if (comPreco > 0) {
+    const cobertura = comPreco < itens ? ` (${comPreco} de ${itens} itens com preço)` : "";
+    blocos.push(`Estimativa${cobertura}: ~${brl(total)}`);
+  }
   return [`Lista de compras (${dataTexto})`, ...blocos].join("\n\n");
 }
