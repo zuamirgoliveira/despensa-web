@@ -160,6 +160,7 @@ despensa-web/
 │  │  ├─ compra.ts                 modo compra: pego, não encontrei, preço, extra, orçamento
 │  │  ├─ reconciliacao.ts          fechar a compra: estoque cheio, reconciliar, fechar lista, resumo
 │  │  ├─ importarNota.ts           orquestra a importação (mercado, produtos, apelidos, compra, meta)
+│  │  ├─ despensa.ts               quantidade atual: definir, somar/subtrair, apagar compra desfazendo, repor sempre
 │  │  ├─ catalogo.ts               edição com meta manual, liberar meta, mesclar produtos
 │  │  ├─ eventos.ts                emissor de mudanças (aoMudar, emitirMudanca)
 │  │  └─ useRepositorio.ts         hook que reexecuta a consulta quando a coleção muda
@@ -294,6 +295,7 @@ Decisões de implementação (`gerarLista(entrada)` devolve `{ ida, itens, resum
 - `situacaoDoItem(produto, estoque)`: `sem_registro` (ninguém informou a quantidade), `zerado` (≤ 0), `abaixo` (< padrão), `ok`, `acima` (> padrão é permitido: compra a mais, promoção). Padrão = `Produto.meta` > 0; sem padrão, qualquer quantidade > 0 é `ok`. `quantidadeQueFalta` = `max(0, padrão − atual)`. `nivelDeQuantidade` (≥ 75% cheio, ≥ 35% metade, > 5% acabando, senão acabou) é só rótulo.
 - `gerarListaDaCasa({ produtos, estoques, compras })`: lista única, sem ida nem agenda. Entram produtos **ativos, recorrentes e com registro** que estão zerados (quantidade = padrão, senão última comprada, senão 1 passo) ou abaixo do padrão (quantidade = faltante, arredondada para cima ao passo da unidade). **Não recorrente nunca entra**; se zerou vira aviso (`naoRecorrentesZerados`). Motivos `acabou` e `abaixo`. Estimativa de custo = quantidade × último preço.
 - **Recorrência** (`recorrencia.ts`, só sugere; nada é aplicado sozinho): `padraoSugerido` (meta digitada à mão, senão média por nota, senão meta atual; arredondado ao passo, mínimo um passo), `sugerirReporSempre` (não recorrente, ativo, 3 ou mais notas distintas), `sugerirDeixarDeRepor` (recorrente, já comprado, mais de 90 dias sem compra), `promoverARecorrente` (padrão diferente do sugerido trava `metaManual`) e `rebaixarDeRecorrente` (mantém padrão e histórico).
+- **Operações** (`data/despensa.ts`): `definirQuantidade` (grava número e rótulo), `ajustarEstoque` (soma/subtrai, nunca abaixo de zero), `apagarCompraDesfazendoEstoque` (a tela mostra antes `efeitoDeApagarCompra`), `reporSempre`, `deixarDeRepor`. Modo compra: "Terminar sem nota" (`terminarSemNota`) soma o que foi pego e fecha a lista; "Terminar compra" segue para importar a nota (que soma). Usar os dois na mesma compra soma duas vezes (o diálogo avisa).
 - **Transição:** a tela `/lista`, `garantirLista` e `lista.ts` (`gerarLista`, por ida) seguem em uso até a tarefa D-11 trocar a tela e removê-los.
 
 ### 6.3.0 Início (`inicio.ts`, tela `/`)

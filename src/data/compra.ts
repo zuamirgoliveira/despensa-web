@@ -1,5 +1,7 @@
 // Serviço do modo compra: cada toque persiste na hora (funciona offline e se o app fechar).
+import { totalCorrente } from "@/domain/compra";
 import type { ItemLista, Lista } from "@/domain/types";
+import { agruparLinhas, ajustarEstoque } from "./despensa";
 import type { Repositorios } from "./repositorios";
 
 const arred = (n: number): number => Math.max(0, Math.round(n * 1000) / 1000);
@@ -54,4 +56,19 @@ export async function adicionarExtra(
 
 export async function definirOrcamento(repos: Repositorios, lista: Lista, orcamentoCentavos: number | undefined): Promise<Lista> {
   return repos.listas.salvar({ ...lista, orcamentoCentavos });
+}
+
+/**
+ * "Terminar sem nota": o que foi pego (pego ou extra, com produto) **soma** à despensa e a lista fecha com o total
+ * corrente como gasto. Só para compras sem nota: importar depois a nota desta mesma compra somaria de novo.
+ */
+export async function terminarSemNota(repos: Repositorios, listaId: string, agora: Date = new Date()): Promise<{ produtos: number } | undefined> {
+  const lista = await repos.listas.obter(listaId);
+  if (!lista || lista.status === "fechada") return undefined;
+  const itens = await repos.itensLista.listarPorLista(listaId);
+  const pegos = itens.filter((i) => !i.removido && (i.status === "pego" || i.status === "extra"));
+  const linhas = agruparLinhas(pegos.map((i) => ({ produtoId: i.produtoId, quantidade: i.quantidadePega ?? i.quantidadeSugerida })));
+  const produtos = await ajustarEstoque(repos, linhas, 1, agora);
+  await repos.listas.salvar({ ...lista, status: "fechada", gastoCentavos: totalCorrente(itens) });
+  return { produtos };
 }

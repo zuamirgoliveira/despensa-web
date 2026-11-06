@@ -6,6 +6,7 @@
 - **D-03/D-04:** regras puras da despensa (situação, o que falta, rótulo de nível) e a nova lista da casa (`padrão − atual`, só recorrentes). Ainda não ligadas às telas.
 - **D-05:** regras de recorrência (padrão sugerido, "repor sempre", "deixar de repor").
 - **D-06:** a nota soma à despensa (sem somar duas vezes ao reimportar); itens novos entram não recorrentes; a conferência mostra o efeito na despensa e oferece "Repor sempre" e "Não é da despensa".
+- **D-07/D-08:** modo compra com "Terminar sem nota" (soma à despensa); apagar compra mostra e desfaz a soma; operações da despensa no repositório.
 
 ## 0.4.0 (cópia de segurança e persistência)
 

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Card, EmptyState, Input, LinkBotao, Progress } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { Alert, Button, Card, Dialog, EmptyState, Input, LinkBotao, Progress, useToast } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import {
-  adicionarExtra, alternarPego, definirOrcamento, definirPreco, definirQuantidadePega, iniciarCompra, marcarEstado, removerDaCompra,
+  adicionarExtra, alternarPego, definirOrcamento, definirPreco, definirQuantidadePega, iniciarCompra, marcarEstado, removerDaCompra, terminarSemNota,
 } from "@/data/compra";
 import { useRepositorio } from "@/data/useRepositorio";
 import { alertasPorProduto } from "@/domain/precos";
@@ -23,6 +24,9 @@ export function ModoCompra() {
   const [orcamento, setOrcamento] = useState("");
   const [extra, setExtra] = useState({ nome: "", quantidade: "1", preco: "" });
   const [erro, setErro] = useState<string | null>(null);
+  const [terminando, setTerminando] = useState(false);
+  const router = useRouter();
+  const { mostrar } = useToast();
 
   useEffect(() => {
     const id = new URLSearchParams(location.search).get("lista");
@@ -154,8 +158,28 @@ export function ModoCompra() {
       </Card>
 
       <LinkBotao href={`/importar?lista=${lista.id}`} tamanho="grande">
-        Terminar compra
+        Terminar compra (importar a nota)
       </LinkBotao>
+      <Button variante="secundario" tamanho="grande" onClick={() => setTerminando(true)}>
+        Terminar sem nota
+      </Button>
+      <Dialog
+        aberto={terminando}
+        titulo="Terminar sem nota?"
+        rotuloConfirmar="Terminar e somar à despensa"
+        aoConfirmar={async () => {
+          setTerminando(false);
+          const r = await terminarSemNota(await repos(), lista.id);
+          mostrar(r ? `Compra terminada. ${r.produtos} ${r.produtos === 1 ? "item somado" : "itens somados"} à despensa.` : "Esta lista já foi fechada.");
+          router.push("/despensa");
+        }}
+        aoCancelar={() => setTerminando(false)}
+      >
+        <p>
+          O que você marcou como pego ({progresso.pegos} de {progresso.total}) soma à despensa e a lista fecha. Se depois importar a nota desta compra,
+          as quantidades somam de novo.
+        </p>
+      </Dialog>
     </div>
   );
 }
