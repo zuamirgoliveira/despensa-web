@@ -42,12 +42,12 @@ async function comDados(): Promise<void> {
   });
 }
 
-describe("exportar (versão 2)", () => {
+describe("exportar (versão 3)", () => {
   it("traz versão, contagens, período e a soma de verificação do conteúdo", async () => {
     await comDados();
     const b = await exportar(repos, new Date("2026-11-05T17:30:00Z"));
     expect(b.versao).toBe(VERSAO_BACKUP);
-    expect(VERSAO_BACKUP).toBe(2);
+    expect(VERSAO_BACKUP).toBe(3);
     expect(b.meta).toMatchObject({
       app: "despensa-web",
       incluiPosicaoDeCasa: true,
@@ -89,7 +89,7 @@ describe("inspecionarBackup (nada é gravado)", () => {
     const json = JSON.stringify(await exportar(repos, new Date("2026-11-05T17:30:00Z")), null, 2);
     const r = await inspecionarBackup(json);
     expect(r).toMatchObject({
-      versao: 2,
+      versao: 3,
       exportadoEm: "2026-11-05T17:30:00.000Z",
       integridade: "ok",
       temPosicaoDeCasa: true,
@@ -139,5 +139,24 @@ describe("compatibilidade: arquivo da versão 1 (sem cabeçalho)", () => {
     expect(r.periodo).toBeDefined();
     expect((r.periodo as { de: string; ate: string }).de < (r.periodo as { de: string; ate: string }).ate).toBe(true);
     expect(lerBackup(V1).colecoes.compras).toHaveLength(12);
+  });
+});
+
+describe("backup anterior à versão 3 (estoque só por nível)", () => {
+  it("converte o nível em quantidade ao ler e restaura sem perder o estoque", async () => {
+    const casaId = "11111111-1111-4111-8111-111111111111";
+    const produtoId = "22222222-2222-4222-8222-222222222222";
+    const antigo = {
+      versao: 2,
+      exportadoEm: "2026-11-05T10:00:00.000Z",
+      colecoes: {
+        casas: [{ id: casaId, nome: "Casa" }], perfis: [], agendas: [], mercados: [], apelidos: [], compras: [], listas: [], itensLista: [],
+        produtos: [{ id: produtoId, casaId, nome: "Arroz", unidade: "kg", meta: 4, frequencia: "semanal", tipoIda: "mercado_semanal", vidaUtilDias: 180 }],
+        estoques: [{ id: "33333333-3333-4333-8333-333333333333", casaId, produtoId, nivel: "metade", confirmadoEm: "2026-11-01T10:00:00.000Z" }],
+      },
+    };
+    const lido = lerBackup(JSON.stringify(antigo));
+    expect(lido.colecoes.estoques[0].quantidade).toBe(2);
+    expect(lido.colecoes.produtos[0].recorrente).toBe(true);
   });
 });

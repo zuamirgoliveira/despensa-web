@@ -66,8 +66,8 @@ describe("schemas", () => {
 
   it("estoque", () => {
     const base = { id: id(), casaId, produtoId: id(), confirmadoEm: "2026-11-05T10:00:00-03:00" };
-    expect(estoqueSchema.safeParse({ ...base, nivel: "metade" }).success).toBe(true);
-    expect(estoqueSchema.safeParse({ ...base, nivel: "vazio" }).success).toBe(false);
+    expect(estoqueSchema.safeParse({ ...base, quantidade: 1, nivel: "metade" }).success).toBe(true);
+    expect(estoqueSchema.safeParse({ ...base, quantidade: 1, nivel: "vazio" }).success).toBe(false);
   });
 
   it("compra usa centavos inteiros e chave de 44 dígitos", () => {

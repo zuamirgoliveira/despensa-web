@@ -1,3 +1,4 @@
+import { fracaoDoNivel } from "@/domain/estoque";
 import { describe, expect, it } from "vitest";
 import { agruparPorLocal, nivelEstimado, selecionarParaConferir, SEM_LOCAL, type ProdutoParaConferir } from "@/domain/conferencia";
 import type { EntradaLista } from "@/domain/lista";
@@ -11,10 +12,10 @@ const AGENDAS: AgendaIda[] = [
   { id: id(), casaId, tipo: "hortifruti_semanal", diaDaSemana: 3 },
 ];
 const produto = (extra: Partial<Produto> = {}): Produto => ({
-  id: id(), casaId, nome: "P", categoria: "mercearia", unidade: "un", meta: 30, metaManual: false, frequencia: "mensal",
+  id: id(), casaId, nome: "P", categoria: "mercearia", unidade: "un", meta: 30, metaManual: false, recorrente: true, frequencia: "mensal",
   tipoIda: "mercado_semanal", vidaUtilDias: 180, contavel: false, ativo: true, ...extra,
 });
-const estoque = (p: Produto, nivel: Estoque["nivel"], confirmadoEm: string): Estoque => ({ id: id(), casaId, produtoId: p.id, nivel, confirmadoEm });
+const estoque = (p: Produto, nivel: Estoque["nivel"], confirmadoEm: string): Estoque => ({ id: id(), casaId, produtoId: p.id, quantidade: fracaoDoNivel(nivel), nivel, confirmadoEm });
 const entrada = (produtos: Produto[], estoques: Estoque[], extra: Partial<EntradaLista> = {}): EntradaLista => ({
   tipo: "mercado_semanal", hoje: "2026-11-08", produtos, estoques, compras: [], agendas: AGENDAS, folgaDias: 2, ...extra,
 });

@@ -10,7 +10,7 @@ describe("novoProduto", () => {
   it("hortifruti: unidade kg, meta = quantidade, vida útil 7, ida de hortifruti", () => {
     const p = novoProduto({ ...base, nome: " Melao Japones ", item: { unidade: "KG", quantidade: 1.26 } });
     expect(p).toMatchObject({
-      nome: "Melao Japones", unidade: "kg", categoria: "hortifruti", meta: 1.26, metaManual: false,
+      nome: "Melao Japones", unidade: "kg", categoria: "hortifruti", meta: 1.26, metaManual: false, recorrente: false,
       tipoIda: "hortifruti_semanal", vidaUtilDias: 7, frequencia: "semanal", ativo: true,
     });
     expect(produtoSchema.safeParse(p).success).toBe(true);

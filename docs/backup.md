@@ -2,7 +2,7 @@
 
 > **Status:** implementado (tarefas B-01 a B-06). Testes: `tests/data/backupV2.test.ts`, `restauracao.test.ts`, `backupArquivo.test.ts`, `tests/domain/backup.test.ts`, `tests/lib/armazenamento.test.ts`, `arquivos.test.ts` e `e2e/backup.spec.ts`.
 
-Especificação (versão 2 do formato) e guia de uso. Decisões de 05/11/2026. O app não tem servidor: **os dados ficam só no aparelho** (IndexedDB do navegador). A segurança vem de ter uma cópia **fora do celular**, feita com facilidade e lembrada com frequência.
+Especificação (versão 3 do formato) e guia de uso. Decisões de 05/11/2026. O app não tem servidor: **os dados ficam só no aparelho** (IndexedDB do navegador). A segurança vem de ter uma cópia **fora do celular**, feita com facilidade e lembrada com frequência.
 
 ## 1. Por que os dados podem se perder
 
@@ -34,13 +34,13 @@ Sem servidor, **backup automático** (que acontece sozinho, sem abrir o app) e *
 - Opção **Incluir a posição de casa**: ligada por padrão. Se desligar, o arquivo sai sem as coordenadas; ao restaurar, é preciso tocar em "Estou em casa agora" de novo.
 - A data da última cópia fica em `Perfil.ultimoBackupEm` (no banco, não em `localStorage`).
 
-### Formato do arquivo (versão 2)
+### Formato do arquivo (versão 3)
 
 `despensa-backup-AAAA-MM-DD.json` (JSON, UTF-8):
 
 ```json
 {
-  "versao": 2,
+  "versao": 3,
   "exportadoEm": "2026-11-05T17:30:00.000Z",
   "meta": {
     "app": "despensa-web",
@@ -58,7 +58,7 @@ Sem servidor, **backup automático** (que acontece sozinho, sem abrir o app) e *
 - **Não entram:** CPF, texto bruto das notas, fotos, preferência de tema.
 - **Entram:** casa, perfil (parâmetros de custo e, se marcado, a posição de casa), agenda, mercados (nome e endereço), produtos, apelidos, estoque, compras e itens, listas, conferências.
 - Tamanho: dezenas de KB por trimestre de uso (o seed de desenvolvimento, 12 compras, tem ~30 KB).
-- **Compatibilidade:** o app lê todas as versões anteriores (a versão 1 não tem `meta`: lê sem verificar integridade). Versão **mais nova** que a suportada é recusada com a mensagem "atualize o app". Cada mudança de formato aumenta `versao`; uma cópia de 2026 tem de abrir em 2028 (fixture de teste da v1).
+- **Compatibilidade:** o app lê todas as versões anteriores (a versão 1 não tem `meta`: lê sem verificar integridade; as versões 1 e 2 não têm `Estoque.quantidade` nem `Produto.recorrente`: ao ler, a quantidade vira nível × padrão, ou a última quantidade comprada, e todo produto vale como recorrente). Versão **mais nova** que a suportada é recusada com a mensagem "atualize o app". Cada mudança de formato aumenta `versao`; uma cópia de 2026 tem de abrir em 2028 (fixture de teste da v1).
 
 ## 4. Restaurar uma cópia
 

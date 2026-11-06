@@ -100,6 +100,11 @@ export const produtoSchema = z.object({
   meta: z.number().nonnegative(),
   /** Verdadeiro quando o usuário editou a meta (trava a atualização automática). */
   metaManual: z.boolean().default(false),
+  /**
+   * Item de uso contínuo: só os recorrentes entram sozinhos na lista da casa (padrão − atual).
+   * Não recorrente = compra eventual, que apenas aparece na despensa. Registros antigos valem como recorrentes.
+   */
+  recorrente: z.boolean().default(true),
   frequencia: z.enum(FREQUENCIAS).default("semanal"),
   tipoIda: z.enum(TIPOS_IDA),
   vidaUtilDias: z.number().int().positive(),
@@ -121,6 +126,9 @@ export const estoqueSchema = z.object({
   id: idSchema,
   casaId: idSchema,
   produtoId: idSchema,
+  /** Quantidade atual (base do estoque). Pode passar do padrão (`Produto.meta`): compra a mais, promoção. */
+  quantidade: z.number().nonnegative(),
+  /** Rótulo do último atalho usado (cheio, metade, acabando, acabou); a verdade é `quantidade`. */
   nivel: z.enum(NIVEIS),
   quantidadeExata: z.number().nonnegative().optional(),
   confirmadoEm: instanteSchema,

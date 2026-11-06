@@ -1,5 +1,7 @@
 // Exportar e importar backup em JSON, com validação Zod de todo o arquivo.
 import { z } from "zod";
+import { converterEstoqueLegado, type EstoqueLegado } from "@/domain/despensa";
+import type { Compra } from "@/domain/types";
 import {
   agendaIdaSchema,
   apelidoMercadoSchema,
@@ -17,7 +19,7 @@ import {
 import type { ModoRestauracao, Repositorios } from "./repositorios";
 
 /** Versão do formato do arquivo. A 1 não tinha `meta`; a 2 acrescenta contagens, período e integridade. */
-export const VERSAO_BACKUP = 2;
+export const VERSAO_BACKUP = 3;
 
 /** Cabeçalho do arquivo (v2): o que há dentro e uma soma para detectar arquivo cortado ou alterado. */
 export const metaBackupSchema = z.object({
@@ -164,6 +166,21 @@ export async function inspecionarBackup(json: string): Promise<InspecaoBackup> {
   };
 }
 
+/**
+ * Backups v1 e v2 guardam o estoque só por nível. Antes da validação, acrescenta `quantidade`
+ * (nível × padrão; ver `converterEstoqueLegado`). A soma de verificação segue sobre o texto original.
+ */
+function converterEstoquesLegados(bruto: unknown): unknown {
+  const col = (bruto as { colecoes?: Record<string, unknown> } | null)?.colecoes;
+  if (!col || !Array.isArray(col.estoques)) return bruto;
+  const produtos = new Map((Array.isArray(col.produtos) ? (col.produtos as { id: string; meta: number }[]) : []).map((p) => [p.id, p]));
+  const compras = (Array.isArray(col.compras) ? col.compras : []) as Compra[];
+  const estoques = (col.estoques as EstoqueLegado[]).map((e) =>
+    e && typeof e === "object" && typeof e.nivel === "string" ? converterEstoqueLegado(e, produtos.get(e.produtoId), compras) : e,
+  );
+  return { ...(bruto as object), colecoes: { ...col, estoques } };
+}
+
 /** Valida o texto do arquivo sem gravar nada. Lança BackupInvalidoError com mensagem clara. */
 export function lerBackup(json: string): Backup {
   let bruto: unknown;
@@ -178,7 +195,7 @@ export function lerBackup(json: string): Backup {
       `Este backup é da versão ${versao}, mais nova que a suportada (${VERSAO_BACKUP}). Atualize o app.`,
     );
   }
-  const r = backupSchema.safeParse(bruto);
+  const r = backupSchema.safeParse(versao === undefined || (typeof versao === "number" && versao < 3) ? converterEstoquesLegados(bruto) : bruto);
   if (!r.success) {
     const p = r.error.issues[0];
     throw new BackupInvalidoError(`Arquivo de backup inválido em "${p.path.join(".") || "raiz"}": ${p.message}`);

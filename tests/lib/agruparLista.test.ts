@@ -4,7 +4,7 @@ import type { ItemLista, Mercado, Produto } from "@/domain/types";
 
 const casaId = crypto.randomUUID();
 const produto = (nome: string, extra: Partial<Produto> = {}): Produto => ({
-  id: crypto.randomUUID(), casaId, nome, categoria: "mercearia", unidade: "un", meta: 1, metaManual: false, frequencia: "semanal",
+  id: crypto.randomUUID(), casaId, nome, categoria: "mercearia", unidade: "un", meta: 1, metaManual: false, recorrente: true, frequencia: "semanal",
   tipoIda: "mercado_semanal", vidaUtilDias: 180, contavel: false, ativo: true, ...extra,
 });
 const visao = (p?: Produto, avulso?: string): ItemVisao => ({

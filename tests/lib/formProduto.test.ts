@@ -4,7 +4,7 @@ import type { Produto } from "@/domain/types";
 
 const produto: Produto = {
   id: crypto.randomUUID(), casaId: crypto.randomUUID(), nome: "Tomate", categoria: "hortifruti", unidade: "kg", meta: 1.5,
-  metaManual: false, frequencia: "semanal", tipoIda: "hortifruti_semanal", vidaUtilDias: 7, contavel: false, ativo: true,
+  metaManual: false, recorrente: true, frequencia: "semanal", tipoIda: "hortifruti_semanal", vidaUtilDias: 7, contavel: false, ativo: true,
 };
 
 describe("formulário de produto", () => {

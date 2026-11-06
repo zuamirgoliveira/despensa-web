@@ -29,6 +29,7 @@ export function novoProduto(args: {
     unidade: UNIDADE_DO_PRODUTO[args.item.unidade],
     meta: args.item.quantidade,
     metaManual: false,
+    recorrente: false,
     frequencia: "semanal",
     tipoIda: categoria === "hortifruti" ? "hortifruti_semanal" : "mercado_semanal",
     vidaUtilDias: VIDA_UTIL_PADRAO_DIAS[categoria],

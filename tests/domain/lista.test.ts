@@ -1,3 +1,4 @@
+import { fracaoDoNivel } from "@/domain/estoque";
 import { describe, expect, it } from "vitest";
 import { arredondarParaCima, estimarCusto, gerarLista, mesclarRegeracao, passoDaUnidade, ultimoPrecoUnitario, type EntradaLista, type ItemListaSugerido } from "@/domain/lista";
 import type { AgendaIda, Compra, Estoque, ItemLista, Produto } from "@/domain/types";
@@ -13,11 +14,11 @@ const AGENDAS: AgendaIda[] = [
 // hoje = domingo 08/11/2026: mercado 14/11 (e 21, 28); hortifruti 11/11 (e 18); feira 30/11
 
 const produto = (extra: Partial<Produto> = {}): Produto => ({
-  id: id(), casaId, nome: "Produto", categoria: "mercearia", unidade: "kg", meta: 1, metaManual: false,
+  id: id(), casaId, nome: "Produto", categoria: "mercearia", unidade: "kg", meta: 1, metaManual: false, recorrente: true,
   frequencia: "semanal", tipoIda: "mercado_semanal", vidaUtilDias: 180, contavel: false, ativo: true, ...extra,
 });
 const estoque = (p: Produto, nivel: Estoque["nivel"], confirmadoEm = "2026-11-08T10:00:00Z"): Estoque => ({
-  id: id(), casaId, produtoId: p.id, nivel, confirmadoEm,
+  id: id(), casaId, produtoId: p.id, quantidade: fracaoDoNivel(nivel), nivel, confirmadoEm,
 });
 const entrada = (tipo: EntradaLista["tipo"], produtos: Produto[], estoques: Estoque[], extra: Partial<EntradaLista> = {}): EntradaLista => ({
   tipo, hoje: "2026-11-08", produtos, estoques, compras: [], agendas: AGENDAS, folgaDias: 2, ...extra,

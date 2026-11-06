@@ -16,7 +16,7 @@ afterEach(() => repos.fechar());
 const novo = async (nome: string, extra: Partial<Produto> = {}) => {
   const casa = (await repos.casas.listar())[0];
   return repos.produtos.salvar({
-    id: crypto.randomUUID(), casaId: casa.id, nome, categoria: "mercearia", unidade: "un", meta: 7, metaManual: false,
+    id: crypto.randomUUID(), casaId: casa.id, nome, categoria: "mercearia", unidade: "un", meta: 7, metaManual: false, recorrente: true,
     frequencia: "semanal", tipoIda: "mercado_semanal", vidaUtilDias: 180, contavel: false, ativo: true, ...extra,
   });
 };

@@ -1,5 +1,9 @@
 # Changelog
 
+## Não lançado (reposicionamento: a despensa em primeiro lugar)
+
+- **D-01/D-02:** estoque passa a ter quantidade numérica (`Estoque.quantidade`) e produto ganha `recorrente`; migração 003 converte os estoques atuais (nível × padrão) e marca os produtos existentes como recorrentes; backup v3 lê v1 e v2. A compra agora soma ao estoque.
+
 ## 0.4.0 (cópia de segurança e persistência)
 
 - **Cópia de segurança v2:** arquivo com cabeçalho (contagens, período, soma SHA-256) e opção de incluir a posição de casa (ligada por padrão); a v1 continua abrindo.

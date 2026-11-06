@@ -89,7 +89,7 @@ export function estoqueAgora(
 }
 
 /**
- * Produto comprado volta a `cheio`. Devolve só os registros de estoque que mudam ou nascem
+ * Produto comprado **soma** a quantidade comprada ao estoque (rótulo `cheio`; D-06 refina). Devolve só os registros de estoque que mudam ou nascem
  * (um por produto da compra). `gerarId` é injetado para manter a função pura.
  */
 export function aplicarCompra(
@@ -101,6 +101,7 @@ export function aplicarCompra(
   const porProduto = new Map(estoques.map((e) => [e.produtoId, e]));
   const vistos = new Set<string>();
   const saida: Estoque[] = [];
+  const comprada = (id: string) => compra.itens.filter((i) => i.produtoId === id).reduce((s, i) => s + i.quantidade, 0);
   for (const item of compra.itens) {
     const id = item.produtoId;
     if (!id || vistos.has(id)) continue;
@@ -108,8 +109,8 @@ export function aplicarCompra(
     const atual = porProduto.get(id);
     saida.push(
       atual
-        ? { ...atual, nivel: "cheio", quantidadeExata: undefined, confirmadoEm }
-        : { id: gerarId(), casaId: compra.casaId, produtoId: id, nivel: "cheio", confirmadoEm },
+        ? { ...atual, nivel: "cheio", quantidade: atual.quantidade + comprada(id), quantidadeExata: undefined, confirmadoEm }
+        : { id: gerarId(), casaId: compra.casaId, produtoId: id, nivel: "cheio", quantidade: comprada(id), confirmadoEm },
     );
   }
   return saida;

@@ -22,7 +22,7 @@ beforeEach(async () => {
 afterEach(() => repos.fechar());
 
 const produto = (nome: string, extra: Partial<Produto> = {}): Produto => ({
-  id: id(), casaId: casa.id, nome, categoria: "hortifruti", unidade: "kg", meta: 1, metaManual: false,
+  id: id(), casaId: casa.id, nome, categoria: "hortifruti", unidade: "kg", meta: 1, metaManual: false, recorrente: true,
   frequencia: "semanal", tipoIda: "hortifruti_semanal", vidaUtilDias: 7, contavel: false, ativo: true, ...extra,
 });
 
@@ -85,10 +85,10 @@ describe("CRUD", () => {
 
   it("estoques: um por produto", async () => {
     const produtoId = id();
-    const e = await repos.estoques.salvar({ id: id(), casaId: casa.id, produtoId, nivel: "metade", confirmadoEm: "2026-11-05T10:00:00Z" });
+    const e = await repos.estoques.salvar({ id: id(), casaId: casa.id, produtoId, quantidade: 0.5, nivel: "metade", confirmadoEm: "2026-11-05T10:00:00Z" });
     expect(await repos.estoques.obterPorProduto(produtoId)).toEqual(e);
     await expect(
-      repos.estoques.salvar({ id: id(), casaId: casa.id, produtoId, nivel: "cheio", confirmadoEm: "2026-11-05T10:00:00Z" }),
+      repos.estoques.salvar({ id: id(), casaId: casa.id, produtoId, quantidade: 1, nivel: "cheio", confirmadoEm: "2026-11-05T10:00:00Z" }),
     ).rejects.toBeDefined();
   });
 
@@ -209,7 +209,7 @@ describe("backup", () => {
     });
     await repos.apelidos.salvar({ casaId: casa.id, cnpj: m.cnpj, codigo: "52", produtoId: p.id });
     await repos.compras.salvar(compra(m.id, "2026-11-04T10:33:31"));
-    await repos.estoques.salvar({ id: id(), casaId: casa.id, produtoId: p.id, nivel: "metade", confirmadoEm: "2026-11-05T10:00:00Z" });
+    await repos.estoques.salvar({ id: id(), casaId: casa.id, produtoId: p.id, quantidade: 0.5, nivel: "metade", confirmadoEm: "2026-11-05T10:00:00Z" });
     await repos.agendas.salvar({ id: id(), casaId: casa.id, tipo: "mercado_semanal", diaDaSemana: 6 });
     const l = await repos.listas.salvar({ id: id(), casaId: casa.id, tipoIda: "mercado_semanal", data: "2026-11-07", status: "rascunho", criadaEm: "2026-11-05T10:00:00Z" });
     await repos.itensLista.salvar({ id: id(), casaId: casa.id, listaId: l.id, produtoId: p.id, quantidadeSugerida: 2, status: "pendente", urgente: false, removido: false, quantidadeEditada: false });

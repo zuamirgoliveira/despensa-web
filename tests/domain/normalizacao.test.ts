@@ -3,7 +3,7 @@ import { chaveDeProduto, formatarTamanho, normalizarDescricao, produtosParecidos
 import type { Compra, Produto } from "@/domain/types";
 
 const produto = (id: string, nome: string, ativo = true): Produto =>
-  ({ id, casaId: "c", nome, categoria: "mercearia", unidade: "un", meta: 1, metaManual: false, frequencia: "semanal", tipoIda: "mercado_semanal", vidaUtilDias: 180, contavel: false, ativo }) as Produto;
+  ({ id, casaId: "c", nome, categoria: "mercearia", unidade: "un", meta: 1, metaManual: false, recorrente: true, frequencia: "semanal", tipoIda: "mercado_semanal", vidaUtilDias: 180, contavel: false, ativo }) as Produto;
 
 describe("normalizarDescricao: o mesmo item escrito de jeitos diferentes", () => {
   it.each([

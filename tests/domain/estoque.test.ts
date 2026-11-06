@@ -154,7 +154,7 @@ describe("aplicarCompra", () => {
     return () => `id-${++n}`;
   };
   const est = (produtoId: string, nivel: Estoque["nivel"], extra: Partial<Estoque> = {}): Estoque => ({
-    id: crypto.randomUUID(), casaId, produtoId, nivel, confirmadoEm: "2026-10-01T10:00:00Z", ...extra,
+    id: crypto.randomUUID(), casaId, produtoId, quantidade: fracaoDoNivel(nivel), nivel, confirmadoEm: "2026-10-01T10:00:00Z", ...extra,
   });
 
   it("atualiza o existente para cheio e cria os que não existem", () => {

@@ -82,7 +82,7 @@ describe("mesclar produtos", () => {
     const produtos = await repos.produtos.listar();
     const origem = produtos.find((p) => p.nome === "Melao Japones")!;
     const destino = produtos.find((p) => p.nome === "Banana Prata")!;
-    await repos.estoques.salvar({ id: crypto.randomUUID(), casaId: origem.casaId, produtoId: origem.id, nivel: "metade", confirmadoEm: "2026-11-05T10:00:00Z" });
+    await repos.estoques.salvar({ id: crypto.randomUUID(), casaId: origem.casaId, produtoId: origem.id, quantidade: 0.5, nivel: "metade", confirmadoEm: "2026-11-05T10:00:00Z" });
 
     const r = await mesclarProdutos(repos, origem.id, destino.id);
 
@@ -107,8 +107,8 @@ describe("mesclar produtos", () => {
     await importar();
     const [origem, destino] = await repos.produtos.listar();
     const base = { casaId: origem.casaId, confirmadoEm: "2026-11-05T10:00:00Z" };
-    await repos.estoques.salvar({ id: crypto.randomUUID(), produtoId: origem.id, nivel: "acabou", ...base });
-    await repos.estoques.salvar({ id: crypto.randomUUID(), produtoId: destino.id, nivel: "cheio", ...base });
+    await repos.estoques.salvar({ id: crypto.randomUUID(), produtoId: origem.id, quantidade: 0, nivel: "acabou", ...base });
+    await repos.estoques.salvar({ id: crypto.randomUUID(), produtoId: destino.id, quantidade: 1, nivel: "cheio", ...base });
     await mesclarProdutos(repos, origem.id, destino.id);
     expect(await repos.estoques.listar()).toHaveLength(1);
     expect((await repos.estoques.obterPorProduto(destino.id))?.nivel).toBe("cheio");

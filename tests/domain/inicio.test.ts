@@ -65,7 +65,7 @@ describe("mercadosComEstimativaPendente", () => {
 
 describe("resumirDia", () => {
   const produto = (extra: Partial<Produto> = {}): Produto => ({
-    id: id(), casaId, nome: "P", categoria: "hortifruti", unidade: "un", meta: 7, metaManual: false, frequencia: "semanal",
+    id: id(), casaId, nome: "P", categoria: "hortifruti", unidade: "un", meta: 7, metaManual: false, recorrente: true, frequencia: "semanal",
     tipoIda: "hortifruti_semanal", vidaUtilDias: 7, contavel: false, ativo: true, ...extra,
   });
   const base = { hoje: "2026-11-08", agendas: AGENDAS, folgaDias: 2, listas: [], mercados: [] };
@@ -78,7 +78,7 @@ describe("resumirDia", () => {
 
   it("conta quantos produtos vencem na próxima ida", () => {
     const [a, b, c] = [produto(), produto(), produto({ tipoIda: "mercado_semanal" })];
-    const est = (p: Produto): Estoque => ({ id: id(), casaId, produtoId: p.id, nivel: "acabou", confirmadoEm: "2026-11-08T10:00:00Z" });
+    const est = (p: Produto): Estoque => ({ id: id(), casaId, produtoId: p.id, quantidade: 0, nivel: "acabou", confirmadoEm: "2026-11-08T10:00:00Z" });
     const r = resumirDia({ ...base, produtos: [a, b, c], estoques: [a, b, c].map(est), compras: [] });
     expect(r.proxima?.tipo).toBe("hortifruti_semanal");
     expect(r.quantosVencem).toBe(2); // só os do hortifruti

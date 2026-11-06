@@ -20,7 +20,7 @@ export function gerarSeed(agora = new Date()) {
     ["Leite", "laticinios", "un", 6, 1], ["Detergente", "limpeza", "un", 2, 1],
   ];
   const produtos = base.map(([nome, categoria, unidade, meta, m]) => ({
-    id: id(), casaId, nome, categoria, unidade, meta, metaManual: false, frequencia: m ? "mensal" : "semanal",
+    id: id(), casaId, nome, categoria, unidade, meta, metaManual: false, recorrente: true, frequencia: m ? "mensal" : "semanal",
     tipoIda: m ? "mercado_semanal" : "hortifruti_semanal", vidaUtilDias: categoria === "hortifruti" ? 7 : categoria === "laticinios" ? 10 : 180, contavel: false, ativo: true,
   }));
   const compras = [];

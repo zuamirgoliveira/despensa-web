@@ -45,7 +45,7 @@ async function copiaDoSeed(): Promise<string> {
       id: `00000000-0000-4000-8000-00000000000${i + 1}`,
       casaId: casa.id,
       produtoId: p.id,
-      nivel: niveis[i],
+      quantidade: i, nivel: niveis[i],
       confirmadoEm: "2026-11-01T10:00:00.000Z",
     });
   }
@@ -89,7 +89,7 @@ describe("modos com dados no aparelho", () => {
       categoria: "outros",
       unidade: "un",
       meta: 1,
-      metaManual: false,
+      metaManual: false, recorrente: true,
       frequencia: "semanal",
       tipoIda: "mercado_semanal",
       vidaUtilDias: 90,
@@ -187,7 +187,7 @@ describe("tudo ou nada", () => {
         categoria: "outros",
         unidade: "un",
         meta: 1,
-        metaManual: false,
+        metaManual: false, recorrente: true,
         frequencia: "semanal",
         tipoIda: "mercado_semanal",
         vidaUtilDias: 90,
