@@ -3,6 +3,7 @@
 ## Não lançado (reposicionamento: a despensa em primeiro lugar)
 
 - **Modo compra compacto:** item pego vira uma linha (✓ verde, nome riscado); "Não encontrei" e "Adiar" viram **"Não peguei"** (linha amarela, no fim da lista); card pendente com Peguei, Não peguei e preço na mesma linha; seções concluídas descem; cabeçalho mais baixo; cartão "Tudo resolvido". Corrige o preço digitado se perder ao tocar em Peguei.
+- **Card da Despensa:** saem os 4 atalhos de nível; "Ajustar" e "Editar" viram janelas (montadas só ao abrir, o que alivia listas grandes); "Repor sempre" vira um interruptor no card; volta o "Voltar ao cálculo automático" do padrão; frequência, tipo de ida, vida útil e "contável" saem do formulário; a revisão da despensa sempre aceita quantidade exata.
 
 - **Câmera:** o foco contínuo agora é confirmado e mostrado na tela; toque na imagem ou botão Focar refoca; "Tirar foto" usa a câmera do app com botão Fotografar (foto em resolução máxima via ImageCapture) em vez do seletor do navegador.
 

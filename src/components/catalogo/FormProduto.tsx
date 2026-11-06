@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 import { Alert, Button, Input, Select } from "@/components/ui";
-import { CATEGORIAS, FREQUENCIAS, TIPOS_IDA, UNIDADES_PRODUTO } from "@/schemas";
+import { CATEGORIAS, UNIDADES_PRODUTO } from "@/schemas";
 import type { Mercado, Produto } from "@/domain/types";
 import { validarProduto, valoresDoProduto, type CampoProduto, type ValoresProduto } from "@/lib/formProduto";
-import { CATEGORIA_ROTULO, FREQUENCIA_ROTULO, TIPO_IDA_ROTULO, UNIDADE_ROTULO } from "@/lib/rotulos";
+import { CATEGORIA_ROTULO, UNIDADE_ROTULO } from "@/lib/rotulos";
 
 type Props = {
   produto: Produto;
   mercados: readonly Mercado[];
   aoSalvar: (novo: Produto) => Promise<void>;
+  /** Devolve o padrão ao cálculo automático (média das compras). Só aparece quando o padrão foi fixado à mão. */
+  aoLiberarPadrao?: () => Promise<void>;
 };
 
-export function FormProduto({ produto, mercados, aoSalvar }: Props) {
+export function FormProduto({ produto, mercados, aoSalvar, aoLiberarPadrao }: Props) {
   const [v, setV] = useState<ValoresProduto>(() => valoresDoProduto(produto));
   const [erros, setErros] = useState<Partial<Record<CampoProduto, string>>>({});
   const [salvando, setSalvando] = useState(false);
@@ -59,26 +61,12 @@ export function FormProduto({ produto, mercados, aoSalvar }: Props) {
         erro={erros.meta}
         ajuda={produto.metaManual ? "Padrão fixado por você: não muda mais com as compras." : "Calculado pela média das compras."}
       />
-      <div className="grid grid-cols-2 gap-3">
-        <Select rotulo="Frequência" value={v.frequencia} onChange={muda("frequencia")} erro={erros.frequencia}>
-          {FREQUENCIAS.map((f) => (
-            <option key={f} value={f}>
-              {FREQUENCIA_ROTULO[f]}
-            </option>
-          ))}
-        </Select>
-        <Select rotulo="Tipo de ida" value={v.tipoIda} onChange={muda("tipoIda")} erro={erros.tipoIda}>
-          {TIPOS_IDA.map((t) => (
-            <option key={t} value={t}>
-              {TIPO_IDA_ROTULO[t]}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Input rotulo="Vida útil (dias)" inputMode="numeric" value={v.vidaUtilDias} onChange={muda("vidaUtilDias")} erro={erros.vidaUtilDias} />
-        <Input rotulo="Local na casa" value={v.localCasa} onChange={muda("localCasa")} erro={erros.localCasa} placeholder="geladeira, armário…" />
-      </div>
+      {produto.metaManual && aoLiberarPadrao ? (
+        <Button type="button" variante="secundario" onClick={() => void aoLiberarPadrao()}>
+          Voltar ao cálculo automático
+        </Button>
+      ) : null}
+      <Input rotulo="Local na casa" value={v.localCasa} onChange={muda("localCasa")} erro={erros.localCasa} placeholder="geladeira, armário…" />
       <Select rotulo="Mercado preferido" value={v.mercadoPreferidoId} onChange={muda("mercadoPreferidoId")} erro={erros.mercadoPreferidoId}>
         <option value="">Nenhum</option>
         {mercados.map((m) => (
@@ -88,13 +76,8 @@ export function FormProduto({ produto, mercados, aoSalvar }: Props) {
         ))}
       </Select>
       <label className="flex min-h-11 items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          className="size-5"
-          checked={v.contavel}
-          onChange={(e) => setV((a) => ({ ...a, contavel: e.target.checked }))}
-        />
-        Contável (aceita quantidade exata na conferência)
+        <input type="checkbox" className="size-5" checked={v.recorrente} onChange={(e) => setV((a) => ({ ...a, recorrente: e.target.checked }))} />
+        Repor sempre (entra na lista quando faltar)
       </label>
       {Object.keys(erros).length ? <Alert tipo="erro">Corrija os campos destacados.</Alert> : null}
       <Button type="submit" disabled={salvando}>

@@ -10,9 +10,9 @@
 ## A despensa
 
 - Cada item mostra **quantidade atual de quantidade padrão** (por exemplo, `1,26 de 1,26 kg`) e uma situação: **Zerado**, **Abaixo do padrão**, **No padrão** ou **Acima do padrão**. Ter mais que o padrão (uma promoção, por exemplo) é normal.
-- **+ e −** ajustam na hora. Em **Ajustar e editar** há os atalhos **Cheio, Metade, Acabando, Acabou** (calculam a quantidade a partir do padrão) e o campo de **quantidade exata**.
+- **+ e −** ajustam na hora. **Ajustar** abre uma janela para digitar a quantidade exata e mostra se o item vai para a lista. **Editar** abre a janela com nome, categoria, unidade, quantidade padrão (e "Voltar ao cálculo automático"), local, mercado preferido, o histórico de **Preço e compras**, arquivar e mesclar.
 - **Filtros:** Todos, Faltando, Zerados, Eventuais e Sem padrão. Dá para buscar e agrupar por categoria ou por local da casa.
-- **Recorrente ou eventual?** Só os itens **recorrentes** (de uso contínuo) entram sozinhos na lista quando faltam. Item que chega pela nota nasce **eventual**: fica na despensa, mas não vai para a lista. Para um item de uso contínuo, toque em **Repor sempre**: o app sugere a quantidade padrão pelas suas compras e você confirma. Item cadastrado à mão já nasce recorrente. O app avisa "Parece de uso contínuo" quando você compra o mesmo item 3 vezes, e pergunta se quer **deixar de repor** o que ficou mais de 90 dias sem compra.
+- **Recorrente ou eventual?** (interruptor **Repor sempre** no card) Só os itens **recorrentes** (de uso contínuo) entram sozinhos na lista quando faltam. Item que chega pela nota nasce **eventual**: fica na despensa, mas não vai para a lista. Para um item de uso contínuo, toque em **Repor sempre**: o app sugere a quantidade padrão pelas suas compras e você confirma. Item cadastrado à mão já nasce recorrente. O app avisa "Parece de uso contínuo" quando você compra o mesmo item 3 vezes, e pergunta se quer **deixar de repor** o que ficou mais de 90 dias sem compra.
 - Em **Mais → Conferir despensa** há uma revisão opcional: o app pergunta, um item por vez, o que está sem quantidade, desatualizado (mais de 14 dias) ou provavelmente acabando.
 
 ## A lista de compras

@@ -1,4 +1,5 @@
-// Validação do formulário de produto: converte o texto digitado (vírgula decimal) e aplica o schema.
+// Validação do formulário de item da despensa: converte o texto digitado (vírgula decimal) e aplica o schema.
+// Frequência, tipo de ida, vida útil e "contável" não são editáveis aqui (não influenciam mais a lista); seguem guardados no item.
 import type { Produto } from "@/domain/types";
 import { produtoSchema } from "@/schemas";
 
@@ -7,12 +8,10 @@ export type ValoresProduto = {
   categoria: string;
   unidade: string;
   meta: string;
-  frequencia: string;
-  tipoIda: string;
-  vidaUtilDias: string;
   localCasa: string;
   mercadoPreferidoId: string;
-  contavel: boolean;
+  /** "Repor sempre": o item entra sozinho na lista quando faltar. */
+  recorrente: boolean;
 };
 
 export type CampoProduto = keyof ValoresProduto;
@@ -23,12 +22,9 @@ const MENSAGENS: Record<CampoProduto, string> = {
   categoria: "Escolha uma categoria.",
   unidade: "Escolha a unidade.",
   meta: "Informe um número maior ou igual a zero.",
-  frequencia: "Escolha a frequência.",
-  tipoIda: "Escolha o tipo de ida.",
-  vidaUtilDias: "Informe a vida útil em dias (número inteiro maior que zero).",
   localCasa: "Texto longo demais.",
   mercadoPreferidoId: "Mercado inválido.",
-  contavel: "Valor inválido.",
+  recorrente: "Valor inválido.",
 };
 
 export function valoresDoProduto(p: Produto): ValoresProduto {
@@ -37,12 +33,9 @@ export function valoresDoProduto(p: Produto): ValoresProduto {
     categoria: p.categoria,
     unidade: p.unidade,
     meta: String(p.meta).replace(".", ","),
-    frequencia: p.frequencia,
-    tipoIda: p.tipoIda,
-    vidaUtilDias: String(p.vidaUtilDias),
     localCasa: p.localCasa ?? "",
     mercadoPreferidoId: p.mercadoPreferidoId ?? "",
-    contavel: p.contavel,
+    recorrente: p.recorrente,
   };
 }
 
@@ -55,12 +48,9 @@ export function validarProduto(original: Produto, v: ValoresProduto): ResultadoF
     categoria: v.categoria,
     unidade: v.unidade,
     meta: numero(v.meta),
-    frequencia: v.frequencia,
-    tipoIda: v.tipoIda,
-    vidaUtilDias: numero(v.vidaUtilDias),
     localCasa: v.localCasa.trim() || undefined,
     mercadoPreferidoId: v.mercadoPreferidoId || undefined,
-    contavel: v.contavel,
+    recorrente: v.recorrente,
   };
   const r = produtoSchema.safeParse(candidato);
   if (r.success) return { ok: true, produto: r.data };

@@ -52,9 +52,8 @@ test("2 mercados: melhor preço por produto, cesta com cobertura e sugestão de 
   // a despensa mostra o preferido
   await irParaTela(page, "Despensa");
   const naDespensa = page.getByRole("listitem").filter({ hasText: "Melao Japones" }).first();
-  await naDespensa.getByText("Ajustar e editar").click();
-  await naDespensa.getByText("Mais opções").click();
-  await expect(naDespensa.getByLabel("Mercado preferido")).not.toHaveValue("");
+  await naDespensa.getByRole("button", { name: "Editar", exact: true }).click();
+  await expect(page.getByRole("dialog").getByLabel("Mercado preferido")).not.toHaveValue("");
   semViolacaoDeCsp(erros);
 });
 

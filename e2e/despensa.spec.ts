@@ -44,7 +44,7 @@ test("adicionar item à mão: nasce recorrente e, zerado, entra na lista", async
   semViolacaoDeCsp(erros);
 });
 
-test("a nota popula a despensa: eventuais, quantidades, filtros, +/−, repor sempre, arquivar e mesclar", async ({ page }) => {
+test("a nota popula a despensa: eventuais, quantidades, filtros, +/−, repor sempre, editar, ajustar, arquivar e mesclar", async ({ page }) => {
   const { erros } = vigiarConsole(page);
   await importarNota(page);
   await irParaTela(page, "Despensa");
@@ -72,47 +72,66 @@ test("a nota popula a despensa: eventuais, quantidades, filtros, +/−, repor se
   await expect(melao.getByTestId("quantidade")).toHaveText("1,36 de 1,26 kg"); // acima do padrão é permitido
   await expect(melao).toContainText("Acima do padrão");
 
-  // repor sempre: folha com o padrão sugerido
-  await melao.getByRole("button", { name: "Repor sempre", exact: true }).click();
+  // repor sempre: interruptor no card abre a folha com o padrão sugerido
+  await expect(melao.getByLabel("Repor sempre")).not.toBeChecked();
+  await melao.getByLabel("Repor sempre").click();
   const dialogo = page.getByRole("dialog");
   await expect(dialogo.getByLabel(/^Quantidade padrão/)).toHaveValue("1,3");
   await dialogo.getByRole("button", { name: "Repor sempre" }).click();
   await expect(page.getByText("Pronto: quando faltar, vai para a lista.")).toBeVisible();
+  await expect(melao.getByLabel("Repor sempre")).toBeChecked();
   await expect(melao).toContainText("Recorrente");
   await page.getByLabel("Buscar item").fill("");
   await page.getByRole("button", { name: "Eventuais" }).click();
   await expect(linhas(page)).toHaveCount(15);
   await page.getByRole("button", { name: "Todos" }).click();
 
-  // editar o padrão à mão
-  await melao.getByText("Ajustar e editar").click();
-  await melao.getByText("Mais opções").click();
-  await melao.locator("form").getByLabel(/^Quantidade padrão/).fill("3,5");
-  await melao.getByRole("button", { name: "Salvar produto" }).click();
+  // editar o padrão à mão (modal Editar): fica fixado e dá para voltar ao automático
+  await melao.getByRole("button", { name: "Editar", exact: true }).click();
+  const editar = page.getByRole("dialog");
+  await expect(editar.getByRole("heading", { name: "Editar “Melao Japones”" })).toBeVisible();
+  for (const legado of ["Frequência", "Tipo de ida", "Vida útil (dias)", "Contável"]) await expect(editar.getByText(legado)).toHaveCount(0);
+  await editar.getByLabel(/^Quantidade padrão/).fill("3,5");
+  await editar.getByRole("button", { name: "Salvar produto" }).click();
   await expect(page.getByText("Item salvo.")).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0); // o modal fecha ao salvar
   await expect(melao.getByTestId("quantidade")).toHaveText("1,36 de 3,5 kg");
   await expect(melao).toContainText("Menos da metade"); // 39% do padrão: já entra na lista
+  await melao.getByRole("button", { name: "Editar", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Voltar ao cálculo automático" }).click();
+  await expect(page.getByText("O padrão voltou ao cálculo automático.")).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Fechar" }).click();
+  await expect(melao.getByTestId("quantidade")).toHaveText("1,36 de 1,26 kg");
 
-  // quantidade exata
-  await melao.getByLabel(/^Quantidade atual \(kg\)/).fill("0");
-  await melao.getByRole("button", { name: "Definir" }).click();
-  await expect(melao.getByTestId("quantidade")).toHaveText("0 de 3,5 kg");
+  // ajustar a quantidade (modal Ajustar): mostra o efeito na lista
+  await melao.getByRole("button", { name: "Ajustar", exact: true }).click();
+  const ajuste = page.getByRole("dialog");
+  await expect(ajuste.getByLabel(/^Quantidade atual/)).toHaveValue("1,36");
+  await ajuste.getByLabel(/^Quantidade atual/).fill("0,4");
+  await expect(ajuste.getByTestId("efeito-ajuste")).toHaveText("Com essa quantidade, o item vai para a lista de compras.");
+  await ajuste.getByLabel(/^Quantidade atual/).fill("abc");
+  await expect(ajuste.getByRole("button", { name: "Salvar" })).toBeDisabled();
+  await ajuste.getByLabel(/^Quantidade atual/).fill("0");
+  await ajuste.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText("Quantidade atualizada.")).toBeVisible();
+  await expect(melao.getByTestId("quantidade")).toHaveText("0 de 1,26 kg");
   await expect(melao).toContainText("Zerado");
   await expect(page.getByTestId("resumo-despensa")).toHaveText("16 itens · 1 zerado · 0 com menos da metade");
 
   // arquivar some; "Mostrar arquivados" traz de volta
-  await melao.getByRole("button", { name: "Arquivar" }).click();
+  await melao.getByRole("button", { name: "Editar", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Arquivar" }).click();
   await expect(linhas(page)).toHaveCount(15);
   await page.getByLabel("Mostrar arquivados").check();
   await expect(linhas(page)).toHaveCount(16);
   await expect(melao).toContainText("Arquivado");
-  await melao.getByText("Ajustar e editar").click();
-  await melao.getByText("Mais opções").click();
-  await melao.getByRole("button", { name: "Desarquivar" }).click();
+  await melao.getByRole("button", { name: "Editar", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Desarquivar" }).click();
   await page.getByLabel("Mostrar arquivados").uncheck();
 
   // mesclar Melão em Banana Prata
-  await melao.getByRole("button", { name: "Mesclar com outro" }).click();
+  await melao.getByRole("button", { name: "Editar", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Mesclar com outro" }).click();
   const mescla = page.getByRole("dialog");
   await mescla.getByLabel("Mesclar em").selectOption({ label: "Banana Prata" });
   await mescla.getByRole("button", { name: "Mesclar", exact: true }).click();
@@ -131,10 +150,11 @@ test("histórico de preço dentro do item", async ({ page }) => {
   await importarNota(page);
   await irParaTela(page, "Despensa");
   const melao = item(page, "Melao Japones");
-  await melao.getByText("Ajustar e editar").click();
-  await melao.getByText("Preço e compras").click();
-  await expect(melao.getByTestId("historico-item")).toContainText("Último:");
-  await expect(melao.getByTestId("historico-item")).toContainText("04/11/2026");
+  await melao.getByRole("button", { name: "Editar", exact: true }).click();
+  const editar = page.getByRole("dialog");
+  await editar.getByText("Preço e compras").click();
+  await expect(editar.getByTestId("historico-item")).toContainText("Último:");
+  await expect(editar.getByTestId("historico-item")).toContainText("04/11/2026");
 });
 
 test("possíveis duplicados: aponta o mesmo produto escrito de outro jeito e só mescla com confirmação", async ({ page }) => {
