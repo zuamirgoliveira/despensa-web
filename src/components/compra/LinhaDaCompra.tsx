@@ -79,33 +79,20 @@ export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuan
     );
   }
 
-  // Pego: uma linha (✓ verde desfaz; o nome abre quantidade e preço).
+  // Pego: uma linha; tocar nela desfaz (como no "Não peguei"); "Editar" abre quantidade e preço.
   if (pego) {
     const ehExtra = item.status === "extra";
     return (
       <li className="rounded-lg border border-sucesso/40 bg-sucesso/10">
-        <div className="flex min-h-11 items-center gap-1 pr-3">
-          {ehExtra ? (
-            <span className="grid size-11 shrink-0 place-items-center text-sucesso" aria-hidden="true">
-              <Icone nome="ok" className="size-6" />
-            </span>
-          ) : (
-            <button
-              type="button"
-              aria-label={`Desfazer peguei: ${nome}`}
-              onClick={aoPegar}
-              className="grid size-11 shrink-0 place-items-center rounded-lg text-sucesso focus-visible:outline focus-visible:outline-2 focus-visible:outline-primario"
-            >
-              <Icone nome="ok" className="size-6" />
-            </button>
-          )}
+        <div className="flex min-h-11 items-center gap-1 pr-1">
           <button
             type="button"
-            aria-expanded={aberto}
-            aria-label={`${aberto ? "Recolher" : "Editar"} ${nome}`}
-            onClick={() => setAberto((a) => !a)}
-            className="flex min-h-11 min-w-0 flex-1 items-center gap-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-primario"
+            aria-label={ehExtra ? `${aberto ? "Recolher" : "Editar"} ${nome}` : `Desfazer peguei: ${nome}`}
+            aria-expanded={ehExtra ? aberto : undefined}
+            onClick={ehExtra ? () => setAberto((a) => !a) : aoPegar}
+            className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-lg pl-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-primario"
           >
+            <Icone nome="ok" className="size-6 shrink-0 text-sucesso" />
             <span className="min-w-0 flex-1 break-words font-medium line-through decoration-sucesso/70">{nome}</span>
             {ehExtra ? <Badge tom="info">Extra</Badge> : null}
             <span className="numero shrink-0 text-sm text-suave">
@@ -113,6 +100,17 @@ export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuan
               {item.precoCentavos !== undefined ? ` · ${brl(item.precoCentavos)}` : ""}
             </span>
           </button>
+          {ehExtra ? null : (
+            <button
+              type="button"
+              aria-expanded={aberto}
+              aria-label={`${aberto ? "Recolher" : "Editar"} ${nome}`}
+              onClick={() => setAberto((a) => !a)}
+              className="shrink-0 rounded-lg px-2 text-sm text-suave underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primario min-h-11"
+            >
+              Editar
+            </button>
+          )}
         </div>
         {aberto ? (
           <div className="flex flex-col gap-3 border-t border-sucesso/30 p-3">
