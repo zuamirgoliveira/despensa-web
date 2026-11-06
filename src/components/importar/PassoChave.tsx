@@ -8,7 +8,7 @@ import { correcoesDeUmDigito, formatCNPJ, decodeKey, onlyDigits, type Correcao }
 import { dataBR, agruparChave } from "@/lib/format";
 import { lerChaveDeImagem } from "@/lib/imagemChave";
 import { editarChave } from "@/lib/campoChave";
-import { iniciarScanner, type Scanner } from "@/lib/qr";
+import { iniciarScanner, type ModoFoco, type Scanner } from "@/lib/qr";
 import type { Candidata } from "@/domain/nfce/chave";
 
 export type ChaveValida = Extract<ChaveDecodificada, { ok: true }>;
@@ -26,7 +26,8 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
   const [texto, setTexto] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
   const [imgMsg, setImgMsg] = useState<Msg>(null);
-  const [camera, setCamera] = useState(false);
+  const [camera, setCamera] = useState<"qr" | "foto" | null>(null);
+  const [foco, setFoco] = useState<ModoFoco | null>(null);
   const [progresso, setProgresso] = useState<number | null>(null);
   const [previa, setPrevia] = useState<string | null>(null);
   const [candidatas, setCandidatas] = useState<Candidata[]>([]);
@@ -102,16 +103,17 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
     sessao.current++;
     scanner.current?.parar();
     scanner.current = null;
-    setCamera(false);
+    setCamera(null);
+    setFoco(null);
   }
 
-  async function abrirCamera(): Promise<void> {
+  async function abrirCamera(modo: "qr" | "foto" = "qr"): Promise<void> {
     if (!navigator.mediaDevices?.getUserMedia) {
       return setImgMsg({ texto: 'Este navegador não abre a câmera aqui. Use "Tirar foto" ou digite a chave.', tipo: "erro" });
     }
     const minha = ++sessao.current;
-    setCamera(true);
-    setImgMsg({ texto: "Aponte para o QR Code da nota.", tipo: "info" });
+    setCamera(modo);
+    setImgMsg({ texto: modo === "foto" ? "Enquadre a nota com a linha da chave à vista, espere focar e toque em Fotografar." : "Aponte para o QR Code da nota.", tipo: "info" });
     // Se em alguns segundos nada for lido, orienta (o QR do papel térmico é pequeno e pede foco e luz).
     if (dica.current) clearTimeout(dica.current);
     dica.current = setTimeout(() => {
@@ -127,20 +129,36 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
       const novo = await iniciarScanner(video.current as HTMLVideoElement, (r) => {
         if (dica.current) clearTimeout(dica.current);
         scanner.current = null;
-        setCamera(false);
+        setCamera(null);
+        setFoco(null);
         setImgMsg({ texto: "QR Code lido.", tipo: "ok" });
         usarChave(r.chave, r.conteudo);
       });
       if (sessao.current !== minha) novo.parar(); // fechou (ou saiu da tela) antes de a câmera abrir
-      else scanner.current = novo;
+      else {
+        scanner.current = novo;
+        setFoco(novo.foco);
+      }
     } catch {
       if (sessao.current !== minha) return;
       pararCamera();
       setImgMsg({
-        texto: 'Não consegui abrir a câmera. Verifique a permissão, ou use "Tirar foto" / "Enviar imagem".',
+        texto: 'Não consegui abrir a câmera. Verifique a permissão, ou use "Enviar imagem".',
         tipo: "erro",
       });
+      if (modo === "foto") arqFoto.current?.click(); // reserva: câmera do sistema
     }
+  }
+
+  async function focarAgora(): Promise<void> {
+    const ok = await scanner.current?.focar();
+    if (ok === false) setImgMsg({ texto: "A câmera não aceitou o pedido de foco. Afaste um pouco e aproxime devagar.", tipo: "info" });
+  }
+
+  async function fotografar(): Promise<void> {
+    const blob = await scanner.current?.fotografar();
+    if (!blob) return setImgMsg({ texto: "Não consegui tirar a foto. Tente de novo ou use \"Enviar imagem\".", tipo: "erro" });
+    await processarImagem(new File([blob], "nota.jpg", { type: blob.type || "image/jpeg" }));
   }
 
   async function processarImagem(arquivo: File | undefined): Promise<void> {
@@ -213,7 +231,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
         <Button variante="secundario" onClick={() => void abrirCamera()}>
           Escanear QR
         </Button>
-        <Button variante="secundario" onClick={() => arqFoto.current?.click()}>
+        <Button variante="secundario" onClick={() => void abrirCamera("foto")}>
           Tirar foto
         </Button>
         <Button variante="secundario" onClick={() => arqImagem.current?.click()}>
@@ -246,7 +264,29 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
 
       {camera ? (
         <div className="flex flex-col gap-2">
-          <video ref={video} playsInline muted className="aspect-square w-full rounded-lg bg-black object-cover" />
+          <video
+            ref={video}
+            playsInline
+            muted
+            className="aspect-square w-full rounded-lg bg-black object-cover"
+            aria-label="Imagem da câmera: toque para focar"
+            onClick={() => void focarAgora()}
+          />
+          <p className="text-xs text-suave" data-testid="estado-foco">
+            {foco === "continuo"
+              ? "Foco automático ligado. Toque na imagem para focar de novo."
+              : foco === "manual"
+              ? "Foco automático indisponível; toque na imagem ou em Focar para focar."
+              : foco === "indisponivel"
+              ? "Este aparelho não deixa o app controlar o foco. Afaste um pouco e aproxime devagar até ficar nítido."
+              : "Abrindo a câmera..."}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variante="secundario" onClick={() => void focarAgora()} disabled={foco === null || foco === "indisponivel"}>
+              Focar
+            </Button>
+            <Button onClick={() => void fotografar()}>Fotografar</Button>
+          </div>
           <Button variante="secundario" onClick={pararCamera}>
             Fechar câmera
           </Button>

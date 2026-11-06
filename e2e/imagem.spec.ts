@@ -56,6 +56,17 @@ test("fechar a câmera desliga o stream", async ({ page }) => {
     .toBe(true);
 });
 
+test("Tirar foto abre a câmera do app com Focar e Fotografar; fechar encerra a câmera", async ({ page }) => {
+  await page.goto("/importar");
+  await page.getByRole("button", { name: "Tirar foto" }).click();
+  await expect(page.locator("video")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Fotografar" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Focar" })).toBeVisible();
+  await expect(page.getByTestId("estado-foco")).not.toHaveText("Abrindo a câmera...");
+  await page.getByRole("button", { name: "Fechar câmera" }).click();
+  await expect(page.locator("video")).toHaveCount(0);
+});
+
 test("foto real da nota: chave correta (exata ou candidata única)", async ({ page }) => {
   test.skip(!existsSync(FOTO_REAL), "foto real não versionada: coloque em tests/fixtures/foto-nota-real.jpeg");
   test.setTimeout(180_000);

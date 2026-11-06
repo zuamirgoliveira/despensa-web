@@ -2,6 +2,8 @@
 
 ## Não lançado (reposicionamento: a despensa em primeiro lugar)
 
+- **Câmera:** o foco contínuo agora é confirmado e mostrado na tela; toque na imagem ou botão Focar refoca; "Tirar foto" usa a câmera do app com botão Fotografar (foto em resolução máxima via ImageCapture) em vez do seletor do navegador.
+
 - **Lista única:** só existe a lista da casa; entram os recorrentes zerados ou com menos de 50% do padrão, ordenados do mais vazio ao menos vazio. Sai a divisão entre mercados e o botão "Ver a lista de outro mercado"; listas abertas do modelo antigo são fechadas.
 
 - **D-01/D-02:** estoque passa a ter quantidade numérica (`Estoque.quantidade`) e produto ganha `recorrente`; migração 003 converte os estoques atuais (nível × padrão) e marca os produtos existentes como recorrentes; backup v3 lê v1 e v2. A compra agora soma ao estoque.
