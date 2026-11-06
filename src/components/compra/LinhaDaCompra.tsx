@@ -141,11 +141,11 @@ export function LinhaDaCompra({ item, produto, alerta, aoPegar, aoEstado, aoQuan
         {stepper}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Button aria-label={`Peguei ${nome}`} onClick={aoPegar}>
-          Peguei
-        </Button>
         <Button variante="secundario" aria-label={`Não peguei ${nome}`} onClick={() => aoEstado("nao_encontrado")}>
           Não peguei
+        </Button>
+        <Button aria-label={`Peguei ${nome}`} onClick={aoPegar}>
+          Peguei
         </Button>
       </div>
     </li>
