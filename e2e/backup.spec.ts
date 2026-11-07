@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { pularEstimativa, restaurarBackupPelaTela, semViolacaoDeCsp, vigiarConsole } from "./util";
+import { abrirSecao, pularEstimativa, restaurarBackupPelaTela, semViolacaoDeCsp, vigiarConsole } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 
@@ -114,6 +114,7 @@ test("a posição de casa vai por padrão e pode ser deixada de fora", async ({ 
 
 test("armazenamento protegido: a tela informa o estado", async ({ page }) => {
   await page.goto("/ajustes");
+  await abrirSecao(page, "Sobre a proteção dos dados");
   await expect(page.getByLabel("Armazenamento protegido")).toContainText(/Armazenamento protegido pelo navegador: (sim|não|indisponível)/);
 });
 

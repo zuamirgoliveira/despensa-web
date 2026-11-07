@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Card, Input } from "@/components/ui";
+import { Alert, Button, Card, Dialog, Icone, Input } from "@/components/ui";
 import { criarRepositorios } from "@/data";
 import type { Perfil } from "@/domain/types";
 import { arredondarCoordenadas, formatarCoordenadas, lerCoordenadas } from "@/lib/coordenadas";
@@ -15,8 +15,13 @@ const MENSAGEM: Record<string, string> = {
 };
 
 export function CasaLocalizacao({ perfil, aoSalvar }: { perfil: Perfil; aoSalvar: () => void }) {
+  const [editando, setEditando] = useState(false);
+  const [removendo, setRemovendo] = useState(false);
   const [manual, setManual] = useState("");
-  const [msg, setMsg] = useState<{ texto: string; tipo: "erro" | "info" } | null>(null);
+  const [msg, setMsg] = useState<{
+    texto: string;
+    tipo: "erro" | "info";
+  } | null>(null);
 
   async function guardar(posicao: { lat: number; lng: number } | undefined, arredondar = perfil.arredondarLocalizacao): Promise<void> {
     const repos = await criarRepositorios();
@@ -34,29 +39,34 @@ export function CasaLocalizacao({ perfil, aoSalvar }: { perfil: Perfil; aoSalvar
       await guardar(await capturarPosicaoUmaVez());
       setMsg(null);
     } catch (e) {
-      setMsg({ texto: MENSAGEM[e instanceof LocalizacaoError ? e.motivo : "indisponivel"], tipo: "erro" });
+      setMsg({
+        texto: MENSAGEM[e instanceof LocalizacaoError ? e.motivo : "indisponivel"],
+        tipo: "erro",
+      });
     }
   }
 
   async function salvarManual(): Promise<void> {
     const c = lerCoordenadas(manual);
-    if (!c) return setMsg({ texto: 'Coordenadas inválidas. Use o formato "-8.0631, -34.8711" (latitude, longitude).', tipo: "erro" });
+    if (!c)
+      return setMsg({
+        texto: 'Coordenadas inválidas. Use o formato "-8.0631, -34.8711" (latitude, longitude).',
+        tipo: "erro",
+      });
     await guardar(c);
     setManual("");
     setMsg(null);
   }
 
-  return (
-    <Card className="flex flex-col gap-3">
-      <h2 className="text-sm">Localização da casa</h2>
+  const definida = perfil.localizacaoCasa !== undefined;
+  const aberto = !definida || editando;
+
+  const campos = (
+    <>
       <p className="text-sm text-suave">
-        Usada só para estimar distância e custo das idas. Fica neste aparelho e é capturada uma única vez, quando você toca no botão: o app
-        nunca acompanha onde você está.
+        Usada só para estimar distância e custo das idas. Fica neste aparelho e é capturada uma única vez, quando você toca no botão: o app nunca acompanha onde
+        você está.
       </p>
-      <p aria-label="Localização atual">
-        {perfil.localizacaoCasa ? `Definida: ${formatarCoordenadas(perfil.localizacaoCasa)}` : "Ainda não definida."}
-      </p>
-      <Button onClick={() => void estouEmCasa()}>Estou em casa agora</Button>
       <label className="flex min-h-11 items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -66,6 +76,7 @@ export function CasaLocalizacao({ perfil, aoSalvar }: { perfil: Perfil; aoSalvar
         />
         Arredondar a posição (guarda só ≈ 100 m de precisão)
       </label>
+      <Button onClick={() => void estouEmCasa()}>Estou em casa agora</Button>
       <Input
         rotulo="Ou digite/cole as coordenadas"
         value={manual}
@@ -73,15 +84,51 @@ export function CasaLocalizacao({ perfil, aoSalvar }: { perfil: Perfil; aoSalvar
         placeholder="-8.0631, -34.8711"
         ajuda="Dica: no Google Maps, toque e segure no ponto e copie as coordenadas."
       />
-      <div className="grid grid-cols-2 gap-2">
+      <div className={definida ? "grid grid-cols-2 gap-2" : undefined}>
         <Button variante="secundario" onClick={() => void salvarManual()}>
           Salvar coordenadas
         </Button>
-        <Button variante="secundario" disabled={!perfil.localizacaoCasa} onClick={() => void guardar(undefined)}>
-          Remover localização
-        </Button>
+        {definida ? (
+          <Button variante="secundario" onClick={() => setEditando(false)}>
+            Cancelar
+          </Button>
+        ) : null}
       </div>
+    </>
+  );
+
+  return (
+    <Card className="flex flex-col gap-3">
+      <h2 className="text-sm">Localização da casa</h2>
+      <p aria-label="Localização atual" className="flex items-center gap-2">
+        {definida ? <Icone nome="ok" className="shrink-0 text-sucesso" /> : null}
+        <span>{definida ? `Definida: ${formatarCoordenadas(perfil.localizacaoCasa!)}` : "Ainda não definida."}</span>
+      </p>
+      {definida && !editando ? (
+        <div className="grid grid-cols-2 gap-2">
+          <Button variante="secundario" onClick={() => setEditando(true)}>
+            Alterar
+          </Button>
+          <Button variante="secundario" onClick={() => setRemovendo(true)}>
+            Remover
+          </Button>
+        </div>
+      ) : null}
+      {aberto ? campos : null}
       {msg ? <Alert tipo={msg.tipo === "erro" ? "erro" : "info"}>{msg.texto}</Alert> : null}
+      <Dialog
+        aberto={removendo}
+        titulo="Remover a localização da casa?"
+        rotuloConfirmar="Remover"
+        perigo
+        aoConfirmar={() => {
+          setRemovendo(false);
+          void guardar(undefined);
+        }}
+        aoCancelar={() => setRemovendo(false)}
+      >
+        <p>Sem a casa, o app não consegue estimar a distância e o custo das idas. Você pode definir de novo quando quiser.</p>
+      </Dialog>
     </Card>
   );
 }

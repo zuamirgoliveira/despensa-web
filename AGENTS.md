@@ -366,6 +366,8 @@ Métricas do mês contra o mês anterior, com tendência (▼ melhorou, ▲ pior
 
 ### 6.8 Valores padrão (editáveis em Ajustes: `/ajustes`, formulários validados por `lib/formAjustes.ts`)
 
+**Layout de Ajustes:** cards com valor definido ficam **fechados** e mostram só o resumo, com **Alterar**. Localização da casa e cada ida da agenda derivam o estado dos dados (sem coordenada ou sem agenda: aberto; definido: fechado; salvar fecha sozinho; remover pede confirmação). Regras e Custo da ida são `Details` recolhíveis com resumo no título e o próprio botão Salvar, que fecha ao concluir. Aparência é um seletor de 3 opções numa linha. Nos e2e, abra seções com `abrirSecao` (`e2e/util.ts`).
+
 Folga 2 dias; alerta de preço 20%; carro 10 km/L, combustível R$ 6,00, desgaste R$ 0,30/km; bike elétrica R$ 0,05/km; (economia mínima para dividir lista, sem uso na interface, R$ 5,00).
 
 ---

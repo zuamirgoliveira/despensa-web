@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { pularEstimativa, semViolacaoDeCsp, vigiarConsole, prepararDespensa } from "./util";
+import { abrirSecao, pularEstimativa, semViolacaoDeCsp, vigiarConsole, prepararDespensa } from "./util";
 
 const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 const CHAVE_ORIGINAL = "2626 1108 8682 3100 0638 6500 2000 0689 0310 2077 8720";
@@ -51,8 +51,9 @@ test("o limiar de Ajustes muda o resultado", async ({ page }) => {
   await salvar(page, nota(CHAVES[0][0], CHAVES[0][1], "05", "7,88"));
   await salvar(page, nota(CHAVES[1][0], CHAVES[1][1], "06", "10,50"));
   await page.goto("/ajustes");
+  await abrirSecao(page, "Regras da lista");
   await page.getByLabel(/Alerta de preço/).fill("40");
-  await page.getByRole("button", { name: "Salvar regras e custos" }).click();
+  await page.getByRole("button", { name: "Salvar regras", exact: true }).click();
   await expect(page.getByText("Ajustes salvos.").first()).toBeVisible();
   await page.goto("/lista?ida=hortifruti_semanal");
   await expect(page.getByRole("button", { name: /^Remover / })).toHaveCount(16);

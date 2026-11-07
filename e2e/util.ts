@@ -109,3 +109,9 @@ export async function envelhecerEstoques(page: Page): Promise<void> {
     db.close();
   });
 }
+
+/** Abre uma seção recolhível de Ajustes (Regras, Custo da ida, Sobre a proteção…) pelo texto do título, se estiver fechada. */
+export async function abrirSecao(page: Page, titulo: string | RegExp): Promise<void> {
+  const secao = page.locator("details", { has: page.locator("summary", { hasText: titulo }) });
+  if (!(await secao.evaluate((d) => (d as HTMLDetailsElement).open))) await secao.locator("summary").click();
+}

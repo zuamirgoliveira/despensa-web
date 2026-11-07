@@ -70,6 +70,8 @@ test.describe("localização da casa", () => {
     await page.getByRole("button", { name: "Estou em casa agora" }).click();
     await expect(page.getByLabel("Localização atual")).toHaveText("Definida: -8.063, -34.871");
 
+    await expect(page.getByRole("button", { name: "Estou em casa agora" })).toBeHidden(); // o card fechou sozinho
+    await page.getByRole("button", { name: "Alterar", exact: true }).click();
     await page.getByLabel(/Arredondar a posição/).click(); // grava no banco e só depois reflete na tela
     await expect(page.getByLabel(/Arredondar a posição/)).not.toBeChecked();
     await page.getByRole("button", { name: "Estou em casa agora" }).click();
@@ -77,7 +79,8 @@ test.describe("localização da casa", () => {
 
     await page.reload();
     await expect(page.getByLabel("Localização atual")).toHaveText("Definida: -8.0631, -34.8711");
-    await page.getByRole("button", { name: "Remover localização" }).click();
+    await page.getByRole("button", { name: "Remover", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Remover", exact: true }).click();
     await expect(page.getByLabel("Localização atual")).toHaveText("Ainda não definida.");
   });
 

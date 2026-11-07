@@ -5,15 +5,21 @@ type Props = {
   titulo: ReactNode;
   children: ReactNode;
   aberto?: boolean;
+  /** Avisa quando a pessoa abre ou fecha. Com `aberto`, deixa o pai controlar (ex.: fechar ao salvar). */
+  aoAlternar?: (aberto: boolean) => void;
   className?: string;
   /** Use quando o acordeão já está dentro de um Card (evita borda dupla). */
   semBorda?: boolean;
 };
 
 /** Acordeão nativo (`<details>`): acessível por teclado e leitor de tela sem JavaScript. */
-export function Details({ titulo, children, aberto, className, semBorda }: Props) {
+export function Details({ titulo, children, aberto, aoAlternar, className, semBorda }: Props) {
   return (
-    <details open={aberto} className={cn("group", !semBorda && "rounded-lg border border-borda bg-superficie", className)}>
+    <details
+      open={aberto}
+      onToggle={aoAlternar ? (e) => aoAlternar(e.currentTarget.open) : undefined}
+      className={cn("group", !semBorda && "rounded-lg border border-borda bg-superficie", className)}
+    >
       <summary
         className={cn(
           "flex min-h-11 cursor-pointer list-none items-center gap-2 py-2 font-medium [&::-webkit-details-marker]:hidden",

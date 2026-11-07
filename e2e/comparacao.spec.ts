@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { irParaTela, pularEstimativa, semViolacaoDeCsp, vigiarConsole } from "./util";
+import { abrirSecao, irParaTela, pularEstimativa, semViolacaoDeCsp, vigiarConsole } from "./util";
 
 const NOTA_A = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
 /** Outro mercado (CNPJ válido 11.222.333/0001-81), mesmos produtos, melão a R$ 6,00. */
@@ -59,10 +59,12 @@ test("2 mercados: melhor preço por produto, cesta com cobertura e sugestão de 
 
 test("a janela de comparação é editável em Ajustes", async ({ page }) => {
   await page.goto("/ajustes");
+  await abrirSecao(page, "Regras da lista");
   await expect(page.getByLabel("Janela de comparação de preços (dias)")).toHaveValue("60");
   await page.getByLabel("Janela de comparação de preços (dias)").fill("90");
-  await page.getByRole("button", { name: "Salvar regras e custos" }).click();
+  await page.getByRole("button", { name: "Salvar regras", exact: true }).click();
   await expect(page.getByText("Ajustes salvos.").first()).toBeVisible();
   await page.reload();
+  await abrirSecao(page, "Regras da lista");
   await expect(page.getByLabel("Janela de comparação de preços (dias)")).toHaveValue("90");
 });

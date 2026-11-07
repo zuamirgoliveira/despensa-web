@@ -48,7 +48,7 @@ export function Ajustes() {
           Ver mercados
         </Link>
       </Card>
-      {perfil ? <CasaLocalizacao key={`${perfil.id}-${perfil.localizacaoCasa?.lat}-${perfil.localizacaoCasa?.lng}-${perfil.arredondarLocalizacao}`} perfil={perfil} aoSalvar={salvou} /> : null}
+      {perfil ? <CasaLocalizacao key={`${perfil.id}-${perfil.localizacaoCasa?.lat}-${perfil.localizacaoCasa?.lng}`} perfil={perfil} aoSalvar={salvou} /> : null}
       {perfil ? <FormPerfil key={perfil.id} perfil={perfil} aoSalvar={salvou} /> : null}
       <Backup />
     </div>
