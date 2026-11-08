@@ -103,7 +103,7 @@ describe("mesclar produtos", () => {
     expect(r.meta).toBe(2.36);
   });
 
-  it("quando o destino já tem estoque, mantém o do destino", async () => {
+  it("quando o destino já tem estoque, soma os dois", async () => {
     await importar();
     const [origem, destino] = await repos.produtos.listar();
     const base = { casaId: origem.casaId, confirmadoEm: "2026-11-05T10:00:00Z" };
@@ -111,7 +111,17 @@ describe("mesclar produtos", () => {
     await repos.estoques.salvar({ id: crypto.randomUUID(), produtoId: destino.id, quantidade: 1, nivel: "cheio", ...base });
     await mesclarProdutos(repos, origem.id, destino.id);
     expect(await repos.estoques.listar()).toHaveLength(1);
-    expect((await repos.estoques.obterPorProduto(destino.id))?.nivel).toBe("cheio");
+    expect((await repos.estoques.obterPorProduto(destino.id))?.quantidade).toBe(1);
+  });
+
+  it("Coca 1 + Coca 1 = 2 ao mesclar", async () => {
+    await importar();
+    const [origem, destino] = await repos.produtos.listar();
+    const base = { casaId: origem.casaId, nivel: "cheio" as const, confirmadoEm: "2026-11-07T10:00:00Z" };
+    await repos.estoques.salvar({ id: crypto.randomUUID(), produtoId: origem.id, quantidade: 1, ...base });
+    await repos.estoques.salvar({ id: crypto.randomUUID(), produtoId: destino.id, quantidade: 1, ...base });
+    await mesclarProdutos(repos, origem.id, destino.id);
+    expect((await repos.estoques.obterPorProduto(destino.id))?.quantidade).toBe(2);
   });
 
   it("move itens de lista", async () => {

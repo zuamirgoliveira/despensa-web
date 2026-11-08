@@ -48,7 +48,14 @@ export async function mesclarProdutos(repos: Repositorios, origemId: string, des
   if (estoqueOrigem) {
     const estoqueDestino = await repos.estoques.obterPorProduto(destinoId);
     await repos.estoques.apagar(estoqueOrigem.id);
-    if (!estoqueDestino) await repos.estoques.salvar({ ...estoqueOrigem, produtoId: destinoId });
+    if (!estoqueDestino) {
+      await repos.estoques.salvar({ ...estoqueOrigem, produtoId: destinoId });
+    } else {
+      // os dois produtos eram o mesmo: o que havia em cada um soma (Coca 1 + Coca 1 = 2)
+      const quantidade = Math.round((estoqueDestino.quantidade + estoqueOrigem.quantidade) * 1000) / 1000;
+      const confirmadoEm = estoqueOrigem.confirmadoEm > estoqueDestino.confirmadoEm ? estoqueOrigem.confirmadoEm : estoqueDestino.confirmadoEm;
+      await repos.estoques.salvar({ ...estoqueDestino, quantidade, quantidadeExata: undefined, confirmadoEm });
+    }
   }
   await repos.produtos.apagar(origemId);
   await atualizarMetasAutomaticas(repos, [destinoId]);

@@ -47,6 +47,9 @@ describe("sugerirTipoMercado", () => {
     ["ASSAI ATACADISTA S/A", "atacarejo"],
     ["Atacarejo Bom Preço", "atacarejo"],
     ["SUPERMERCADO EXTRA", "supermercado"],
+    ["PADARIA E CONFEITARIA SAO JOSE", "padaria"],
+    ["Pizzaria do Zé", "lanchonete"],
+    ["Drogaria Pacheco", "farmacia"],
     ["", "supermercado"],
   ])("%s → %s", (nome, tipo) => expect(sugerirTipoMercado(nome)).toBe(tipo));
 });

@@ -6,12 +6,29 @@ import { Button, Card, Details, Dialog, EmptyState, useToast } from "@/component
 import { criarRepositorios } from "@/data";
 import { apagarCompraDesfazendoEstoque, efeitoDeApagarCompra, type EfeitoNoEstoque } from "@/data/despensa";
 import { useRepositorio } from "@/data/useRepositorio";
+import { decodeKey } from "@/domain/nfce/chave";
+import { SEFAZ_CONSULTA } from "@/domain/nfce/sefaz";
 import { custoRealCompra } from "@/domain/ida";
 import type { Compra } from "@/domain/types";
 import { brl, dataBR, horaBR, numeroBR } from "@/lib/format";
 
 export function ListaCompras() {
   const { mostrar } = useToast();
+
+  /** Copia a chave e abre a consulta pública da SEFAZ (o captcha é com a pessoa). */
+  async function abrirSefaz(chave: string): Promise<void> {
+    const d = decodeKey(chave);
+    const url = d.ok ? SEFAZ_CONSULTA[d.uf] : undefined;
+    if (!url) return mostrar("Consulta da SEFAZ ainda só existe para PE.", "erro");
+    let copiou = true;
+    try {
+      await navigator.clipboard.writeText(chave);
+    } catch {
+      copiou = false;
+    }
+    window.open(url, "_blank", "noopener");
+    mostrar(copiou ? "Chave copiada. Cole no site da SEFAZ e resolva o captcha." : `Copie a chave: ${chave}`);
+  }
   const [apagar, setApagar] = useState<Compra | null>(null);
   const [efeitos, setEfeitos] = useState<EfeitoNoEstoque[]>([]);
   useEffect(() => {
@@ -113,9 +130,14 @@ export function ListaCompras() {
                     </tbody>
                   </table>
                 </Details>
-                <Button variante="secundario" className="self-end" onClick={() => setApagar(c)}>
-                  Apagar compra
-                </Button>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button variante="secundario" onClick={() => void abrirSefaz(c.chave)}>
+                    Abrir SEFAZ
+                  </Button>
+                  <Button variante="secundario" onClick={() => setApagar(c)}>
+                    Apagar compra
+                  </Button>
+                </div>
               </Card>
             </li>
           );

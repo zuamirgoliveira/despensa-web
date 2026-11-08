@@ -9,12 +9,18 @@ import type { Mercado, Perfil } from "@/domain/types";
 import { centavosParaCampo, reaisParaCentavos } from "@/lib/dinheiro";
 import { brl } from "@/lib/format";
 import { criarMapas } from "@/lib/mapas";
+import { aplicarCustoNasCompras } from "@/data/estimativaIda";
 import { TIPOS_MERCADO, TRANSPORTES } from "@/schemas";
 
 const TIPO_ROTULO: Record<Mercado["tipo"], string> = {
   hortifruti: "Hortifruti",
   supermercado: "Supermercado",
   atacarejo: "Atacarejo",
+  padaria: "Padaria",
+  acougue: "Açougue",
+  lanchonete: "Lanchonete / restaurante",
+  farmacia: "Farmácia",
+  conveniencia: "Conveniência",
   feira: "Feira",
   outro: "Outro",
 };
@@ -67,16 +73,15 @@ export function FormMercado({ mercado, perfil, aoSalvar }: { mercado: Mercado; p
   const min = numero(v.min);
   const fixo = reaisParaCentavos(v.fixo);
   const previa =
-    km !== undefined && !Number.isNaN(km)
-      ? custoIdaDoMercado({ transporte: v.transporte, distanciaKm: km, custoFixoIdaCentavos: fixo }, perfil)
-      : undefined;
+    km !== undefined && !Number.isNaN(km) ? custoIdaDoMercado({ transporte: v.transporte, distanciaKm: km, custoFixoIdaCentavos: fixo }, perfil) : undefined;
 
   async function salvar(): Promise<void> {
     if (Number.isNaN(km) || Number.isNaN(min) || (v.fixo.trim() !== "" && fixo === undefined)) {
       return setErro("Informe números válidos (maiores ou iguais a zero) em distância, tempo e custo fixo.");
     }
     setErro(null);
-    await (await criarRepositorios()).mercados.salvar({
+    const repos = await criarRepositorios();
+    const salvo = await repos.mercados.salvar({
       ...mercado,
       apelido: v.apelido.trim() || undefined,
       tipo: v.tipo,
@@ -85,6 +90,8 @@ export function FormMercado({ mercado, perfil, aoSalvar }: { mercado: Mercado; p
       tempoMinIda: min,
       custoFixoIdaCentavos: fixo,
     });
+    // compras já importadas sem custo da ida passam a ter (some o aviso "falta estimar" da tela inicial)
+    await aplicarCustoNasCompras(repos, salvo);
     aoSalvar();
   }
 
@@ -113,8 +120,20 @@ export function FormMercado({ mercado, perfil, aoSalvar }: { mercado: Mercado; p
         </Select>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Input rotulo="Distância de ida (km)" inputMode="decimal" value={v.km} onChange={(e) => setV({ ...v, km: e.target.value })} ajuda="Só a ida: o custo conta ida e volta." />
-        <Input rotulo="Tempo de ida (min)" inputMode="decimal" value={v.min} onChange={(e) => setV({ ...v, min: e.target.value })} ajuda="Só informação, não vira dinheiro." />
+        <Input
+          rotulo="Distância de ida (km)"
+          inputMode="decimal"
+          value={v.km}
+          onChange={(e) => setV({ ...v, km: e.target.value })}
+          ajuda="Só a ida: o custo conta ida e volta."
+        />
+        <Input
+          rotulo="Tempo de ida (min)"
+          inputMode="decimal"
+          value={v.min}
+          onChange={(e) => setV({ ...v, min: e.target.value })}
+          ajuda="Só informação, não vira dinheiro."
+        />
       </div>
       {v.transporte === "carro" ? (
         <Input rotulo="Custo fixo da ida (R$, ex.: estacionamento)" inputMode="decimal" value={v.fixo} onChange={(e) => setV({ ...v, fixo: e.target.value })} />
