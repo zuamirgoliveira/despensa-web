@@ -70,8 +70,11 @@ test("ciclo da E1: importar → agenda → conferir → lista → comprar offlin
   await page.getByRole("button", { name: "Ler nota" }).click();
   await expect(page.getByLabel("Associar esta nota à lista")).not.toHaveValue("");
   await page.getByRole("button", { name: /Salvar compra/ }).click();
+  // o meio é perguntado a cada nota (mesmo mercado pode ser carro, bike ou a pé)
+  await page.getByLabel("Estimativa da ida").getByRole("button", { name: "De carro" }).click();
+  await page.getByRole("button", { name: "Continuar" }).click();
 
-  // 6) resumo: reconciliação, estoque e custo da ida (mercado já conhecido: sem nova pergunta)
+  // 6) resumo: reconciliação, estoque e custo da ida
   await expect(page).toHaveURL(/\/resumo\?lista=/);
   await expect(page.getByText("Comprado (15)")).toBeVisible();
   await expect(page.getByText("Faltou (2)")).toBeVisible(); // Cenoura e o extra Chiclete (não veio na nota)

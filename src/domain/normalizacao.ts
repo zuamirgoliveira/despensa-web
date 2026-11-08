@@ -54,7 +54,10 @@ export function normalizarDescricao(descricao: string): Normalizado {
     d = d.replace(RE_TAMANHO, " ");
   }
   d = d.replace(RE_EMBALAGEM_FINAL, "");
-  d = d.replace(/[()[\]{}"'*+#/\\._,;:-]+/g, " ").replace(/\s+/g, " ").trim();
+  d = d
+    .replace(/[()[\]{}"'*+#/\\._,;:-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
   const todas = d.split(" ").filter(Boolean);
   // artigos ficam no nome exibido ("Pão de Queijo"), mas não contam na identidade
@@ -63,6 +66,23 @@ export function normalizarDescricao(descricao: string): Normalizado {
   const nome = [base, tamanho ? formatarTamanho(tamanho) : ""].filter(Boolean).join(" ");
   const chave = `${[...palavras].sort().join(" ")}${tamanho ? `|${tamanho.valor}${tamanho.medida}` : ""}`;
   return { nome, chave, palavras, tamanho };
+}
+
+/**
+ * O item vendido por unidade/pacote precisa saber o tamanho da embalagem (2 l, 350 ml, 200 g) para comparar
+ * preço e contar a despensa. Falta quando o nome não traz tamanho. Item por kg/litro não precisa.
+ */
+export function faltaTamanho(unidadeDaNota: string, nome: string): boolean {
+  return (unidadeDaNota === "UNID" || unidadeDaNota === "PCT") && normalizarDescricao(nome).tamanho === undefined;
+}
+
+/** Tamanho digitado ("2l", "350 ml", "1,5kg", "200g") em forma canônica, ou `undefined` se não for um tamanho. */
+export function lerTamanhoDigitado(texto: string): Tamanho | undefined {
+  const t = texto.trim();
+  if (!t) return undefined;
+  const n = normalizarDescricao(`x ${t}`);
+  // precisa ser só o tamanho: "x" sobra como única palavra
+  return n.palavras.length === 1 && n.palavras[0] === "x" ? n.tamanho : undefined;
 }
 
 /** Identidade de um nome de produto: nomes que só diferem em caixa, acento, ordem, espaços ou escrita do tamanho têm a mesma chave. */

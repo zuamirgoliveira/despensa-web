@@ -6,7 +6,7 @@ export function custoPorKmCarro(carro: Perfil["carro"]): number {
   return carro.precoCombustivelCentavos / carro.consumoKmPorLitro + carro.desgasteCentavosPorKm;
 }
 
-export type MeioDeTransporte = "carro" | "bike_eletrica";
+export type MeioDeTransporte = "carro" | "bike_eletrica" | "a_pe";
 
 /**
  * Custo financeiro da ida e volta, em centavos (arredondado ao centavo). Só dinheiro: o tempo não
@@ -21,6 +21,7 @@ export function custoIda(args: {
   custoFixoCentavos?: number;
 }): number {
   const { meio, kmIdaVolta, perfil } = args;
+  if (meio === "a_pe") return 0;
   if (meio === "bike_eletrica") return Math.round(kmIdaVolta * perfil.bikeCentavosPorKm);
   return Math.round(kmIdaVolta * custoPorKmCarro(perfil.carro) + (args.custoFixoCentavos ?? 0));
 }

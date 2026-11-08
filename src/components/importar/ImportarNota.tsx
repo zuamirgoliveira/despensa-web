@@ -8,7 +8,6 @@ import { prepararConferencia, salvarNotaImportada, situacaoDosProdutos, type Ite
 import { finalizarCompra, listasEmCompra } from "@/data/reconciliacao";
 import type { Lista } from "@/domain/types";
 import { parseNota, type ResultadoParser } from "@/domain/nfce/parser";
-import { aplicarCustoNasCompras } from "@/data/estimativaIda";
 import { Conferencia } from "./Conferencia";
 import { EstimativaIda } from "./EstimativaIda";
 import { PassoChave, type ChaveValida } from "./PassoChave";
@@ -36,10 +35,11 @@ export function ImportarNota() {
   const [despensa, setDespensa] = useState<Record<string, SituacaoNaDespensa>>({});
   const [ignorados, setIgnorados] = useState<ReadonlySet<string>>(new Set());
   const [reporSempre, setReporSempre] = useState<ReadonlySet<string>>(new Set());
+  const [porUnidade, setPorUnidade] = useState<ReadonlySet<string>>(new Set());
   const [salvando, setSalvando] = useState(false);
   const [listasAbertas, setListasAbertas] = useState<Lista[]>([]);
   const [listaId, setListaId] = useState("");
-  const [estimar, setEstimar] = useState<{ mercadoId: string; destino: string } | null>(null);
+  const [estimar, setEstimar] = useState<{ mercadoId: string; chave: string; destino: string } | null>(null);
   const [jaImportadaNota, setJaImportadaNota] = useState(false);
 
   async function ler(conteudo: string, informada: ChaveValida | null): Promise<void> {
@@ -66,18 +66,20 @@ export function ImportarNota() {
     setDespensa(await situacaoDosProdutos(repos));
     setIgnorados(new Set());
     setReporSempre(new Set());
+    setPorUnidade(new Set());
     setLeitura({ resultado, itens, avisos, erros });
     const temErro = resultado.erros.length + erros.length > 0;
     setMsgLeitura({ texto: temErro ? "Encontrei problemas." : `Li ${nota.itens.length} itens.`, tipo: temErro ? "erro" : "ok" });
   }
 
-  // Listas em compra: a do parâmetro ?lista= (vindo do modo compra) ou, sem ela, a mais recente.
+  // Vínculo com lista só quando a importação vem do botão do Modo compra (?lista=). Sem ele, nenhuma lista
+  // vem marcada: comprar fora da lista não pode fechar nem reconciliar uma lista por engano.
   useEffect(() => {
     (async () => {
       const abertas = await listasEmCompra(await criarRepositorios());
       const pedida = new URLSearchParams(location.search).get("lista");
       setListasAbertas(abertas);
-      setListaId(abertas.find((l) => l.id === pedida)?.id ?? abertas[0]?.id ?? "");
+      setListaId(abertas.find((l) => l.id === pedida)?.id ?? "");
     })();
   }, []);
 
@@ -108,18 +110,13 @@ export function ImportarNota() {
         substituir: jaImportadaNota || jaImportadaEm !== null,
         ignorar: [...ignorados],
         reporSempre: [...reporSempre],
+        porUnidade: [...porUnidade],
       });
       const fechamento = await finalizarCompra(repos, compra, listaId || undefined, new Date(), anterior);
       mostrar("Compra salva.");
       const destino = fechamento.lista ? `/resumo?lista=${fechamento.lista.id}` : "/compras";
-      const atual = (await repos.mercados.obter(mercado.id)) ?? mercado;
-      if (atual.distanciaKm !== undefined) {
-        // mercado já conhecido: o custo da ida entra na compra sem perguntar nada
-        await aplicarCustoNasCompras(repos, atual);
-        router.push(destino);
-      } else {
-        setEstimar({ mercadoId: mercado.id, destino }); // pergunta uma vez; nunca bloqueia
-      }
+      // sempre pergunta como a pessoa foi (carro, bike ou a pé); "Decidir depois" nunca bloqueia
+      setEstimar({ mercadoId: mercado.id, chave: compra.chave, destino });
     } catch (e) {
       mostrar(e instanceof Error ? e.message : "Não consegui salvar a compra.", "erro");
     } finally {
@@ -127,7 +124,7 @@ export function ImportarNota() {
     }
   }
 
-  if (estimar) return <EstimativaIda mercadoId={estimar.mercadoId} aoConcluir={() => router.push(estimar.destino)} />;
+  if (estimar) return <EstimativaIda mercadoId={estimar.mercadoId} chave={estimar.chave} aoConcluir={() => router.push(estimar.destino)} />;
 
   return (
     <div className="flex flex-col gap-4">
@@ -159,6 +156,8 @@ export function ImportarNota() {
           aoAlternarIgnorar={(c) => setIgnorados((a) => alternar(a, c))}
           reporSempre={reporSempre}
           aoAlternarReporSempre={(c) => setReporSempre((a) => alternar(a, c))}
+          porUnidade={porUnidade}
+          aoAlternarPorUnidade={(c) => setPorUnidade((a) => alternar(a, c))}
         />
       ) : null}
       <Alert tipo="info">Seus dados ficam só neste aparelho. O app não guarda CPF.</Alert>

@@ -3,7 +3,7 @@ import { metaAutomatica, novoProduto } from "@/domain/catalogo";
 import { padraoSugerido, promoverARecorrente } from "@/domain/recorrencia";
 import { sugerirTipoMercado } from "@/domain/mercados";
 import type { NotaParseada } from "@/domain/nfce/parser";
-import { chaveDeProduto, normalizarDescricao, produtosParecidos } from "@/domain/normalizacao";
+import { chaveDeProduto, normalizarDescricao, produtosParecidos, type Tamanho } from "@/domain/normalizacao";
 import type { Compra, Mercado, Produto } from "@/domain/types";
 import type { Repositorios } from "./repositorios";
 
@@ -13,6 +13,8 @@ export class NotaDuplicadaError extends Error {
     this.name = "NotaDuplicadaError";
   }
 }
+
+const tamanhoDoNome = (nome: string): Tamanho | undefined => normalizarDescricao(nome).tamanho;
 
 export type ItemConferencia = {
   codigo: string;
@@ -59,15 +61,17 @@ export type EntradaImportacao = {
   ignorar?: readonly string[];
   /** Códigos de itens a promover a recorrentes ("Repor sempre") ao salvar. */
   reporSempre?: readonly string[];
+  /** Códigos de itens confirmados como "vendidos por unidade" (sem tamanho de embalagem): não perguntar o tamanho depois. */
+  porUnidade?: readonly string[];
 };
 
 /** O que a despensa já tem de cada nome (por `chaveDeProduto`), para mostrar "o que vai mudar" antes de salvar. */
-export type SituacaoNaDespensa = { atual?: number; recorrente: boolean };
+export type SituacaoNaDespensa = { atual?: number; recorrente: boolean; porUnidade?: boolean };
 
 export async function situacaoDosProdutos(repos: Repositorios): Promise<Record<string, SituacaoNaDespensa>> {
   const [produtos, estoques] = await Promise.all([repos.produtos.listar(), repos.estoques.listar()]);
   const qtd = new Map(estoques.map((e) => [e.produtoId, e.quantidade]));
-  return Object.fromEntries(produtos.map((p) => [chaveDeProduto(p.nome), { atual: qtd.get(p.id), recorrente: p.recorrente }]));
+  return Object.fromEntries(produtos.map((p) => [chaveDeProduto(p.nome), { atual: qtd.get(p.id), recorrente: p.recorrente, porUnidade: p.vendidoPorUnidade }]));
 }
 
 export type ResultadoImportacao = { compra: Compra; mercado: Mercado; produtosCriados: Produto[] };
@@ -104,18 +108,27 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
   const paraRecorrentes: string[] = [];
   for (const item of nota.itens) {
     if (ignorados.has(item.codigo)) {
-      itens.push({ codigo: item.codigo, descricao: item.descricao, quantidade: item.quantidade, unidade: item.unidade, valorUnitarioCentavos: item.valorUnitarioCentavos, valorTotalCentavos: item.valorTotalCentavos });
+      itens.push({
+        codigo: item.codigo,
+        descricao: item.descricao,
+        quantidade: item.quantidade,
+        unidade: item.unidade,
+        valorUnitarioCentavos: item.valorUnitarioCentavos,
+        valorTotalCentavos: item.valorTotalCentavos,
+      });
       continue;
     }
     if (await repos.apelidos.obter([mercado.cnpj, item.codigo])) casados++;
     const nome = (nomes[item.codigo] ?? "").trim() || normalizarDescricao(item.descricao).nome;
     let produto = porNome.get(chaveDeProduto(nome));
     if (!produto) {
-      produto = await repos.produtos.salvar(
-        novoProduto({ id: crypto.randomUUID(), casaId: casa.id, nome, item, mercadoTipo: mercado.tipo }),
-      );
+      produto = await repos.produtos.salvar(novoProduto({ id: crypto.randomUUID(), casaId: casa.id, nome, item, mercadoTipo: mercado.tipo }));
       porNome.set(chaveDeProduto(nome), produto);
       produtosCriados.push(produto);
+    }
+    if (entrada.porUnidade?.includes(item.codigo) && !produto.vendidoPorUnidade) {
+      produto = await repos.produtos.salvar({ ...produto, vendidoPorUnidade: true });
+      porNome.set(chaveDeProduto(nome), produto);
     }
     await repos.apelidos.salvar({ casaId: casa.id, cnpj: mercado.cnpj, codigo: item.codigo, produtoId: produto.id });
     if (entrada.reporSempre?.includes(item.codigo)) paraRecorrentes.push(produto.id);
@@ -127,6 +140,8 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
       unidade: item.unidade,
       valorUnitarioCentavos: item.valorUnitarioCentavos,
       valorTotalCentavos: item.valorTotalCentavos,
+      // o tamanho do nome do produto (escrito ou confirmado na conferência) é o que vale para comparar preços
+      ...(tamanhoDoNome(nome) ? { tamanho: tamanhoDoNome(nome) } : {}),
     });
   }
 
@@ -142,7 +157,10 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
     itensCasados: anterior?.itensCasados ?? casados,
     importadoEm: (entrada.agora ?? new Date()).toISOString(),
   });
-  await atualizarMetasAutomaticas(repos, itens.flatMap((i) => (i.produtoId ? [i.produtoId] : [])));
+  await atualizarMetasAutomaticas(
+    repos,
+    itens.flatMap((i) => (i.produtoId ? [i.produtoId] : [])),
+  );
   if (paraRecorrentes.length) {
     const compras = await repos.compras.listar();
     for (const id of new Set(paraRecorrentes)) {

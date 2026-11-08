@@ -55,7 +55,7 @@ test("estimativa automática: confirma de bike com um toque, grava o custo e só
   const cartao = page.getByLabel("Estimativa da ida");
   await expect(cartao).toContainText("10,7 km, cerca de 12 min", { timeout: 20_000 });
   await expect(cartao).toContainText("(aproximado: só achei o bairro)"); // o endereço da nota vem cortado
-  await expect(cartao).toContainText("Você foi de carro ou de bike elétrica?");
+  await expect(cartao).toContainText("Como você foi?");
 
   await cartao.getByRole("button", { name: "De bike elétrica" }).click();
   // bike: 12 km de ida → 24 km × R$ 0,05 = R$ 1,20
@@ -85,7 +85,7 @@ test("estimativa automática: confirma de bike com um toque, grava o custo e só
   semViolacaoDeCsp(erros);
 });
 
-test("mercado conhecido: a nota seguinte vai direto, com o custo da ida (cache, sem chamar o serviço)", async ({ page }) => {
+test("mercado conhecido: a nota seguinte pergunta só o meio (sem chamar o serviço) e calcula o custo por ele", async ({ page }) => {
   const pedidos = await simularMapas(page);
   await definirCasa(page);
   await lerESalvar(page, NOTA);
@@ -95,10 +95,17 @@ test("mercado conhecido: a nota seguinte vai direto, com o custo da ida (cache, 
   const antes = pedidos.length;
 
   await lerESalvar(page, OUTRA_NOTA);
-  await expect(page).toHaveURL(/\/compras$/); // sem pergunta
+  // a distância já é conhecida: pergunta só como foi desta vez, sem consultar o serviço
+  const cartao = page.getByLabel("Estimativa da ida");
+  await expect(cartao).toContainText("Como você foi desta vez?");
+  await expect(cartao).toContainText("Última vez: Carro");
+  await cartao.getByRole("button", { name: "A pé" }).click();
+  await expect(page.getByLabel("Custo da ida registrado")).toHaveText("Custo da ida e volta: R$ 0,00. Já está na compra.");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page).toHaveURL(/\/compras$/);
   expect(pedidos.length).toBe(antes);
   await page.getByText("11/11/2026").first().click();
-  await expect(page.getByLabel(/^Custo real da compra de 11\/11\/2026/)).toContainText("Custo da ida R$ 19,26");
+  await expect(page.getByLabel(/^Custo real da compra de 11\/11\/2026/)).toContainText("Custo da ida R$ 0,00");
 });
 
 test("endereço não encontrado: pede km e minutos uma vez, à mão", async ({ page }) => {

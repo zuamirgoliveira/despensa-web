@@ -24,6 +24,7 @@ describe("custoIda", () => {
     ["carro, 0 km sem fixo", { meio: "carro" as const, kmIdaVolta: 0 }, 0],
     ["bike, 8,4 km", { meio: "bike_eletrica" as const, kmIdaVolta: 8.4 }, 42],
     ["bike ignora custo fixo", { meio: "bike_eletrica" as const, kmIdaVolta: 8.4, custoFixoCentavos: 500 }, 42],
+    ["a pé não custa nada", { meio: "a_pe" as const, kmIdaVolta: 4, custoFixoCentavos: 500 }, 0],
     ["bike, 10 km (R$ 0,50)", { meio: "bike_eletrica" as const, kmIdaVolta: 10 }, 50],
   ])("%s", (_nome, entrada, esperado) => expect(custoIda({ ...entrada, perfil })).toBe(esperado));
 

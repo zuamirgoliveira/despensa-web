@@ -112,6 +112,8 @@ export const produtoSchema = z.object({
   localCasa: z.string().trim().max(60).optional(),
   /** Produto "contável": aceita quantidade exata na conferência. */
   contavel: z.boolean().default(false),
+  /** Confirmado na importação: o produto não tem tamanho de embalagem (ovo, pizza); não perguntar de novo. */
+  vendidoPorUnidade: z.boolean().optional(),
   ativo: z.boolean().default(true),
 });
 
@@ -143,6 +145,8 @@ export const itemCompraSchema = z.object({
   unidade: z.enum(UNIDADES_NOTA),
   valorUnitarioCentavos: centavosSchema,
   valorTotalCentavos: centavosSchema,
+  /** Tamanho da embalagem confirmado na importação (2 l, 350 ml, 200 g); vence o que a descrição da nota sugere. */
+  tamanho: z.object({ valor: z.number().positive(), medida: z.enum(["g", "ml"]) }).optional(),
 });
 
 /** Chave natural: `chave` (44 dígitos). Nunca guarda CPF nem o texto bruto. */
@@ -156,6 +160,8 @@ export const compraSchema = z.object({
   itens: z.array(itemCompraSchema),
   custoIdaCentavos: centavosNaoNegSchema.optional(),
   listaId: idSchema.optional(),
+  /** Como a pessoa foi a esta compra (perguntado a cada importação). */
+  meio: z.enum(TRANSPORTES).optional(),
   /** Quantos itens da nota já tinham apelido no catálogo na importação (métrica "itens casados"). */
   itensCasados: z.number().int().nonnegative().optional(),
   importadoEm: instanteSchema,

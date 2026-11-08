@@ -137,3 +137,25 @@ describe("sugerirMesclagens (duplicados do catálogo)", () => {
     expect(r.flatMap((s) => [s.origem.id, s.destino.id])).not.toContain("2");
   });
 });
+
+import { faltaTamanho, lerTamanhoDigitado } from "@/domain/normalizacao";
+
+describe("tamanho da embalagem na importação", () => {
+  it.each([
+    ["UNID", "Refri Coca Cola Sem", true],
+    ["PCT", "Creme de Leite", true],
+    ["UNID", "Coca Cola Zero 2l", false],
+    ["KG", "Banana", false],
+    ["L", "Leite", false],
+  ])("faltaTamanho(%s, %s) = %s", (un, nome, esperado) => expect(faltaTamanho(un, nome)).toBe(esperado));
+
+  it.each([
+    ["2l", { valor: 2000, medida: "ml" }],
+    ["350 ml", { valor: 350, medida: "ml" }],
+    ["1,5kg", { valor: 1500, medida: "g" }],
+    ["200g", { valor: 200, medida: "g" }],
+    ["dois litros", undefined],
+    ["", undefined],
+    ["coca 2l", undefined],
+  ])("lerTamanhoDigitado(%s)", (texto, esperado) => expect(lerTamanhoDigitado(texto)).toEqual(esperado));
+});

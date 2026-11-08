@@ -95,7 +95,7 @@ test("Compartilhar lista abre o menu do sistema com o texto da lista", async ({ 
   const dados = await page.evaluate(() => (window as unknown as { __compartilhado: { title: string; text: string }[] }).__compartilhado[0]);
   expect(dados.title).toBe("Lista de compras");
   expect(dados.text).toMatch(/^Lista de compras \(\d{2}\/\d{2}\/\d{4}\)\n\nHortifruti\n• /);
-  expect(dados.text).toContain("• Melao Japones:");
+  expect(dados.text).toMatch(/• .*Melao Japones/);
   expect(dados.text.split("\n").filter((l) => l.startsWith("• "))).toHaveLength(16);
 });
 
@@ -108,7 +108,7 @@ test("sem o menu de compartilhar, a lista é copiada", async ({ page, context })
   await page.goto("/lista");
   await page.getByRole("button", { name: "Compartilhar lista" }).click();
   await expect(page.getByText(/Copiei a lista/)).toBeVisible();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("• Melao Japones:");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/• .*Melao Japones/);
 });
 
 test("sem itens, Compartilhar lista fica desabilitado", async ({ page }) => {

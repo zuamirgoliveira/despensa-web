@@ -1,6 +1,6 @@
 import { IDBFactory } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { aplicarCustoNasCompras, confirmarEstimativa, estimarMercado } from "@/data/estimativaIda";
+import { aplicarCustoNasCompras, confirmarEstimativa, estimarMercado, registrarIdaDaCompra, ultimoMeioDoMercado } from "@/data/estimativaIda";
 import { criarRepositorios } from "@/data/indexeddb";
 import type { Repositorios } from "@/data/repositorios";
 import type { Mercado } from "@/domain/types";
@@ -115,6 +115,19 @@ describe("confirmarEstimativa", () => {
     const r = await confirmarEstimativa(repos, mercado.id, { meio: "bike_eletrica", distanciaKm: 4.2 });
     expect(r.custoIdaCentavos).toBe(42);
     expect((await repos.mercados.obter(mercado.id))?.tempoMinIda).toBeUndefined();
+  });
+
+  it("o meio é por compra: o mesmo mercado pode ser carro, bike ou a pé", async () => {
+    await compra("1".repeat(44));
+    await compra("2".repeat(44));
+    await compra("3".repeat(44));
+    await confirmarEstimativa(repos, mercado.id, { meio: "carro", distanciaKm: 4.2 }, "1".repeat(44));
+    expect(await registrarIdaDaCompra(repos, "2".repeat(44), "bike_eletrica")).toBe(42);
+    expect(await registrarIdaDaCompra(repos, "3".repeat(44), "a_pe")).toBe(0);
+    expect(await repos.compras.obter("1".repeat(44))).toMatchObject({ meio: "carro", custoIdaCentavos: 756 });
+    expect(await repos.compras.obter("2".repeat(44))).toMatchObject({ meio: "bike_eletrica", custoIdaCentavos: 42 });
+    expect(await repos.compras.obter("3".repeat(44))).toMatchObject({ meio: "a_pe", custoIdaCentavos: 0 });
+    expect(await ultimoMeioDoMercado(repos, mercado.id)).toBeDefined();
   });
 
   it("mercado inexistente lança erro claro", async () => {

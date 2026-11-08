@@ -24,7 +24,7 @@ const TIPO_ROTULO: Record<Mercado["tipo"], string> = {
   feira: "Feira",
   outro: "Outro",
 };
-const TRANSPORTE_ROTULO: Record<Mercado["transporte"], string> = { carro: "Carro", bike_eletrica: "Bike elétrica" };
+const TRANSPORTE_ROTULO: Record<Mercado["transporte"], string> = { carro: "Carro", bike_eletrica: "Bike elétrica", a_pe: "A pé" };
 
 const numero = (s: string): number | undefined => {
   if (s.trim() === "") return undefined;

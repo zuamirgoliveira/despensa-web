@@ -156,3 +156,15 @@ describe("importação soma à despensa (D-06)", () => {
     expect(s[chaveDeProduto("Alho Redinha")]).toMatchObject({ recorrente: false });
   });
 });
+
+describe("tamanho e 'vendido por unidade' na importação", () => {
+  it("guarda o tamanho do nome no item e marca o produto vendido por unidade", async () => {
+    const nomes = await nomesSugeridos();
+    const [c1, c2] = nota.itens.map((i) => i.codigo);
+    nomes[c1] = `${nomes[c1]} 2l`;
+    const r = await salvarNotaImportada(repos, { nota, chave: CHAVE, nomes, porUnidade: [c2] });
+    expect(r.compra.itens.find((i) => i.codigo === c1)?.tamanho).toEqual({ valor: 2000, medida: "ml" });
+    const p2 = await repos.produtos.obter(r.compra.itens.find((i) => i.codigo === c2)?.produtoId as string);
+    expect(p2?.vendidoPorUnidade).toBe(true);
+  });
+});

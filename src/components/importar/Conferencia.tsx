@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Alert, Badge, Button, Card, Input, Select } from "@/components/ui";
 import type { ItemConferencia, SituacaoNaDespensa } from "@/data/importarNota";
-import { chaveDeProduto } from "@/domain/normalizacao";
+import { chaveDeProduto, faltaTamanho, formatarTamanho, lerTamanhoDigitado, normalizarDescricao } from "@/domain/normalizacao";
 import type { ResultadoParser } from "@/domain/nfce/parser";
 import type { Lista } from "@/domain/types";
 import { brl, dataBR, horaBR, numeroBR } from "@/lib/format";
@@ -25,13 +26,36 @@ type Props = {
   ignorados: ReadonlySet<string>;
   aoAlternarIgnorar: (codigo: string) => void;
   reporSempre: ReadonlySet<string>;
+  porUnidade: ReadonlySet<string>;
+  aoAlternarPorUnidade: (codigo: string) => void;
   aoAlternarReporSempre: (codigo: string) => void;
 };
 
-export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, aoMudarNome, jaImportada, salvando, aoSalvar, listasAbertas, listaId, aoMudarLista, despensa, ignorados, aoAlternarIgnorar, reporSempre, aoAlternarReporSempre }: Props) {
+export function Conferencia({
+  leitura,
+  avisosExtras,
+  errosExtras,
+  itens,
+  nomes,
+  aoMudarNome,
+  jaImportada,
+  salvando,
+  aoSalvar,
+  listasAbertas,
+  listaId,
+  aoMudarLista,
+  despensa,
+  ignorados,
+  aoAlternarIgnorar,
+  reporSempre,
+  aoAlternarReporSempre,
+  porUnidade,
+  aoAlternarPorUnidade,
+}: Props) {
   const { nota } = leitura;
   const erros = [...leitura.erros, ...errosExtras];
   const avisos = [...leitura.avisos, ...avisosExtras];
+  const [tamanhosDigitados, setTamanhosDigitados] = useState<Record<string, string>>({});
   const porCodigo = new Map(nota.itens.map((i) => [i.codigo, i]));
 
   return (
@@ -75,11 +99,7 @@ export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, 
                 <span>{i.descricao}</span>
                 {i.novo ? <Badge tom="info">novo</Badge> : null}
               </div>
-              <Input
-                rotulo="Nome do produto"
-                value={nomes[i.codigo] ?? i.sugestaoNome}
-                onChange={(e) => aoMudarNome(i.codigo, e.target.value)}
-              />
+              <Input rotulo="Nome do produto" value={nomes[i.codigo] ?? i.sugestaoNome} onChange={(e) => aoMudarNome(i.codigo, e.target.value)} />
               {i.parecidos.length ? (
                 <div className="flex flex-col gap-1" role="group" aria-label={`Produtos parecidos com ${i.sugestaoNome}`}>
                   <p className="text-xs text-suave">Já existe algo parecido no catálogo. É o mesmo produto?</p>
@@ -89,6 +109,22 @@ export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, 
                     </Button>
                   ))}
                 </div>
+              ) : null}
+              {it && !ignorado && (faltaTamanho(it.unidade, nome) || tamanhosDigitados[i.codigo]) && !naDespensa?.porUnidade ? (
+                <TamanhoDoItem
+                  nomeBase={i.sugestaoNome}
+                  sugestoes={i.parecidos.flatMap((p) => {
+                    const t = normalizarDescricao(p.nome).tamanho;
+                    return p.motivo === "tamanho" && t ? [formatarTamanho(t)] : [];
+                  })}
+                  porUnidade={porUnidade.has(i.codigo)}
+                  aoMudarTamanho={(texto) => {
+                    setTamanhosDigitados((a) => ({ ...a, [i.codigo]: texto }));
+                    const t = lerTamanhoDigitado(texto);
+                    aoMudarNome(i.codigo, t ? `${normalizarDescricao(i.sugestaoNome).nome} ${formatarTamanho(t)}` : i.sugestaoNome);
+                  }}
+                  aoAlternarPorUnidade={() => aoAlternarPorUnidade(i.codigo)}
+                />
               ) : null}
               {it ? (
                 <p className="text-xs text-suave">
@@ -119,6 +155,11 @@ export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, 
         })}
       </ul>
 
+      <p className="text-sm" aria-label="Vínculo com a lista">
+        {listaId && listasAbertas.some((l) => l.id === listaId)
+          ? `Esta nota será ligada à lista de ${dataBR(listasAbertas.find((l) => l.id === listaId)!.data)} e vai fechá-la.`
+          : "Esta nota não está ligada a nenhuma lista: só soma à despensa e guarda os preços."}
+      </p>
       {listasAbertas.length ? (
         <Select
           rotulo="Associar esta nota à lista"
@@ -139,5 +180,60 @@ export function Conferencia({ leitura, avisosExtras, errosExtras, itens, nomes, 
         {jaImportada ? "Substituir compra" : "Salvar compra"}
       </Button>
     </Card>
+  );
+}
+
+function TamanhoDoItem({
+  nomeBase,
+  sugestoes,
+  porUnidade,
+  aoMudarTamanho,
+  aoAlternarPorUnidade,
+}: {
+  nomeBase: string;
+  sugestoes: string[];
+  porUnidade: boolean;
+  aoMudarTamanho: (texto: string) => void;
+  aoAlternarPorUnidade: () => void;
+}) {
+  const [texto, setTexto] = useState("");
+  const invalido = texto.trim() !== "" && lerTamanhoDigitado(texto) === undefined;
+  return (
+    <div className="flex flex-col gap-1 rounded-lg bg-aviso/10 p-2" role="group" aria-label={`Tamanho de ${nomeBase}`}>
+      <p className="text-xs">A nota não diz o tamanho da embalagem. Informe para comparar preços certo (Coca 2l não é Coca 350ml).</p>
+      {!porUnidade ? (
+        <>
+          <Input
+            rotulo="Tamanho da embalagem (ex.: 2l, 350ml, 200g)"
+            value={texto}
+            onChange={(e) => {
+              setTexto(e.target.value);
+              aoMudarTamanho(e.target.value);
+            }}
+            erro={invalido ? "Use um número com g, kg, ml ou l." : undefined}
+          />
+          {sugestoes.length ? (
+            <div className="flex flex-wrap gap-2">
+              {sugestoes.map((t) => (
+                <Button
+                  key={t}
+                  variante="secundario"
+                  onClick={() => {
+                    setTexto(t);
+                    aoMudarTamanho(t);
+                  }}
+                >
+                  {t}
+                </Button>
+              ))}
+            </div>
+          ) : null}
+        </>
+      ) : null}
+      <label className="flex min-h-11 items-center gap-2 text-sm">
+        <input type="checkbox" className="size-5" checked={porUnidade} onChange={aoAlternarPorUnidade} />
+        Vendido por unidade (sem tamanho, como ovo ou pizza)
+      </label>
+    </div>
   );
 }

@@ -16,10 +16,18 @@ const centesimos = (n: number): number => Math.round(n * 100) / 100;
  * com tamanho (`PCT 180`, `CAFE 500G`, `LEITE 1L`) → por 100 g ou 100 ml (pacote sem medida = gramas);
  * `CX 12` → por unidade; o resto → por unidade.
  */
-export function precoNormalizado(item: Pick<ItemDaNota, "descricao" | "unidade" | "valorUnitarioCentavos">): { centavos: number; base: BasePreco } {
+export function precoNormalizado(item: Pick<ItemDaNota, "descricao" | "unidade" | "valorUnitarioCentavos"> & Partial<Pick<ItemDaNota, "tamanho">>): {
+  centavos: number;
+  base: BasePreco;
+} {
   const v = item.valorUnitarioCentavos;
   if (item.unidade === "KG") return { centavos: v, base: "kg" };
   if (item.unidade === "L") return { centavos: v, base: "l" };
+  // o tamanho confirmado na importação (Coca 2 l mesmo quando a nota diz só "REFRI COCA COLA SEM") vence o da descrição
+  if (item.tamanho) {
+    const base = item.tamanho.medida === "ml" ? "100ml" : "100g";
+    return { centavos: centesimos(v / (item.tamanho.valor / 100)), base };
+  }
   const emb = extrairEmbalagem(item.descricao);
   if (emb && emb.tamanho > 0) {
     if (emb.medida === "ml") return { centavos: centesimos(v / (emb.tamanho / 100)), base: "100ml" };
@@ -82,7 +90,13 @@ export function historicoPorProduto(compras: readonly Compra[]): HistoricoProdut
       const n = precoNormalizado(i);
       const chave = `${i.produtoId}|${n.base}`;
       const g = grupos.get(chave) ?? { produtoId: i.produtoId, unidade: i.unidade, base: n.base, pontos: [] };
-      g.pontos.push({ emissao: c.emissao, mercadoId: c.mercadoId, precoCentavos: i.valorUnitarioCentavos, normalizadoCentavos: n.centavos, quantidade: i.quantidade });
+      g.pontos.push({
+        emissao: c.emissao,
+        mercadoId: c.mercadoId,
+        precoCentavos: i.valorUnitarioCentavos,
+        normalizadoCentavos: n.centavos,
+        quantidade: i.quantidade,
+      });
       grupos.set(chave, g);
     }
   }
@@ -111,7 +125,6 @@ export function historicoPorProduto(compras: readonly Compra[]): HistoricoProdut
 export function historicoDoProduto(compras: readonly Compra[], produtoId: string): HistoricoProduto[] {
   return historicoPorProduto(compras).filter((h) => h.produtoId === produtoId);
 }
-
 
 export type AlertaPreco = { tipo: "acima" | "abaixo"; pct: number };
 

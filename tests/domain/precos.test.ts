@@ -158,3 +158,14 @@ describe("alertaDePreco", () => {
     expect(m.get(prod)).toEqual({ tipo: "acima", pct: 50 });
   });
 });
+
+describe("precoNormalizado com tamanho confirmado", () => {
+  const base = { descricao: "REFRI COCA COLA SEM", unidade: "UNID" as const };
+  it("Coca 2 l: o tamanho confirmado vale mesmo que a nota não o diga", () => {
+    expect(precoNormalizado({ ...base, valorUnitarioCentavos: 1490, tamanho: { valor: 2000, medida: "ml" } })).toEqual({ centavos: 74.5, base: "100ml" });
+    expect(precoNormalizado({ descricao: "REFRI COCA COLA ZERO 2L PET", unidade: "UNID", valorUnitarioCentavos: 1098 })).toEqual({ centavos: 54.9, base: "100ml" });
+  });
+  it("sem tamanho continua por unidade", () => {
+    expect(precoNormalizado({ ...base, valorUnitarioCentavos: 1490 })).toEqual({ centavos: 1490, base: "un" });
+  });
+});

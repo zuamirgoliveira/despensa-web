@@ -21,7 +21,8 @@ export type ResultadoEstimativa =
   | { status: "endereco_nao_encontrado" }
   | { status: "falha"; motivo: MotivoErroMapas };
 
-const MEIO_DE_ROTA = { carro: "carro", bike_eletrica: "bike" } as const;
+// a pé usa a malha viária do carro (sem fator); o custo é zero de qualquer forma
+const MEIO_DE_ROTA = { carro: "carro", bike_eletrica: "bike", a_pe: "carro" } as const;
 
 /**
  * Estima distância e tempo de ida (casa → mercado) para o meio de transporte. Guarda as coordenadas do
@@ -66,11 +67,37 @@ export async function confirmarEstimativa(
   repos: Repositorios,
   mercadoId: string,
   v: { meio: MeioDeTransporte; distanciaKm: number; tempoMin?: number },
+  chaveDaCompra?: string,
 ): Promise<{ mercado: Mercado; custoIdaCentavos: number | undefined }> {
   const mercado = await repos.mercados.obter(mercadoId);
   if (!mercado) throw new Error("Mercado não encontrado.");
   const salvo = await repos.mercados.salvar({ ...mercado, transporte: v.meio, distanciaKm: v.distanciaKm, tempoMinIda: v.tempoMin });
-  return { mercado: salvo, custoIdaCentavos: await aplicarCustoNasCompras(repos, salvo) };
+  const daCompra = chaveDaCompra ? await registrarIdaDaCompra(repos, chaveDaCompra, v.meio) : undefined;
+  const dasOutras = await aplicarCustoNasCompras(repos, salvo);
+  return { mercado: salvo, custoIdaCentavos: daCompra ?? dasOutras };
+}
+
+/**
+ * Registra como a pessoa foi a ESTA compra (perguntado a cada nota: o mesmo mercado pode ser de carro,
+ * bike ou a pé). Grava `meio` e o custo da ida na compra; o mercado guarda o último meio usado.
+ * A distância vem do mercado; sem ela, só o meio é guardado e o custo fica pendente.
+ */
+export async function registrarIdaDaCompra(repos: Repositorios, chave: string, meio: MeioDeTransporte): Promise<number | undefined> {
+  const compra = await repos.compras.obter(chave);
+  if (!compra) return undefined;
+  const mercado = await repos.mercados.obter(compra.mercadoId);
+  const casa = await repos.iniciar();
+  const perfil = await repos.perfis.obterDaCasa(casa.id);
+  if (mercado && mercado.transporte !== meio) await repos.mercados.salvar({ ...mercado, transporte: meio });
+  const custo = mercado && perfil ? custoIdaDoMercado({ ...mercado, transporte: meio }, perfil) : undefined;
+  await repos.compras.salvar({ ...compra, meio, custoIdaCentavos: custo });
+  return custo;
+}
+
+/** Meio usado na compra mais recente do mercado (só para mostrar "última vez"; nunca preenche sozinho). */
+export async function ultimoMeioDoMercado(repos: Repositorios, mercadoId: string): Promise<MeioDeTransporte | undefined> {
+  const compras = (await repos.compras.listarPorMercado(mercadoId)).filter((c) => c.meio).sort((a, b) => b.emissao.localeCompare(a.emissao));
+  return compras[0]?.meio;
 }
 
 /** Grava `custoIdaCentavos` nas compras do mercado que ainda não têm, usando o transporte e a distância dele. */
