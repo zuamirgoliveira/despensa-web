@@ -6,6 +6,7 @@ import { criarRepositorios } from "@/data";
 import { useRepositorio } from "@/data/useRepositorio";
 import { TIPOS_IDA } from "@/schemas";
 import { Aparencia } from "./Aparencia";
+import { ApagarTudo } from "./ApagarTudo";
 import { Backup } from "./Backup";
 import { CasaLocalizacao } from "./CasaLocalizacao";
 import { FormAgenda } from "./FormAgenda";
@@ -51,6 +52,7 @@ export function Ajustes() {
       {perfil ? <CasaLocalizacao key={`${perfil.id}-${perfil.localizacaoCasa?.lat}-${perfil.localizacaoCasa?.lng}`} perfil={perfil} aoSalvar={salvou} /> : null}
       {perfil ? <FormPerfil key={perfil.id} perfil={perfil} aoSalvar={salvou} /> : null}
       <Backup />
+      <ApagarTudo />
     </div>
   );
 }

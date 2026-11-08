@@ -1,5 +1,17 @@
-import { expect, test } from "@playwright/test";
-import { abrirSecao, semViolacaoDeCsp, vigiarConsole } from "./util";
+import { readFileSync } from "node:fs";
+import { expect, test, type Page } from "@playwright/test";
+import { abrirSecao, pularEstimativa, semViolacaoDeCsp, vigiarConsole } from "./util";
+
+const NOTA = readFileSync("tests/fixtures/notas/cia-santos-hortifruti.txt", "utf8");
+
+async function importarNota(page: Page) {
+  await page.goto("/importar");
+  await page.getByLabel("Texto copiado da página da SEFAZ").fill(NOTA);
+  await page.getByRole("button", { name: "Ler nota" }).click();
+  await page.getByRole("button", { name: /Salvar compra|Substituir compra/ }).click();
+  await pularEstimativa(page);
+  await expect(page).toHaveURL(/\/compras$/);
+}
 
 const cartao = (page: import("@playwright/test").Page, titulo: string) =>
   page.getByRole("heading", { name: titulo, exact: true }).locator("xpath=ancestor::div[contains(@class,'rounded-xl')][1]");
@@ -82,4 +94,38 @@ test("validação por campo e agenda sem dia", async ({ page }) => {
   await cartao(page, "Mercado semanal").getByLabel("Dia da semana").selectOption("");
   await cartao(page, "Mercado semanal").getByRole("button", { name: "Salvar agenda" }).click();
   await expect(cartao(page, "Mercado semanal").getByText("Escolha o dia da semana.")).toBeVisible();
+});
+
+test("apagar todos os dados: explica o risco, exige confirmação dupla e recomeça do zero", async ({ page }) => {
+  const { erros } = vigiarConsole(page);
+  await importarNota(page);
+  await page.goto("/ajustes");
+  await page.getByRole("button", { name: "Apagar todos os dados" }).click();
+
+  const aviso = page.getByRole("dialog", { name: "Apagar todos os dados?" });
+  await expect(aviso).toContainText("Isto não tem volta");
+  await expect(aviso).toContainText("1 compra");
+  await aviso.getByRole("button", { name: "Cancelar" }).click();
+  await expect(aviso).toBeHidden();
+
+  // cancelar não apagou nada
+  await page.goto("/compras");
+  await expect(page.getByText(/CIA SANTOS/)).toBeVisible();
+
+  await page.goto("/ajustes");
+  await page.getByRole("button", { name: "Apagar todos os dados" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Continuar" }).click();
+  const ultima = page.getByRole("dialog", { name: "Última confirmação" });
+  const apagar = ultima.getByRole("button", { name: "Apagar tudo" });
+  await expect(apagar).toBeDisabled();
+  await ultima.getByRole("checkbox").check();
+  await expect(apagar).toBeDisabled(); // falta digitar a palavra
+  await ultima.getByLabel("Digite APAGAR para confirmar").fill("apagar");
+  await expect(apagar).toBeEnabled();
+  await apagar.click();
+
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/compras");
+  await expect(page.getByText("Nenhuma compra ainda")).toBeVisible();
+  semViolacaoDeCsp(erros);
 });
