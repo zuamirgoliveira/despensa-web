@@ -6,7 +6,7 @@ Referência técnica para qualquer agente ou desenvolvedor que altere este repos
 
 ## 1. Resumo técnico
 
-PWA de gestão de despensa doméstica. Funciona offline, instala no Android, roda 100% no aparelho (sem backend, sem autenticação, sem banco no servidor). O servidor só entrega arquivos estáticos e o shell Next.js.
+PWA de gestão de despensa doméstica. Funciona offline, instala no Android, roda 100% no aparelho (sem autenticação, sem banco no servidor). O servidor entrega os arquivos estáticos e o shell Next.js e tem **uma única rota**, o proxy da consulta do QR Code (seção 5.5), que não guarda nada.
 
 - **Foco do produto:** gerenciar a despensa da família. Toda funcionalidade apoia isso: saber o que há (quantidade atual × padrão), saber o que falta (lista da casa), comprar e manter atualizado com pouco esforço. A nota fiscal é um meio de atualizar a despensa e guardar preços, nunca o centro (`docs/proposta-despensa.md`).
 - **Perfil de projeto:** A, com dados locais (IndexedDB).
@@ -36,7 +36,7 @@ PWA de gestão de despensa doméstica. Funciona offline, instala no Android, rod
 
 Fixe versões exatas no `package-lock.json`. Instalação sempre com `npm ci`. Não adicionar dependência sem registrá-la na tabela da seção 12.
 
-**Não usar:** Supabase, Server Actions, rotas de API próprias (`app/api`), autenticação, `middleware.ts`, Framer Motion, Sonner, bibliotecas de estado global, bibliotecas de gráfico (gráficos em SVG próprio), bibliotecas de datas (usar utilitários próprios em `src/lib/datas.ts`).
+**Não usar:** Supabase, Server Actions, rotas de API próprias (`app/api`) além do proxy `/api/nfce` da seção 5.5, autenticação, `middleware.ts`, Framer Motion, Sonner, bibliotecas de estado global, bibliotecas de gráfico (gráficos em SVG próprio), bibliotecas de datas (usar utilitários próprios em `src/lib/datas.ts`).
 
 ---
 
@@ -128,7 +128,8 @@ despensa-web/
 │  ├─ domain/                      regras de negócio puras (sem React, sem IndexedDB)
 │  │  ├─ nfce/chave.ts             chave de acesso, DV, QR, reparo de OCR
 │  │  ├─ nfce/parser.ts            texto da SEFAZ → nota estruturada
-│  │  ├─ nfce/sefaz.ts             URL de consulta por UF
+│  │  ├─ nfce/sefaz.ts             URL de consulta por UF; `consultaDoQR` valida e reconstrói a URL do QR (host e caminho fixos)
+│  │  ├─ nfce/xml.ts               XML da NFC-e (consulta do QR) → mesma estrutura do parser, sem CPF
 │  │  ├─ catalogo.ts               produto novo a partir de item de nota, chave de nome
 │  │  ├─ normalizacao.ts           nome normalizado, chave de produto, parecidos e sugestões de mesclagem
 │  │  ├─ mercados.ts               tipo sugerido pelo nome do emitente
@@ -167,6 +168,7 @@ despensa-web/
 │  │  ├─ eventos.ts                emissor de mudanças (aoMudar, emitirMudanca)
 │  │  └─ useRepositorio.ts         hook que reexecuta a consulta quando a coleção muda
 │  ├─ lib/
+│  │  ├─ nfceRemota.ts             cliente do proxy /api/nfce (resposta validada com Zod)
 │  │  ├─ qr.ts                     leitura de QR (nativo + jsqr) e scanner de câmera
 │  │  ├─ ocr.ts                    leitura da chave por Tesseract
 │  │  ├─ imagem.ts                 arquivo → canvas com EXIF
@@ -228,6 +230,16 @@ app/ (telas) → components/ → data/ (repositórios) → schemas/
 - **Idioma do código:** entidades e regras de negócio em português (`produto`, `mercado`, `compra`); utilitários e infraestrutura em inglês.
 
 ---
+
+### 5.5 Proxy da consulta do QR Code (única rota de servidor)
+
+**Decisão (08/11/2026, registrada a pedido do dono):** abrir exceção às regras 2 e 3 para automatizar a importação. A consulta pública da NFC-e pelo QR (`https://nfce.sefaz.pe.gov.br:444/nfce-web/consultarNFCe?p=chave|2|1|1|hash`) devolve o **XML da nota** sem captcha, porque a URL do cupom já traz a assinatura do emitente (nada é contornado), mas a SEFAZ não envia CORS e o navegador não consegue lê-la. `POST /api/nfce` (`src/app/api/nfce/route.ts`) faz só essa ponte:
+
+- Entrada `{ url }`. `consultaDoQR` exige `https`, host `nfce.sefaz.pe.gov.br`, porta vazia ou 444, caminho `/nfce-web/consultarNFCe` e `p` no formato `chave(44)|d|d|d+|hash(40 hex)`; **a URL é reconstruída** só com essas partes (nunca se acessa um endereço escolhido por quem chama). Chave: DV ok, modelo 65, UF PE.
+- `fetch` com `redirect: "error"`, 10 s de limite, resposta de até 1 MB. Mesma origem obrigatória (cabeçalho `Origin` = host) e 20 consultas por minuto por IP (memória, sem persistência).
+- `parseNotaXml` (`domain/nfce/xml.ts`) converte para o mesmo formato do parser de texto e roda as mesmas conferências (`conferirNota`). **O CPF do consumidor (tag `<dest>`) é lido só para sinalizar `cpfNaNota` e nunca é devolvido.** Resposta `no-store`; nada é gravado nem registrado em log.
+- O cliente (`lib/nfceRemota.ts`) valida a resposta com Zod. Falha de qualquer tipo mostra o motivo e **mantém o passo a passo manual** (colar o texto). Disparos: QR lido pela câmera do app, QR da imagem enviada ou URL recebida por Compartilhar (`/importar?text=…`).
+- Privacidade: a URL do QR (chave + assinatura da nota) passa pelo servidor do app para chegar à SEFAZ; endereço de casa, lista e demais dados continuam só no aparelho. Testes: `tests/api/nfce.test.ts`, `tests/domain/xml.test.ts`, `e2e/qr-automatico.spec.ts` (sempre com a SEFAZ simulada). Se a SEFAZ mudar o formato do XML, o caminho manual segue funcionando.
 
 ### 5.4 Aparência: tema, tokens e layout
 
@@ -405,7 +417,7 @@ Escalonado; para na primeira etapa com resultado: (1) janela exata de 44 dígito
 
 ### 7.4 Acesso à nota
 
-Consulta pública de PE: `https://nfce.sefaz.pe.gov.br/nfce-web/consNfce`, protegida por reCAPTCHA. **O app não contorna o captcha.** Fluxo: o app copia a chave e abre a página; o usuário resolve o captcha; o texto resultante é colado (ou recebido por Compartilhar) e lido pelo parser. A SVRS exige certificado ICP-Brasil e não é usada.
+Consulta pública de PE: `https://nfce.sefaz.pe.gov.br/nfce-web/consNfce`, protegida por reCAPTCHA. **O app não contorna o captcha.** (O QR Code do cupom é outro caminho, legítimo: ver 5.5.) Fluxo: o app copia a chave e abre a página; o usuário resolve o captcha; o texto resultante é colado (ou recebido por Compartilhar) e lido pelo parser. A SVRS exige certificado ICP-Brasil e não é usada.
 
 ### 7.5 Parser (`parser.ts`)
 
@@ -420,7 +432,7 @@ Consulta pública de PE: `https://nfce.sefaz.pe.gov.br/nfce-web/consNfce`, prote
 
 ### 7.6 Leitura por câmera e imagem
 
-- QR: `BarcodeDetector` quando existir; senão `jsqr` em 3 escalas (1600/1000/640) com `inversionAttempts: 'attemptBoth'`. Câmera traseira pedindo 1920×1080 ideal e foco contínuo quando houver (o padrão do Android é 640×480, pouco para o QR do papel térmico), quadro a cada ~350 ms, dica de uso após 8 s sem leitura, **parar o stream** ao ler, fechar ou sair da tela. **Foco:** `ligarFocoContinuo` lê `getCapabilities().focusMode` e só diz "ligado" se `applyConstraints` aceitou (a tela mostra o estado: contínuo, manual ou indisponível); toque na imagem ou botão **Focar** chama `refocar` (foco pontual e volta ao contínuo); **Tirar foto** abre a câmera do app e **Fotografar** usa `ImageCapture.takePhoto()` (resolução máxima, com foco) ou, sem suporte, o quadro do vídeo; se a câmera não abrir, cai no `<input capture>` do sistema. Em iOS/Safari o foco não é controlável pelo navegador.
+- QR: `BarcodeDetector` quando existir; senão `jsqr` em 3 escalas (1600/1000/640) com `inversionAttempts: 'attemptBoth'`. Câmera traseira pedindo 1920×1080 ideal e foco contínuo quando houver (o padrão do Android é 640×480, pouco para o QR do papel térmico), quadro a cada ~350 ms, dica de uso após 8 s sem leitura, **parar o stream** ao ler, fechar ou sair da tela. **Foco:** `ligarFocoContinuo` lê `getCapabilities().focusMode` e só diz "ligado" se `applyConstraints` aceitou (a tela mostra o estado: contínuo, manual ou indisponível); toque na imagem ou botão **Focar** chama `refocar` (foco pontual e volta ao contínuo); **Tirar foto** abre a **câmera do sistema** (`<input capture>`, que foca bem; o app lê o QR ou a chave da foto), **Escanear QR** abre a câmera do app, e nela, quando o foco contínuo não está ligado, aparece "A câmera não foca? Usar a câmera do celular"; **Fotografar** (na câmera do app) usa `ImageCapture.takePhoto()` (resolução máxima, com foco) ou, sem suporte, o quadro do vídeo; se a câmera não abrir, cai no `<input capture>` do sistema. Em iOS/Safari o foco não é controlável pelo navegador.
 - OCR: Tesseract.js 5 em worker, carregado **por import dinâmico** apenas quando usado. Assets em `/vendor/tesseract/` (worker, core LSTM e SIMD, `eng.traineddata.gz`). Whitelist `0123456789 `, PSM 6, até 3 tentativas de pré-processamento (cinza/contraste 1800 px; Otsu 1800 px; cinza/contraste 2600 px). Sempre `worker.terminate()` no `finally`.
 - Imagem → canvas respeitando orientação EXIF, lado máximo 2200 px.
 - Arquivos: `lib/qr.ts` (`lerQR`, `iniciarScanner`), `lib/ocr.ts` (`lerChaveDaFoto`, com `DependenciasOCR` injetável para teste), `lib/preprocessamento.ts` (funções puras sobre pixels: cinza, contraste, Otsu, `TENTATIVAS_OCR`), `lib/imagem.ts`. `jsqr` e `tesseract.js` entram por import dinâmico (fora do bundle inicial). O worker, o core (`tesseract-core-lstm.wasm.js` e `-simd-`) e `eng.traineddata.gz` vêm de `node_modules` via `scripts/copy-vendor.mjs` (que falha o build com mensagem clara se faltar arquivo).
@@ -572,8 +584,8 @@ Nova dependência: registrar aqui (pacote, versão, tipo, motivo) no mesmo commi
 ## 13. Regras permanentes (nunca fazer)
 
 1. Contornar, automatizar ou burlar o reCAPTCHA da SEFAZ.
-2. Enviar a chave, a nota, fotos, CPF ou o endereço de casa a qualquer serviço de terceiros.
-3. Criar backend, rota de API, autenticação ou banco no servidor sem decisão explícita registrada neste arquivo.
+2. Enviar a chave, a nota, fotos, CPF ou o endereço de casa a qualquer serviço de terceiros (a única passagem pelo servidor do app é a URL do QR no proxy da 5.5, e o CPF nunca sai dele).
+3. Criar backend, rota de API, autenticação ou banco no servidor sem decisão explícita registrada neste arquivo (decisão existente: só `/api/nfce`, seção 5.5).
 4. Acessar IndexedDB fora da camada de repositório.
 5. Colocar lógica de negócio em componentes React.
 6. Usar float para dinheiro nos modelos (sempre centavos inteiros).

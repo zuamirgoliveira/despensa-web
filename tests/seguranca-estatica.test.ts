@@ -38,7 +38,8 @@ describe("regras de segurança no código-fonte", () => {
     expect(ruins).toEqual([]);
   });
 
-  it("não há rota de API nem middleware", () => {
-    expect(arquivos("src").filter((p) => /app\/api\/|middleware\.ts|proxy\.ts/.test(p))).toEqual([]);
+  it("a única rota de API é o proxy da consulta do QR (AGENTS.md 5.5); sem middleware", () => {
+    const rotas = arquivos("src").filter((p) => /app\/api\/|middleware\.ts|proxy\.ts/.test(p));
+    expect(rotas.map((p) => p.replace(/\\/g, "/").replace(/^.*src\//, "src/"))).toEqual(["src/app/api/nfce/route.ts"]);
   });
 });

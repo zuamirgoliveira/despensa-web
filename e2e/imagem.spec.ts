@@ -56,9 +56,9 @@ test("fechar a câmera desliga o stream", async ({ page }) => {
     .toBe(true);
 });
 
-test("Tirar foto abre a câmera do app com Focar e Fotografar; fechar encerra a câmera", async ({ page }) => {
+test("Escanear QR abre a câmera do app com Focar e Fotografar; fechar encerra a câmera", async ({ page }) => {
   await page.goto("/importar");
-  await page.getByRole("button", { name: "Tirar foto" }).click();
+  await page.getByRole("button", { name: "Escanear QR" }).click();
   await expect(page.locator("video")).toBeVisible();
   await expect(page.getByRole("button", { name: "Fotografar" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Focar" })).toBeVisible();

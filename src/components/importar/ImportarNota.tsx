@@ -8,6 +8,8 @@ import { prepararConferencia, salvarNotaImportada, situacaoDosProdutos, type Ite
 import { finalizarCompra, listasEmCompra } from "@/data/reconciliacao";
 import type { Lista } from "@/domain/types";
 import { parseNota, type ResultadoParser } from "@/domain/nfce/parser";
+import { consultaDoQR } from "@/domain/nfce/sefaz";
+import { BuscaNotaError, buscarNotaPeloQR } from "@/lib/nfceRemota";
 import { Conferencia } from "./Conferencia";
 import { EstimativaIda } from "./EstimativaIda";
 import { PassoChave, type ChaveValida } from "./PassoChave";
@@ -41,13 +43,38 @@ export function ImportarNota() {
   const [listaId, setListaId] = useState("");
   const [estimar, setEstimar] = useState<{ mercadoId: string; chave: string; destino: string } | null>(null);
   const [jaImportadaNota, setJaImportadaNota] = useState(false);
+  const [buscando, setBuscando] = useState(false);
+  const [msgBusca, setMsgBusca] = useState<{ texto: string; tipo: "ok" | "erro" } | null>(null);
 
   async function ler(conteudo: string, informada: ChaveValida | null): Promise<void> {
     if (!conteudo.trim()) {
       setMsgLeitura({ texto: "Cole o texto da nota primeiro.", tipo: "erro" });
       return;
     }
-    const resultado = parseNota(conteudo);
+    await aplicarResultado(parseNota(conteudo), informada);
+  }
+
+  /** Busca a nota pela URL do QR (servidor repassa a consulta pública) e segue para a conferência. */
+  async function buscarPeloQR(url: string): Promise<void> {
+    const consulta = consultaDoQR(url);
+    if (!consulta) return;
+    setBuscando(true);
+    setMsgBusca(null);
+    try {
+      const resultado = await buscarNotaPeloQR(consulta.url);
+      await aplicarResultado(resultado, null);
+      setMsgBusca({ texto: "Nota buscada na SEFAZ. Confira os itens abaixo e salve.", tipo: "ok" });
+    } catch (e) {
+      setMsgBusca({
+        texto: `${e instanceof BuscaNotaError ? e.message : "Não consegui buscar a nota."} Use o passo a passo abaixo.`,
+        tipo: "erro",
+      });
+    } finally {
+      setBuscando(false);
+    }
+  }
+
+  async function aplicarResultado(resultado: ResultadoParser, informada: ChaveValida | null): Promise<void> {
     const { nota } = resultado;
     const avisos: string[] = [];
     const erros: string[] = [];
@@ -89,10 +116,19 @@ export function ImportarNota() {
     const recebido = [p.get("text"), p.get("url"), p.get("title")].filter(Boolean).join("\n");
     if (!recebido) return;
     history.replaceState(null, "", "/importar");
+    // QR lido pela câmera do celular e compartilhado com o app: a URL basta para buscar a nota
+    const url = recebido.match(/https:\/\/nfce\.sefaz\.pe\.gov\.br\S*/)?.[0];
+    const consulta = url ? consultaDoQR(url) : null;
     queueMicrotask(() => {
+      if (consulta) {
+        setChaveExterna(consulta.chave);
+        void buscarPeloQR(consulta.url);
+        return;
+      }
       setTexto(recebido);
       void ler(recebido, null);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function salvar(): Promise<void> {
@@ -133,8 +169,14 @@ export function ImportarNota() {
           setChave(c);
           setJaImportadaEm(em);
         }}
+        aoLerQr={(url) => {
+          setMsgBusca(null);
+          if (url && consultaDoQR(url)) void buscarPeloQR(url);
+        }}
         chaveExterna={chaveExterna}
       />
+      {buscando ? <Alert tipo="info">Buscando a nota na SEFAZ...</Alert> : null}
+      {msgBusca ? <Alert tipo={msgBusca.tipo === "ok" ? "info" : "erro"}>{msgBusca.texto}</Alert> : null}
       <PassoSefaz chave={chave} />
       <PassoColar texto={texto} aoMudarTexto={setTexto} aoLer={() => void ler(texto, chave)} mensagem={msgLeitura} />
       {leitura ? (

@@ -18,11 +18,13 @@ type Props = {
   aoMudarChave: (chave: ChaveValida | null, jaImportadaEm: string | null) => void;
   /** Texto externo (ex.: chave achada no texto colado) para preencher o campo. */
   chaveExterna?: string;
+  /** URL lida do QR Code (ou null ao digitar/ler a chave de outro jeito): permite buscar a nota sozinho. */
+  aoLerQr?: (url: string | null) => void;
 };
 
 type Msg = { texto: string; tipo: "ok" | "erro" | "info" } | null;
 
-export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
+export function PassoChave({ aoMudarChave, chaveExterna, aoLerQr }: Props) {
   const [texto, setTexto] = useState("");
   const [msg, setMsg] = useState<Msg>(null);
   const [imgMsg, setImgMsg] = useState<Msg>(null);
@@ -80,6 +82,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
   function usarChave(chave: string, conteudoQR: string | null = null): void {
     const url = conteudoQR && /^https?:\/\//i.test(conteudoQR) ? conteudoQR : null;
     setQrUrl(url);
+    aoLerQr?.(url);
     setCandidatas([]);
     setAproximada(null);
     void validar(chave);
@@ -113,13 +116,17 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
     }
     const minha = ++sessao.current;
     setCamera(modo);
-    setImgMsg({ texto: modo === "foto" ? "Enquadre a nota com a linha da chave à vista, espere focar e toque em Fotografar." : "Aponte para o QR Code da nota.", tipo: "info" });
+    setImgMsg({
+      texto: modo === "foto" ? "Enquadre a nota com a linha da chave à vista, espere focar e toque em Fotografar." : "Aponte para o QR Code da nota.",
+      tipo: "info",
+    });
     // Se em alguns segundos nada for lido, orienta (o QR do papel térmico é pequeno e pede foco e luz).
     if (dica.current) clearTimeout(dica.current);
     dica.current = setTimeout(() => {
       if (sessao.current === minha) {
         setImgMsg({
-          texto: 'Ainda não consegui ler o QR. Deixe o papel liso, com boa luz, e aproxime ou afaste devagar até o QR ficar nítido. Se não der, use "Tirar foto" ou digite a chave.',
+          texto:
+            'Ainda não consegui ler o QR. Deixe o papel liso, com boa luz, e aproxime ou afaste devagar até o QR ficar nítido. Se não focar, feche e use "Tirar foto": a câmera do celular foca melhor. Ou digite a chave.',
           tipo: "info",
         });
       }
@@ -134,7 +141,8 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
         setImgMsg({ texto: "QR Code lido.", tipo: "ok" });
         usarChave(r.chave, r.conteudo);
       });
-      if (sessao.current !== minha) novo.parar(); // fechou (ou saiu da tela) antes de a câmera abrir
+      if (sessao.current !== minha)
+        novo.parar(); // fechou (ou saiu da tela) antes de a câmera abrir
       else {
         scanner.current = novo;
         setFoco(novo.foco);
@@ -157,7 +165,7 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
 
   async function fotografar(): Promise<void> {
     const blob = await scanner.current?.fotografar();
-    if (!blob) return setImgMsg({ texto: "Não consegui tirar a foto. Tente de novo ou use \"Enviar imagem\".", tipo: "erro" });
+    if (!blob) return setImgMsg({ texto: 'Não consegui tirar a foto. Tente de novo ou use "Enviar imagem".', tipo: "erro" });
     await processarImagem(new File([blob], "nota.jpg", { type: blob.type || "image/jpeg" }));
   }
 
@@ -202,8 +210,8 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
           texto: o.aproximada
             ? "Não consegui ler a chave com certeza (a impressão pontilhada confunde o leitor). Veja a leitura aproximada abaixo, ou tire outra foto bem de perto da linha da chave."
             : o.ambiguo
-            ? "Li números demais com dúvida para adivinhar. Tire outra foto, bem de perto da linha da chave e com boa luz, ou digite."
-            : "Não encontrei a chave na imagem. Tente de novo com a nota esticada e a linha da chave bem à vista, ou digite.",
+              ? "Li números demais com dúvida para adivinhar. Tire outra foto, bem de perto da linha da chave e com boa luz, ou digite."
+              : "Não encontrei a chave na imagem. Tente de novo com a nota esticada e a linha da chave bem à vista, ou digite.",
           tipo: "erro",
         });
       }
@@ -217,22 +225,13 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
   return (
     <Card className="flex flex-col gap-3">
       <h2 className="text-sm">1. Chave da nota</h2>
-      <Input
-        rotulo="Chave de acesso (44 dígitos)"
-        inputMode="numeric"
-        autoComplete="off"
-        value={texto}
-        onChange={aoDigitar}
-        placeholder="0000 0000 0000 ..."
-      />
+      <Input rotulo="Chave de acesso (44 dígitos)" inputMode="numeric" autoComplete="off" value={texto} onChange={aoDigitar} placeholder="0000 0000 0000 ..." />
       {msg ? <Alert tipo={msg.tipo === "erro" ? "erro" : msg.tipo === "ok" ? "info" : "aviso"}>{msg.texto}</Alert> : null}
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <Button onClick={() => arqFoto.current?.click()}>Tirar foto</Button>
         <Button variante="secundario" onClick={() => void abrirCamera()}>
           Escanear QR
-        </Button>
-        <Button variante="secundario" onClick={() => void abrirCamera("foto")}>
-          Tirar foto
         </Button>
         <Button variante="secundario" onClick={() => arqImagem.current?.click()}>
           Enviar imagem
@@ -276,10 +275,10 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
             {foco === "continuo"
               ? "Foco automático ligado. Toque na imagem para focar de novo."
               : foco === "manual"
-              ? "Foco automático indisponível; toque na imagem ou em Focar para focar."
-              : foco === "indisponivel"
-              ? "Este aparelho não deixa o app controlar o foco. Afaste um pouco e aproxime devagar até ficar nítido."
-              : "Abrindo a câmera..."}
+                ? "Foco automático indisponível; toque na imagem ou em Focar para focar."
+                : foco === "indisponivel"
+                  ? "Este aparelho não deixa o app controlar o foco. Afaste um pouco e aproxime devagar até ficar nítido."
+                  : "Abrindo a câmera..."}
           </p>
           <div className="grid grid-cols-2 gap-2">
             <Button variante="secundario" onClick={() => void focarAgora()} disabled={foco === null || foco === "indisponivel"}>
@@ -287,6 +286,17 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
             </Button>
             <Button onClick={() => void fotografar()}>Fotografar</Button>
           </div>
+          {foco !== "continuo" ? (
+            <Button
+              variante="secundario"
+              onClick={() => {
+                pararCamera();
+                arqFoto.current?.click();
+              }}
+            >
+              A câmera não foca? Usar a câmera do celular
+            </Button>
+          ) : null}
           <Button variante="secundario" onClick={pararCamera}>
             Fechar câmera
           </Button>
@@ -299,10 +309,12 @@ export function PassoChave({ aoMudarChave, chaveExterna }: Props) {
       {correcoes.length ? (
         <div className="flex flex-col gap-2" role="group" aria-label="Correções possíveis">
           <p className="text-sm text-suave">
-            Se só um dígito estiver errado, estas trocas deixam a chave válida. Confira no papel (o número da nota e a data estão impressos logo abaixo da chave) e escolha a que bate:
+            Se só um dígito estiver errado, estas trocas deixam a chave válida. Confira no papel (o número da nota e a data estão impressos logo abaixo da
+            chave) e escolha a que bate:
           </p>
           <p className="text-xs text-suave">
-            Se a chave está idêntica à do papel e nenhuma troca bate, a própria nota saiu com a chave inválida (acontece em notas emitidas em contingência). A SEFAZ também a recusa: peça uma nova via ou a correção ao estabelecimento.
+            Se a chave está idêntica à do papel e nenhuma troca bate, a própria nota saiu com a chave inválida (acontece em notas emitidas em contingência). A
+            SEFAZ também a recusa: peça uma nova via ou a correção ao estabelecimento.
           </p>
           {correcoes.map((c) => (
             <Button key={`${c.posicao}-${c.para}`} variante="secundario" onClick={() => void validar(c.chave)}>

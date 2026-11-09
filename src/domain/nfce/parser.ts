@@ -41,7 +41,7 @@ const TOLERANCIA_LINHA_CENTAVOS = 2;
 const centavos = (valor: number): number => Math.round(valor * 100);
 const brl = (c: number): string => "R$ " + (c / 100).toFixed(2).replace(".", ",");
 
-const UNIDADES_ALIAS: Readonly<Record<string, ItemNota["unidade"]>> = {
+export const UNIDADES_ALIAS: Readonly<Record<string, ItemNota["unidade"]>> = {
   KG: "KG", UNID: "UNID", UN: "UNID", UND: "UNID", L: "L", LT: "L", LITRO: "L", PCT: "PCT", PC: "PCT",
 };
 
@@ -80,6 +80,50 @@ export function extrairEmbalagem(descricao: string): Embalagem | null {
   const b = d.match(/\b(\d+(?:[.,]\d+)?)\s*(gr?|ml|kg|l)\b/);
   if (b) return { tipo: "un", ...medidaDe(num(b[1]), b[2].replace(/^gr$/, "g")) };
   return null;
+}
+
+/** Conferências comuns ao texto colado e ao XML: data, totais, linhas, chave × CNPJ/número e formato. Erros impedem salvar. */
+export function conferirNota(nota: NotaParseada, avisos: string[], erros: string[]): void {
+  const { itens, loja, somaItensCentavos } = nota;
+  if (!nota.emissao) erros.push("Não encontrei a data de emissão.");
+
+  // Conferências
+  if (nota.valorPagarCentavos != null && itens.length) {
+    const dif = somaItensCentavos - nota.valorPagarCentavos;
+    if (Math.abs(dif) > TOLERANCIA_TOTAL_CENTAVOS) {
+      avisos.push(
+        `A soma dos itens (${brl(somaItensCentavos)}) difere do valor a pagar (${brl(nota.valorPagarCentavos)}). Pode haver desconto ou item faltando.`,
+      );
+    }
+  } else if (itens.length) {
+    avisos.push("Não encontrei o valor a pagar para conferir o total.");
+  }
+  if (nota.totalItens != null && nota.totalItens !== itens.length) {
+    erros.push(`A nota informa ${nota.totalItens} itens, mas li ${itens.length}.`);
+  }
+  for (const i of itens) {
+    const esperado = Math.round(i.quantidade * i.valorUnitarioCentavos);
+    if (Math.abs(esperado - i.valorTotalCentavos) > TOLERANCIA_LINHA_CENTAVOS) {
+      avisos.push(
+        `${i.descricao}: ${String(i.quantidade).replace(".", ",")} × ${brl(i.valorUnitarioCentavos)} = ${brl(esperado)}, mas a nota diz ${brl(i.valorTotalCentavos)}.`,
+      );
+    }
+  }
+
+  if (nota.chave) {
+    const k = decodeKey(nota.chave);
+    if (!k.ok) erros.push(`Chave de acesso no texto inválida: ${k.error}`);
+    else {
+      if (loja.cnpj && k.cnpj !== loja.cnpj) erros.push("O CNPJ da chave não bate com o CNPJ do mercado no texto.");
+      if (nota.numero != null && k.numero !== nota.numero) erros.push("O número da nota não bate com a chave.");
+      if (!k.ehNFCe) avisos.push("A chave não é de NFC-e (modelo 65).");
+    }
+  } else {
+    avisos.push("Não encontrei a chave de acesso no texto; não dá para evitar importar a mesma nota duas vezes.");
+  }
+
+  const valida = notaParseadaSchema.safeParse(nota);
+  if (!valida.success) erros.push("A nota lida está em formato inesperado.");
 }
 
 const RE_ITEM =
@@ -162,45 +206,7 @@ export function parseNota(texto: unknown): ResultadoParser {
     cpfNaNota,
   };
 
-  if (!nota.emissao) erros.push("Não encontrei a data de emissão.");
-
-  // Conferências
-  if (nota.valorPagarCentavos != null && itens.length) {
-    const dif = somaItensCentavos - nota.valorPagarCentavos;
-    if (Math.abs(dif) > TOLERANCIA_TOTAL_CENTAVOS) {
-      avisos.push(
-        `A soma dos itens (${brl(somaItensCentavos)}) difere do valor a pagar (${brl(nota.valorPagarCentavos)}). Pode haver desconto ou item faltando.`,
-      );
-    }
-  } else if (itens.length) {
-    avisos.push("Não encontrei o valor a pagar para conferir o total.");
-  }
-  if (nota.totalItens != null && nota.totalItens !== itens.length) {
-    erros.push(`A nota informa ${nota.totalItens} itens, mas li ${itens.length}.`);
-  }
-  for (const i of itens) {
-    const esperado = Math.round(i.quantidade * i.valorUnitarioCentavos);
-    if (Math.abs(esperado - i.valorTotalCentavos) > TOLERANCIA_LINHA_CENTAVOS) {
-      avisos.push(
-        `${i.descricao}: ${String(i.quantidade).replace(".", ",")} × ${brl(i.valorUnitarioCentavos)} = ${brl(esperado)}, mas a nota diz ${brl(i.valorTotalCentavos)}.`,
-      );
-    }
-  }
-
-  if (nota.chave) {
-    const k = decodeKey(nota.chave);
-    if (!k.ok) erros.push(`Chave de acesso no texto inválida: ${k.error}`);
-    else {
-      if (loja.cnpj && k.cnpj !== loja.cnpj) erros.push("O CNPJ da chave não bate com o CNPJ do mercado no texto.");
-      if (nota.numero != null && k.numero !== nota.numero) erros.push("O número da nota não bate com a chave.");
-      if (!k.ehNFCe) avisos.push("A chave não é de NFC-e (modelo 65).");
-    }
-  } else {
-    avisos.push("Não encontrei a chave de acesso no texto; não dá para evitar importar a mesma nota duas vezes.");
-  }
-
-  const valida = notaParseadaSchema.safeParse(nota);
-  if (!valida.success) erros.push("A nota lida está em formato inesperado.");
+  conferirNota(nota, avisos, erros);
 
   return { nota, avisos, erros };
 }
