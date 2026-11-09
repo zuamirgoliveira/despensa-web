@@ -110,7 +110,7 @@ export function PassoChave({ aoMudarChave, chaveExterna, aoLerQr }: Props) {
     setFoco(null);
   }
 
-  async function abrirCamera(modo: "qr" | "foto" = "qr"): Promise<void> {
+  async function abrirCamera(modo: "qr" | "foto" = "qr", deviceId?: string): Promise<void> {
     if (!navigator.mediaDevices?.getUserMedia) {
       return setImgMsg({ texto: 'Este navegador não abre a câmera aqui. Use "Tirar foto" ou digite a chave.', tipo: "erro" });
     }
@@ -133,14 +133,18 @@ export function PassoChave({ aoMudarChave, chaveExterna, aoLerQr }: Props) {
     }, 8000);
     await new Promise((r) => setTimeout(r, 0)); // espera o <video> existir
     try {
-      const novo = await iniciarScanner(video.current as HTMLVideoElement, (r) => {
-        if (dica.current) clearTimeout(dica.current);
-        scanner.current = null;
-        setCamera(null);
-        setFoco(null);
-        setImgMsg({ texto: "QR Code lido.", tipo: "ok" });
-        usarChave(r.chave, r.conteudo);
-      });
+      const novo = await iniciarScanner(
+        video.current as HTMLVideoElement,
+        (r) => {
+          if (dica.current) clearTimeout(dica.current);
+          scanner.current = null;
+          setCamera(null);
+          setFoco(null);
+          setImgMsg({ texto: "QR Code lido.", tipo: "ok" });
+          usarChave(r.chave, r.conteudo);
+        },
+        { deviceId },
+      );
       if (sessao.current !== minha)
         novo.parar(); // fechou (ou saiu da tela) antes de a câmera abrir
       else {
@@ -156,6 +160,16 @@ export function PassoChave({ aoMudarChave, chaveExterna, aoLerQr }: Props) {
       });
       if (modo === "foto") arqFoto.current?.click(); // reserva: câmera do sistema
     }
+  }
+
+  /** Passa para a próxima câmera traseira (celulares têm várias lentes; só uma tem autofoco). */
+  function trocarCamera(): void {
+    const atual = scanner.current;
+    if (!atual || atual.traseiras.length < 2) return;
+    const prox = atual.traseiras[(atual.traseiras.indexOf(atual.atual ?? "") + 1) % atual.traseiras.length];
+    const modo = camera ?? "qr";
+    pararCamera();
+    void abrirCamera(modo, prox);
   }
 
   async function focarAgora(): Promise<void> {
@@ -277,7 +291,7 @@ export function PassoChave({ aoMudarChave, chaveExterna, aoLerQr }: Props) {
               : foco === "manual"
                 ? "Foco automático indisponível; toque na imagem ou em Focar para focar."
                 : foco === "indisponivel"
-                  ? "Este aparelho não deixa o app controlar o foco. Afaste um pouco e aproxime devagar até ficar nítido."
+                  ? "O app não consegue controlar o foco desta lente. Toque em Trocar câmera (celulares têm várias lentes) ou use a câmera do celular."
                   : "Abrindo a câmera..."}
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -286,6 +300,11 @@ export function PassoChave({ aoMudarChave, chaveExterna, aoLerQr }: Props) {
             </Button>
             <Button onClick={() => void fotografar()}>Fotografar</Button>
           </div>
+          {(scanner.current?.traseiras.length ?? 0) > 1 ? (
+            <Button variante="secundario" onClick={trocarCamera}>
+              Trocar câmera ({(scanner.current?.traseiras.indexOf(scanner.current?.atual ?? "") ?? 0) + 1} de {scanner.current?.traseiras.length})
+            </Button>
+          ) : null}
           {foco !== "continuo" ? (
             <Button
               variante="secundario"

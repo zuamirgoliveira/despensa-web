@@ -61,6 +61,9 @@ export type Scanner = {
   focar: () => Promise<boolean>;
   /** Foto em resolução máxima da câmera (ImageCapture); sem suporte, o quadro atual do vídeo. */
   fotografar: () => Promise<Blob | undefined>;
+  /** Câmeras traseiras do aparelho (um celular com várias lentes tem uma grande-angular sem autofoco) e a em uso. */
+  traseiras: string[];
+  atual?: string;
 };
 
 type TrilhaComFoco = Pick<MediaStreamTrack, "applyConstraints"> & { getCapabilities?: () => object };
@@ -116,15 +119,62 @@ export const INTERVALO_SCANNER_MS = 350;
  * `aoLer` é chamado. Quem chama deve usar `parar()` ao fechar ou sair da tela.
  * Lança o erro do navegador (ex.: NotAllowedError) se a câmera não puder ser aberta.
  */
-export async function iniciarScanner(video: HTMLVideoElement, aoLer: (r: ResultadoQR) => void): Promise<Scanner> {
-  const stream = await navigator.mediaDevices.getUserMedia({
+/** Câmeras de vídeo que não são a frontal (o rótulo só aparece depois da permissão). */
+export function camerasTraseiras(dispositivos: readonly Pick<MediaDeviceInfo, "deviceId" | "label" | "kind">[]): string[] {
+  return dispositivos.filter((d) => d.kind === "videoinput" && d.deviceId && !/front|frontal|user|selfie/i.test(d.label)).map((d) => d.deviceId);
+}
+
+async function abrirStream(deviceId?: string): Promise<MediaStream> {
+  return navigator.mediaDevices.getUserMedia({
     // Sem pedir resolução o Android costuma abrir em 640×480, pouco para o QR pequeno e denso do papel térmico.
-    video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    video: { ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: "environment" } }), width: { ideal: 1920 }, height: { ideal: 1080 } },
     audio: false,
   });
-  // Foco contínuo, onde o aparelho permite; o resultado fica no `foco` do Scanner (a tela mostra ao usuário).
+}
+
+/**
+ * Abre a câmera traseira. O Chrome costuma abrir a lente "environment" que quiser, e em vários celulares é a
+ * grande-angular, sem autofoco: o QR nunca fica nítido. Por isso, se a primeira câmera não confirma foco
+ * contínuo, as outras traseiras são testadas e fica a primeira que confirma. `deviceId` força uma câmera (botão "Trocar câmera").
+ */
+async function abrirCameraComFoco(deviceId?: string): Promise<{ stream: MediaStream; foco: ModoFoco; traseiras: string[]; atual?: string }> {
+  let stream = await abrirStream(deviceId);
+  let trilha = stream.getVideoTracks()[0];
+  let foco: ModoFoco = trilha ? await ligarFocoContinuo(trilha) : "indisponivel";
+  let traseiras: string[] = [];
+  try {
+    traseiras = camerasTraseiras(await navigator.mediaDevices.enumerateDevices());
+  } catch {
+    // sem lista de câmeras: segue com a que abriu
+  }
+  const atualId = (): string | undefined => trilha?.getSettings?.().deviceId;
+  if (!deviceId && foco !== "continuo") {
+    for (const id of traseiras) {
+      if (id === atualId()) continue;
+      let outro: MediaStream;
+      try {
+        outro = await abrirStream(id);
+      } catch {
+        continue;
+      }
+      const t = outro.getVideoTracks()[0];
+      const f = t ? await ligarFocoContinuo(t) : "indisponivel";
+      if (f === "continuo") {
+        stream.getTracks().forEach((x) => x.stop());
+        stream = outro;
+        trilha = t;
+        foco = f;
+        break;
+      }
+      outro.getTracks().forEach((x) => x.stop());
+    }
+  }
+  return { stream, foco, traseiras, atual: atualId() };
+}
+
+export async function iniciarScanner(video: HTMLVideoElement, aoLer: (r: ResultadoQR) => void, opcoes: { deviceId?: string } = {}): Promise<Scanner> {
+  const { stream, foco, traseiras, atual } = await abrirCameraComFoco(opcoes.deviceId);
   const trilha = stream.getVideoTracks()[0];
-  const foco = trilha ? await ligarFocoContinuo(trilha) : "indisponivel";
   let ativo = true;
   let lendo = false;
   const estado: { timer?: ReturnType<typeof setInterval> } = {};
@@ -181,5 +231,5 @@ export async function iniciarScanner(video: HTMLVideoElement, aoLer: (r: Resulta
     return new Promise((ok) => c.toBlob((b) => ok(b ?? undefined), "image/jpeg", 0.95));
   };
 
-  return { parar, foco, focar, fotografar };
+  return { parar, foco, focar, fotografar, traseiras, atual };
 }
