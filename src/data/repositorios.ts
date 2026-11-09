@@ -10,6 +10,7 @@ import type {
   Mercado,
   Perfil,
   Produto,
+  NotaPendente,
   RegistroConferencia,
 } from "@/domain/types";
 
@@ -46,6 +47,7 @@ export interface RepoCompras extends Colecao<Compra> {
 }
 export type RepoListas = Colecao<Lista>;
 export type RepoConferencias = Colecao<RegistroConferencia>;
+export type RepoNotasPendentes = Colecao<NotaPendente>;
 export interface RepoItensLista extends Colecao<ItemLista> {
   listarPorLista(listaId: string): Promise<ItemLista[]>;
   apagarPorLista(listaId: string): Promise<void>;
@@ -64,6 +66,7 @@ export type DadosRestauracao = {
   listas: Lista[];
   itensLista: ItemLista[];
   conferencias: RegistroConferencia[];
+  notasPendentes: NotaPendente[];
 };
 
 /**
@@ -84,6 +87,7 @@ export interface Repositorios {
   readonly listas: RepoListas;
   readonly itensLista: RepoItensLista;
   readonly conferencias: RepoConferencias;
+  readonly notasPendentes: RepoNotasPendentes;
   /**
    * Restaura uma cópia de segurança em **uma única transação**: entra tudo ou nada. Todo registro é
    * validado antes de abrir a transação; chave duplicada na cópia é recusada. Em `mesclar`, o estoque

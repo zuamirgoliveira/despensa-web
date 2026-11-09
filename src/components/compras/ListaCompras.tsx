@@ -7,7 +7,7 @@ import { criarRepositorios } from "@/data";
 import { apagarCompraDesfazendoEstoque, efeitoDeApagarCompra, type EfeitoNoEstoque } from "@/data/despensa";
 import { useRepositorio } from "@/data/useRepositorio";
 import { decodeKey } from "@/domain/nfce/chave";
-import { SEFAZ_CONSULTA } from "@/domain/nfce/sefaz";
+import { consultaDoQR, SEFAZ_CONSULTA } from "@/domain/nfce/sefaz";
 import { custoRealCompra } from "@/domain/ida";
 import type { Compra } from "@/domain/types";
 import { brl, dataBR, horaBR, numeroBR } from "@/lib/format";
@@ -16,7 +16,13 @@ export function ListaCompras() {
   const { mostrar } = useToast();
 
   /** Copia a chave e abre a consulta pública da SEFAZ (o captcha é com a pessoa). */
-  async function abrirSefaz(chave: string): Promise<void> {
+  async function abrirSefaz(chave: string, qrUrl?: string): Promise<void> {
+    // com o QR guardado a nota abre direto, sem captcha e sem copiar nada
+    const direto = qrUrl ? consultaDoQR(qrUrl) : null;
+    if (direto) {
+      window.open(direto.url, "_blank", "noopener");
+      return;
+    }
     const d = decodeKey(chave);
     const url = d.ok ? SEFAZ_CONSULTA[d.uf] : undefined;
     if (!url) return mostrar("Consulta da SEFAZ ainda só existe para PE.", "erro");
@@ -131,7 +137,7 @@ export function ListaCompras() {
                   </table>
                 </Details>
                 <div className="flex flex-wrap justify-end gap-2">
-                  <Button variante="secundario" onClick={() => void abrirSefaz(c.chave)}>
+                  <Button variante="secundario" onClick={() => void abrirSefaz(c.chave, c.qrUrl)}>
                     Abrir SEFAZ
                   </Button>
                   <Button variante="secundario" onClick={() => setApagar(c)}>

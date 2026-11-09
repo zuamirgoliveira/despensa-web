@@ -162,6 +162,8 @@ export const compraSchema = z.object({
   listaId: idSchema.optional(),
   /** Como a pessoa foi a esta compra (perguntado a cada importação). */
   meio: z.enum(TRANSPORTES).optional(),
+  /** URL do QR Code da nota (abre a nota na SEFAZ sem captcha). Sem CPF; validada por `consultaDoQR` antes de ser aberta. */
+  qrUrl: z.string().max(400).optional(),
   /** Quantos itens da nota já tinham apelido no catálogo na importação (métrica "itens casados"). */
   itensCasados: z.number().int().nonnegative().optional(),
   importadoEm: instanteSchema,
@@ -202,6 +204,17 @@ export const itemListaSchema = z
   .refine((v) => v.produtoId !== undefined || v.nomeAvulso !== undefined, {
     message: "Item precisa de produto ou nome avulso",
   });
+
+/**
+ * QR Code lido sem conseguir buscar a nota (sem internet no mercado): fica na fila e é buscado depois.
+ * `id` é a chave de 44 dígitos (um QR por nota). `url` já foi validada por `consultaDoQR`; não tem CPF.
+ */
+export const notaPendenteSchema = z.object({
+  id: chaveSchema,
+  casaId: idSchema,
+  url: z.string().max(400),
+  lidaEm: instanteSchema,
+});
 
 /** Registro de uma sessão de conferência da despensa (alimenta o painel: tempo médio de conferência). */
 export const conferenciaSchema = z.object({

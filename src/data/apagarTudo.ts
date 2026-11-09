@@ -18,7 +18,7 @@ export async function contagemDoAparelho(repos: Repositorios): Promise<{ compras
  */
 export async function apagarTodosOsDados(repos: Repositorios): Promise<void> {
   await repos.restaurar(
-    { casas: [], perfis: [], agendas: [], mercados: [], produtos: [], apelidos: [], estoques: [], compras: [], listas: [], itensLista: [], conferencias: [] },
+    { casas: [], perfis: [], agendas: [], mercados: [], produtos: [], apelidos: [], estoques: [], compras: [], listas: [], itensLista: [], conferencias: [], notasPendentes: [] },
     "substituir",
   );
   await repos.iniciar();

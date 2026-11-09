@@ -12,6 +12,7 @@ export const COLECOES = [
   "listas",
   "itensLista",
   "conferencias",
+  "notasPendentes",
 ] as const;
 
 export type NomeColecao = (typeof COLECOES)[number];

@@ -13,7 +13,17 @@ const MENSAGENS: Readonly<Record<string, string>> = {
   sefaz_demorou: "A SEFAZ demorou demais para responder.",
 };
 
-export class BuscaNotaError extends Error {}
+export class BuscaNotaError extends Error {
+  /** Problema passageiro (sem rede, SEFAZ fora do ar, limite): vale guardar o QR e tentar depois. */
+  constructor(
+    mensagem: string,
+    public readonly passageiro = false,
+  ) {
+    super(mensagem);
+  }
+}
+
+const PASSAGEIROS = new Set(["muitas_consultas", "sefaz_indisponivel", "sefaz_demorou"]);
 
 /** Busca a nota pela URL do QR. Lança `BuscaNotaError` com mensagem para a pessoa; a importação manual segue disponível. */
 export async function buscarNotaPeloQR(url: string): Promise<ResultadoParser> {
@@ -21,12 +31,12 @@ export async function buscarNotaPeloQR(url: string): Promise<ResultadoParser> {
   try {
     r = await fetch("/api/nfce", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url }) });
   } catch {
-    throw new BuscaNotaError("Sem internet agora. Use o passo a passo abaixo ou tente de novo depois.");
+    throw new BuscaNotaError("Sem internet agora.", true);
   }
   const json: unknown = await r.json().catch(() => null);
   if (!r.ok) {
     const codigo = (json as { erro?: string } | null)?.erro ?? "";
-    throw new BuscaNotaError(MENSAGENS[codigo] ?? "Não consegui buscar a nota automaticamente.");
+    throw new BuscaNotaError(MENSAGENS[codigo] ?? "Não consegui buscar a nota automaticamente.", PASSAGEIROS.has(codigo));
   }
   const v = respostaSchema.safeParse(json);
   if (!v.success) throw new BuscaNotaError("A resposta da busca veio em formato inesperado.");

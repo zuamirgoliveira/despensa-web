@@ -5,6 +5,7 @@ import type {
   casaSchema,
   compraSchema,
   conferenciaSchema,
+  notaPendenteSchema,
   coordenadasSchema,
   estoqueSchema,
   itemCompraSchema,
@@ -26,6 +27,7 @@ export type Estoque = z.infer<typeof estoqueSchema>;
 export type ItemCompra = z.infer<typeof itemCompraSchema>;
 export type Compra = z.infer<typeof compraSchema>;
 export type Lista = z.infer<typeof listaSchema>;
+export type NotaPendente = z.infer<typeof notaPendenteSchema>;
 export type RegistroConferencia = z.infer<typeof conferenciaSchema>;
 export type ItemLista = z.infer<typeof itemListaSchema>;
 

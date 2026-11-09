@@ -8,6 +8,7 @@ import {
   casaSchema,
   compraSchema,
   conferenciaSchema,
+  notaPendenteSchema,
   estoqueSchema,
   instanteSchema,
   itemListaSchema,
@@ -49,6 +50,7 @@ export const backupSchema = z.object({
     itensLista: z.array(itemListaSchema),
     /** Ausente em backups anteriores à C-23. */
     conferencias: z.array(conferenciaSchema).default([]),
+    notasPendentes: z.array(notaPendenteSchema).default([]),
   }),
 });
 
@@ -85,7 +87,7 @@ function periodoDasCompras(compras: readonly { emissao: string }[]): { de: strin
 
 export async function exportar(repos: Repositorios, agora: Date = new Date(), opcoes: OpcoesExportacao = {}): Promise<Backup> {
   const incluirPosicaoDeCasa = opcoes.incluirPosicaoDeCasa ?? true;
-  const [casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias] =
+  const [casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias, notasPendentes] =
     await Promise.all([
       repos.casas.listar(),
       repos.perfis.listar(),
@@ -98,6 +100,7 @@ export async function exportar(repos: Repositorios, agora: Date = new Date(), op
       repos.listas.listar(),
       repos.itensLista.listar(),
       repos.conferencias.listar(),
+      repos.notasPendentes.listar(),
     ]);
   const colecoes = {
     casas,
@@ -111,6 +114,7 @@ export async function exportar(repos: Repositorios, agora: Date = new Date(), op
     listas,
     itensLista,
     conferencias,
+    notasPendentes,
   };
   return {
     versao: VERSAO_BACKUP,
@@ -262,7 +266,7 @@ function comparar(locais: readonly string[], copia: readonly string[]): Contagem
 
 /** O que existe hoje neste aparelho em relação à cópia (para o usuário decidir entre mesclar e substituir). */
 export async function compararComAparelho(repos: Repositorios, inspecao: InspecaoBackup): Promise<ComparacaoAparelho> {
-  const [casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias] = await Promise.all([
+  const [casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias, notasPendentes] = await Promise.all([
     repos.casas.listar(),
     repos.perfis.listar(),
     repos.agendas.listar(),
@@ -274,9 +278,10 @@ export async function compararComAparelho(repos: Repositorios, inspecao: Inspeca
     repos.listas.listar(),
     repos.itensLista.listar(),
     repos.conferencias.listar(),
+    repos.notasPendentes.listar(),
   ]);
   const c = inspecao.backup.colecoes;
-  const contagens = contar({ casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias }) as ResumoImportacao;
+  const contagens = contar({ casas, perfis, agendas, mercados, produtos, apelidos, estoques, compras, listas, itensLista, conferencias, notasPendentes }) as ResumoImportacao;
   const vazio = compras.length === 0 && produtos.length === 0 && mercados.length === 0;
   const ultimaImportacao = compras.map((x) => x.importadoEm).sort().pop();
   return {

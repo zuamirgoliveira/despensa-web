@@ -63,6 +63,8 @@ export type EntradaImportacao = {
   reporSempre?: readonly string[];
   /** Códigos de itens confirmados como "vendidos por unidade" (sem tamanho de embalagem): não perguntar o tamanho depois. */
   porUnidade?: readonly string[];
+  /** URL do QR Code de onde a nota veio (guardada na compra para reabrir a nota sem captcha). */
+  qrUrl?: string;
 };
 
 /** O que a despensa já tem de cada nome (por `chaveDeProduto`), para mostrar "o que vai mudar" antes de salvar. */
@@ -155,6 +157,7 @@ export async function salvarNotaImportada(repos: Repositorios, entrada: EntradaI
     itens,
     // reimportar a mesma nota (substituir) mantém o valor da primeira importação
     itensCasados: anterior?.itensCasados ?? casados,
+    ...((entrada.qrUrl ?? anterior?.qrUrl) ? { qrUrl: entrada.qrUrl ?? anterior?.qrUrl } : {}),
     importadoEm: (entrada.agora ?? new Date()).toISOString(),
   });
   await atualizarMetasAutomaticas(

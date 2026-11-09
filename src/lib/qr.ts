@@ -124,6 +124,26 @@ export function camerasTraseiras(dispositivos: readonly Pick<MediaDeviceInfo, "d
   return dispositivos.filter((d) => d.kind === "videoinput" && d.deviceId && !/front|frontal|user|selfie/i.test(d.label)).map((d) => d.deviceId);
 }
 
+const CHAVE_CAMERA = "despensa-camera";
+
+/** Câmera que já leu um QR neste aparelho (guardada para abrir direto nela). `localStorage` pode falhar: nunca bloqueia. */
+export function lerCameraPreferida(): string | undefined {
+  try {
+    return localStorage.getItem(CHAVE_CAMERA) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function gravarCameraPreferida(deviceId: string | undefined): void {
+  if (!deviceId) return;
+  try {
+    localStorage.setItem(CHAVE_CAMERA, deviceId);
+  } catch {
+    // sem armazenamento: só não lembra
+  }
+}
+
 async function abrirStream(deviceId?: string): Promise<MediaStream> {
   return navigator.mediaDevices.getUserMedia({
     // Sem pedir resolução o Android costuma abrir em 640×480, pouco para o QR pequeno e denso do papel térmico.
@@ -138,7 +158,14 @@ async function abrirStream(deviceId?: string): Promise<MediaStream> {
  * contínuo, as outras traseiras são testadas e fica a primeira que confirma. `deviceId` força uma câmera (botão "Trocar câmera").
  */
 async function abrirCameraComFoco(deviceId?: string): Promise<{ stream: MediaStream; foco: ModoFoco; traseiras: string[]; atual?: string }> {
-  let stream = await abrirStream(deviceId);
+  let stream: MediaStream;
+  try {
+    stream = await abrirStream(deviceId);
+  } catch (e) {
+    if (!deviceId) throw e;
+    deviceId = undefined; // a câmera lembrada sumiu (outro aparelho, permissão nova): volta à busca normal
+    stream = await abrirStream();
+  }
   let trilha = stream.getVideoTracks()[0];
   let foco: ModoFoco = trilha ? await ligarFocoContinuo(trilha) : "indisponivel";
   let traseiras: string[] = [];
@@ -173,7 +200,7 @@ async function abrirCameraComFoco(deviceId?: string): Promise<{ stream: MediaStr
 }
 
 export async function iniciarScanner(video: HTMLVideoElement, aoLer: (r: ResultadoQR) => void, opcoes: { deviceId?: string } = {}): Promise<Scanner> {
-  const { stream, foco, traseiras, atual } = await abrirCameraComFoco(opcoes.deviceId);
+  const { stream, foco, traseiras, atual } = await abrirCameraComFoco(opcoes.deviceId ?? lerCameraPreferida());
   const trilha = stream.getVideoTracks()[0];
   let ativo = true;
   let lendo = false;

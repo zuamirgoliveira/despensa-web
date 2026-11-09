@@ -286,7 +286,7 @@ describe("eventos e leitores", () => {
     const parar = aoMudar((c) => vistas.add(c));
     await restaurarBackup(alvo, await copiaDoSeed(), "mesclar");
     parar();
-    expect(vistas.size).toBe(11);
+    expect(vistas.size).toBe(12);
   });
 });
 

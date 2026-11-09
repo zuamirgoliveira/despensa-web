@@ -10,6 +10,7 @@ import type {
   Mercado,
   Perfil,
   Produto,
+  NotaPendente,
   RegistroConferencia,
 } from "@/domain/types";
 import { agendasIniciais } from "@/config/seed";
@@ -20,6 +21,7 @@ import {
   CASA_PADRAO_NOME,
   compraSchema,
   conferenciaSchema,
+  notaPendenteSchema,
   estoqueSchema,
   itemListaSchema,
   listaSchema,
@@ -145,6 +147,7 @@ function validarRestauracao(dados: DadosRestauracao): DadosRestauracao {
     listas: ler("listas", sch(listaSchema), dados.listas),
     itensLista: ler("itensLista", sch(itemListaSchema), dados.itensLista),
     conferencias: ler("conferencias", sch(conferenciaSchema), dados.conferencias),
+    notasPendentes: ler("notasPendentes", sch(notaPendenteSchema), dados.notasPendentes),
   };
   unica("casas", v.casas.map((x) => x.id));
   unica("perfis", v.perfis.map((x) => x.id));
@@ -158,6 +161,7 @@ function validarRestauracao(dados: DadosRestauracao): DadosRestauracao {
   unica("listas", v.listas.map((x) => x.id));
   unica("itensLista", v.itensLista.map((x) => x.id));
   unica("conferencias", v.conferencias.map((x) => x.id));
+  unica("notasPendentes", v.notasPendentes.map((x) => x.id));
   return v;
 }
 
@@ -246,6 +250,7 @@ export function criarRepositoriosComBanco(db: IDBDatabase): Repositorios {
     listas: new ColecaoIdb<Lista>(db, "listas", sch(listaSchema)),
     itensLista: new ItensLista(db, "itensLista", sch(itemListaSchema)),
     conferencias: new ColecaoIdb<RegistroConferencia>(db, "conferencias", sch(conferenciaSchema)),
+    notasPendentes: new ColecaoIdb<NotaPendente>(db, "notasPendentes", sch(notaPendenteSchema)),
     restaurar(dados, modo) {
       return restaurarEmLote(db, repos, dados, modo);
     },

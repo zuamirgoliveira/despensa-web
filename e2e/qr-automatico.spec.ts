@@ -40,7 +40,7 @@ test("QR compartilhado com o app: busca a nota sozinho, sem captcha nem colar te
   expect(corpos).toEqual([{ url: URL_QR }]);
 
   // o texto do QR não vai para o campo de colar
-  await expect(page.getByLabel("Texto copiado da página da SEFAZ")).toHaveValue("");
+  await expect(page.getByLabel("Texto copiado da página da SEFAZ")).toHaveCount(0); // passos manuais saem da frente
 
   // a nota já diz "2L": o tamanho entra no nome do produto e o app não precisa perguntar
   await expect(page.getByLabel("Nome do produto").first()).toHaveValue(/2l$/);
@@ -57,6 +57,44 @@ test("falha da busca: avisa e mantém o passo a passo manual", async ({ page }) 
   await page.route("**/api/nfce", (route) => route.fulfill({ status: 504, contentType: "application/json", body: JSON.stringify({ erro: "sefaz_demorou" }) }));
   await page.goto(`/importar?text=${encodeURIComponent(URL_QR)}`);
   await expect(page.getByText(/A SEFAZ demorou demais/)).toBeVisible();
-  await expect(page.getByText(/Use o passo a passo abaixo/)).toBeVisible();
+  await expect(page.getByText(/Guardei o QR/)).toBeVisible();
   await expect(page.getByLabel("Texto copiado da página da SEFAZ")).toBeVisible();
+});
+
+test("sem internet no mercado: guarda o QR, avisa no Início e busca depois; a nota guarda o QR e reabre sem captcha", async ({ page, context }) => {
+  const { erros } = vigiarConsole(page);
+  let online = false;
+  await page.route("**/api/nfce", (route) =>
+    online
+      ? route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(RESULTADO) })
+      : route.fulfill({ status: 504, contentType: "application/json", body: JSON.stringify({ erro: "sefaz_demorou" }) }),
+  );
+  await page.goto(`/importar?text=${encodeURIComponent(URL_QR)}`);
+  await expect(page.getByText(/Guardei o QR/)).toBeVisible();
+
+  await page.goto("/");
+  await expect(page.getByText("1 nota lida pelo QR está esperando busca.")).toBeVisible();
+
+  online = true;
+  await page.goto("/importar");
+  const fila = page.getByLabel("Notas esperando busca");
+  await expect(fila).toContainText("Nota de");
+  await fila.getByRole("button", { name: "Buscar" }).click();
+  await expect(page.getByText("Nota buscada na SEFAZ")).toBeVisible();
+  // com a busca automática funcionando, os passos manuais saem da frente
+  await expect(page.getByText("2. Consultar na SEFAZ")).toHaveCount(0);
+  await expect(page.getByText("3. Colar o texto da nota")).toHaveCount(0);
+
+  await page.getByRole("button", { name: /Salvar compra/ }).click();
+  await pularEstimativa(page);
+  await expect(page).toHaveURL(/\/compras$/);
+  await page.goto("/");
+  await expect(page.getByText(/esperando busca/)).toHaveCount(0); // saiu da fila ao importar
+
+  // Abrir SEFAZ usa o QR guardado: abre a nota direto
+  await context.route("https://nfce.sefaz.pe.gov.br:444/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>nota simulada</p>" }));
+  await page.goto("/compras");
+  const [popup] = await Promise.all([page.waitForEvent("popup"), page.getByRole("button", { name: "Abrir SEFAZ" }).click()]);
+  expect(popup.url()).toBe(URL_QR);
+  semViolacaoDeCsp(erros);
 });

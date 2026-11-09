@@ -1,11 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Alert, useToast } from "@/components/ui";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Button, Card, useToast } from "@/components/ui";
+import { dataBR } from "@/lib/format";
 import { criarRepositorios } from "@/data";
 import { prepararConferencia, salvarNotaImportada, situacaoDosProdutos, type ItemConferencia, type SituacaoNaDespensa } from "@/data/importarNota";
+import { guardarNotaPendente, listarNotasPendentes, removerNotaPendente } from "@/data/notasPendentes";
 import { finalizarCompra, listasEmCompra } from "@/data/reconciliacao";
+import { useRepositorio } from "@/data/useRepositorio";
 import type { Lista } from "@/domain/types";
 import { parseNota, type ResultadoParser } from "@/domain/nfce/parser";
 import { consultaDoQR } from "@/domain/nfce/sefaz";
@@ -44,6 +47,10 @@ export function ImportarNota() {
   const [estimar, setEstimar] = useState<{ mercadoId: string; chave: string; destino: string } | null>(null);
   const [jaImportadaNota, setJaImportadaNota] = useState(false);
   const [buscando, setBuscando] = useState(false);
+  const [buscaOk, setBuscaOk] = useState(false);
+  const [qrAtual, setQrAtual] = useState<string | null>(null);
+  const conferencia = useRef<HTMLDivElement>(null);
+  const { dados: fila } = useRepositorio(async () => listarNotasPendentes(await criarRepositorios()), ["notasPendentes"]);
   const [msgBusca, setMsgBusca] = useState<{ texto: string; tipo: "ok" | "erro" } | null>(null);
 
   async function ler(conteudo: string, informada: ChaveValida | null): Promise<void> {
@@ -60,15 +67,20 @@ export function ImportarNota() {
     if (!consulta) return;
     setBuscando(true);
     setMsgBusca(null);
+    setBuscaOk(false);
+    setQrAtual(consulta.url);
     try {
       const resultado = await buscarNotaPeloQR(consulta.url);
       await aplicarResultado(resultado, null);
+      setBuscaOk(true);
       setMsgBusca({ texto: "Nota buscada na SEFAZ. Confira os itens abaixo e salve.", tipo: "ok" });
     } catch (e) {
-      setMsgBusca({
-        texto: `${e instanceof BuscaNotaError ? e.message : "Não consegui buscar a nota."} Use o passo a passo abaixo.`,
-        tipo: "erro",
-      });
+      const passageiro = e instanceof BuscaNotaError && e.passageiro;
+      let texto = `${e instanceof BuscaNotaError ? e.message : "Não consegui buscar a nota."} Use o passo a passo abaixo.`;
+      if (passageiro && (await guardarNotaPendente(await criarRepositorios(), consulta.url)) === "guardada") {
+        texto = `${(e as BuscaNotaError).message} Guardei o QR: quando houver conexão, abra Importar e toque em "Buscar" em "Notas esperando busca". O passo a passo abaixo também funciona.`;
+      }
+      setMsgBusca({ texto, tipo: "erro" });
     } finally {
       setBuscando(false);
     }
@@ -147,7 +159,9 @@ export function ImportarNota() {
         ignorar: [...ignorados],
         reporSempre: [...reporSempre],
         porUnidade: [...porUnidade],
+        qrUrl: qrAtual ?? undefined,
       });
+      await removerNotaPendente(repos, k);
       const fechamento = await finalizarCompra(repos, compra, listaId || undefined, new Date(), anterior);
       mostrar("Compra salva.");
       const destino = fechamento.lista ? `/resumo?lista=${fechamento.lista.id}` : "/compras";
@@ -160,6 +174,10 @@ export function ImportarNota() {
     }
   }
 
+  useEffect(() => {
+    if (buscaOk && leitura) conferencia.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [buscaOk, leitura]);
+
   if (estimar) return <EstimativaIda mercadoId={estimar.mercadoId} chave={estimar.chave} aoConcluir={() => router.push(estimar.destino)} />;
 
   return (
@@ -171,14 +189,37 @@ export function ImportarNota() {
         }}
         aoLerQr={(url) => {
           setMsgBusca(null);
+          setBuscaOk(false);
+          setQrAtual(null);
           if (url && consultaDoQR(url)) void buscarPeloQR(url);
         }}
         chaveExterna={chaveExterna}
       />
       {buscando ? <Alert tipo="info">Buscando a nota na SEFAZ...</Alert> : null}
       {msgBusca ? <Alert tipo={msgBusca.tipo === "ok" ? "info" : "erro"}>{msgBusca.texto}</Alert> : null}
-      <PassoSefaz chave={chave} />
-      <PassoColar texto={texto} aoMudarTexto={setTexto} aoLer={() => void ler(texto, chave)} mensagem={msgLeitura} />
+      {fila?.length && !leitura ? (
+        <Card className="flex flex-col gap-2" aria-label="Notas esperando busca">
+          <h2 className="text-sm">Notas esperando busca</h2>
+          <p className="text-sm text-suave">QR Codes lidos sem conexão. Com internet, toque em Buscar.</p>
+          {fila.map((n) => (
+            <div key={n.id} className="flex items-center justify-between gap-2 text-sm">
+              <span>
+                Nota de {dataBR(n.lidaEm.slice(0, 10))} (final {n.id.slice(-6, -1)})
+              </span>
+              <Button variante="secundario" disabled={buscando} onClick={() => void buscarPeloQR(n.url)}>
+                Buscar
+              </Button>
+            </div>
+          ))}
+        </Card>
+      ) : null}
+      {buscaOk && leitura ? null : (
+        <>
+          <PassoSefaz chave={chave} />
+          <PassoColar texto={texto} aoMudarTexto={setTexto} aoLer={() => void ler(texto, chave)} mensagem={msgLeitura} />
+        </>
+      )}
+      <div ref={conferencia} />
       {leitura ? (
         <Conferencia
           leitura={leitura.resultado}

@@ -167,7 +167,7 @@ describe("migrações", () => {
   it("a partir do banco vazio cria todos os stores e índices", async () => {
     const db = await abrirBanco({ indexedDB: new IDBFactory(), nomeBanco: "novo" });
     expect([...db.objectStoreNames].sort()).toEqual(
-      ["agendas", "apelidos", "casas", "compras", "conferencias", "estoques", "itensLista", "listas", "mercados", "perfis", "produtos"],
+      ["agendas", "apelidos", "casas", "compras", "conferencias", "estoques", "itensLista", "listas", "mercados", "notasPendentes", "perfis", "produtos"],
     );
     expect(db.version).toBe(MIGRACOES[MIGRACOES.length - 1].versao);
     const tx = db.transaction("compras");

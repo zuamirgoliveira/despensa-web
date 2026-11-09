@@ -8,7 +8,7 @@ import { correcoesDeUmDigito, formatCNPJ, decodeKey, onlyDigits, type Correcao }
 import { dataBR, agruparChave } from "@/lib/format";
 import { lerChaveDeImagem } from "@/lib/imagemChave";
 import { editarChave } from "@/lib/campoChave";
-import { iniciarScanner, type ModoFoco, type Scanner } from "@/lib/qr";
+import { gravarCameraPreferida, iniciarScanner, type ModoFoco, type Scanner } from "@/lib/qr";
 import type { Candidata } from "@/domain/nfce/chave";
 
 export type ChaveValida = Extract<ChaveDecodificada, { ok: true }>;
@@ -137,6 +137,7 @@ export function PassoChave({ aoMudarChave, chaveExterna, aoLerQr }: Props) {
         video.current as HTMLVideoElement,
         (r) => {
           if (dica.current) clearTimeout(dica.current);
+          gravarCameraPreferida(scanner.current?.atual); // abre direto nesta lente da próxima vez
           scanner.current = null;
           setCamera(null);
           setFoco(null);
